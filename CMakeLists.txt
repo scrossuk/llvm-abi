@@ -131,5 +131,5 @@ set(LLVMABI_PUBLIC_HEADERS
 )
 
 install(FILES ${LLVMABI_PUBLIC_HEADERS}
-	DESTINATION "include"
+	DESTINATION "include/llvm-abi"
 )
