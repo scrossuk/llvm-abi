@@ -42,6 +42,7 @@ set(LLVMABI_VERSION ${LLVMABI_VERSION_MAJOR}.${LLVMABI_VERSION_MINOR}.${LLVMABI_
 message(STATUS "Building llvm-abi version ${LLVMABI_VERSION} using build type '${CMAKE_BUILD_TYPE}'.")
 message(STATUS "    Source directory is '${PROJECT_SOURCE_DIR}'.")
 message(STATUS "    Build directory is '${PROJECT_BINARY_DIR}'.")
+message(STATUS "    Install prefix is '${CMAKE_INSTALL_PREFIX}'.")
 
 # --- Compiler Flags
 
