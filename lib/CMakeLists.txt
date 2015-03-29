@@ -4,3 +4,7 @@ add_library(llvm-abi
 	Context.cpp
 	Type.cpp
 )
+
+install(TARGETS llvm-abi
+	ARCHIVE DESTINATION "lib"
+)

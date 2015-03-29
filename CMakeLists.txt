@@ -121,3 +121,14 @@ include_directories(include)
 
 add_subdirectory(lib)
 
+set(LLVMABI_PUBLIC_HEADERS
+	include/llvm-abi/ABI.hpp
+	include/llvm-abi/ABI_x86_64.hpp
+	include/llvm-abi/Builder.hpp
+	include/llvm-abi/Context.hpp
+	include/llvm-abi/Type.hpp
+)
+
+install(FILES ${LLVMABI_PUBLIC_HEADERS}
+	DESTINATION "include"
+)
