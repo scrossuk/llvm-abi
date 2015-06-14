@@ -22,7 +22,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 enable_testing()
 
-project(llvm-abi CXX)
+project(llvm-abi C CXX)
 
 # Add path for custom modules
 set(CMAKE_MODULE_PATH
@@ -121,6 +121,8 @@ link_directories(${LLVMABI_LLVM_LIBRARY_DIRS})
 include_directories(include)
 
 add_subdirectory(lib)
+add_subdirectory(test)
+add_subdirectory(utils)
 
 set(LLVMABI_PUBLIC_HEADERS
 	include/llvm-abi/ABI.hpp
