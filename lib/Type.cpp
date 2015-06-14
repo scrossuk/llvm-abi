@@ -9,36 +9,41 @@
 
 namespace llvm_abi {
 	
-	Type* Type::Pointer(Context& context) {
+	const Type* Type::Void(Context& context) {
+		Type type(VoidType);
+		return context.getType(type);
+	}
+	
+	const Type* Type::Pointer(Context& context) {
 		Type type(PointerType);
 		return context.getType(type);
 	}
 	
-	Type* Type::Integer(Context& context, IntegerKind kind) {
+	const Type* Type::Integer(Context& context, IntegerKind kind) {
 		Type type(IntegerType);
 		type.subKind_.integerKind = kind;
 		return context.getType(type);
 	}
 	
-	Type* Type::FloatingPoint(Context& context, FloatingPointKind kind) {
+	const Type* Type::FloatingPoint(Context& context, FloatingPointKind kind) {
 		Type type(FloatingPointType);
 		type.subKind_.floatingPointKind = kind;
 		return context.getType(type);
 	}
 	
-	Type* Type::Complex(Context& context, FloatingPointKind kind) {
+	const Type* Type::Complex(Context& context, FloatingPointKind kind) {
 		Type type(ComplexType);
 		type.subKind_.complexKind = kind;
 		return context.getType(type);
 	}
 	
-	Type* Type::Struct(Context& context, std::vector<StructMember> members) {
+	const Type* Type::Struct(Context& context, llvm::ArrayRef<StructMember> members) {
 		Type type(StructType);
-		type.structType_.members = std::move(members);
+		type.structType_.members = llvm::SmallVector<StructMember, 8>(members.begin(), members.end());
 		return context.getType(type);
 	}
 	
-	Type* Type::AutoStruct(Context& context, llvm::ArrayRef<Type*> memberTypes) {
+	const Type* Type::AutoStruct(Context& context, llvm::ArrayRef<const Type*> memberTypes) {
 		Type type(StructType);
 		type.structType_.members.reserve(memberTypes.size());
 		for (auto& memberType: memberTypes) {
@@ -47,7 +52,7 @@ namespace llvm_abi {
 		return context.getType(type);
 	}
 	
-	Type* Type::Array(Context& context, size_t elementCount, Type* elementType) {
+	const Type* Type::Array(Context& context, size_t elementCount, const Type* elementType) {
 		Type type(ArrayType);
 		type.arrayType_.elementCount = elementCount;
 		type.arrayType_.elementType = elementType;
@@ -77,8 +82,8 @@ namespace llvm_abi {
 				}
 				
 				for (size_t i = 0; i < structMembers().size(); i++) {
-					const auto& myMember = structMembers().at(i);
-					const auto& otherMember = type.structMembers().at(i);
+					const auto& myMember = structMembers()[i];
+					const auto& otherMember = type.structMembers()[i];
 					
 					if (myMember.type() != otherMember.type()) {
 						return myMember.type() < otherMember.type();
@@ -106,12 +111,16 @@ namespace llvm_abi {
 		return kind_;
 	}
 	
+	bool Type::isVoid() const {
+		return kind() == VoidType;
+	}
+	
 	bool Type::isPointer() const {
-		return kind_ == PointerType;
+		return kind() == PointerType;
 	}
 	
 	bool Type::isInteger() const {
-		return kind_ == IntegerType;
+		return kind() == IntegerType;
 	}
 	
 	IntegerKind Type::integerKind() const {
@@ -120,7 +129,7 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isFloatingPoint() const {
-		return kind_ == FloatingPointType;
+		return kind() == FloatingPointType;
 	}
 	
 	FloatingPointKind Type::floatingPointKind() const {
@@ -129,7 +138,7 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isComplex() const {
-		return kind_ == ComplexType;
+		return kind() == ComplexType;
 	}
 	
 	FloatingPointKind Type::complexKind() const {
@@ -138,16 +147,16 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isStruct() const {
-		return kind_ == StructType;
+		return kind() == StructType;
 	}
 	
-	const std::vector<StructMember>& Type::structMembers() const {
+	llvm::ArrayRef<StructMember> Type::structMembers() const {
 		assert(isStruct());
 		return structType_.members;
 	}
 	
 	bool Type::isArray() const {
-		return kind_ == ArrayType;
+		return kind() == ArrayType;
 	}
 	
 	size_t Type::arrayElementCount() const {
@@ -155,7 +164,7 @@ namespace llvm_abi {
 		return arrayType_.elementCount;
 	}
 	
-	Type* Type::arrayElementType() const {
+	const Type* Type::arrayElementType() const {
 		assert(isArray());
 		return arrayType_.elementType;
 	}
@@ -210,6 +219,8 @@ namespace llvm_abi {
 	
 	std::string Type::toString() const {
 		switch (kind()) {
+			case VoidType:
+				return "Void";
 			case PointerType:
 				return "Pointer";
 			case IntegerType:
@@ -225,7 +236,7 @@ namespace llvm_abi {
 					if (i > 0) {
 						s += ", ";
 					}
-					s += std::string("StructMember(") + members.at(i).type()->toString() + ")";
+					s += std::string("StructMember(") + members[i].type()->toString() + ")";
 				}
 				return s + ")";
 			}

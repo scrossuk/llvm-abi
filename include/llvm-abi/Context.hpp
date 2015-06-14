@@ -19,7 +19,7 @@ namespace llvm_abi {
 		public:
 			Context();
 			
-			Type* getType(Type type);
+			const Type* getType(Type type);
 			
 		private:
 			// Non-copyable.

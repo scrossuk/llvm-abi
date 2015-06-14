@@ -8,6 +8,38 @@
 
 namespace llvm_abi {
 	
+	class Type;
+	
+	/**
+	 * \brief ABI Struct Member
+	 */
+	class StructMember {
+		public:
+			static StructMember AutoOffset(const Type* type) {
+				return StructMember(type, 0);
+			}
+			
+			static StructMember ForceOffset(const Type* type, size_t offset) {
+				return StructMember(type, offset);
+			}
+			
+			const Type* type() const {
+				return type_;
+			}
+			
+			size_t offset() const {
+				return offset_;
+			}
+			
+		private:
+			StructMember(const Type* pType, size_t pOffset)
+				: type_(pType), offset_(pOffset) { }
+			
+			const Type* type_;
+			size_t offset_;
+			
+	};
+	
 	/**
 	 * \brief Integer Kind
 	 * 
@@ -47,6 +79,7 @@ namespace llvm_abi {
 	 * A set of possible type kinds.
 	 */
 	enum TypeKind {
+		VoidType,
 		PointerType,
 		IntegerType,
 		FloatingPointType,
@@ -68,43 +101,50 @@ namespace llvm_abi {
 	class Type {
 		public:
 			/**
-			 * \brief Integer Type
+			 * \brief Void Type
 			 */
-			static Type* Pointer(Context& context);
+			static const Type* Void(Context& context);
 			
 			/**
 			 * \brief Integer Type
 			 */
-			static Type* Integer(Context& context, IntegerKind kind);
+			static const Type* Pointer(Context& context);
+			
+			/**
+			 * \brief Integer Type
+			 */
+			static const Type* Integer(Context& context, IntegerKind kind);
 			
 			/**
 			 * \brief Floating Point Type
 			 */
-			static Type* FloatingPoint(Context& context, FloatingPointKind kind);
+			static const Type* FloatingPoint(Context& context, FloatingPointKind kind);
 			
 			/**
 			 * \brief Complex Type
 			 */
-			static Type* Complex(Context& context, FloatingPointKind kind);
+			static const Type* Complex(Context& context, FloatingPointKind kind);
 			
 			/**
 			 * \brief Struct Type
 			 */
-			static Type* Struct(Context& context, std::vector<StructMember> members);
+			static const Type* Struct(Context& context, llvm::ArrayRef<StructMember> members);
 			
 			/**
 			 * \brief Auto-aligned Struct Type
 			 */
-			static Type* AutoStruct(Context& context, llvm::ArrayRef<Type*> memberTypes);
+			static const Type* AutoStruct(Context& context, llvm::ArrayRef<const Type*> memberTypes);
 			
 			/**
 			 * \brief Array Type
 			 */
-			static Type* Array(Context& context, size_t elementCount, Type* elementType);
+			static const Type* Array(Context& context, size_t elementCount, const Type* elementType);
 			
 			bool operator<(const Type& type) const;
 			
 			TypeKind kind() const;
+			
+			bool isVoid() const;
 			
 			bool isPointer() const;
 			
@@ -122,13 +162,13 @@ namespace llvm_abi {
 			
 			bool isStruct() const;
 			
-			const std::vector<StructMember>& structMembers() const;
+			llvm::ArrayRef<StructMember> structMembers() const;
 			
 			bool isArray() const;
 			
 			size_t arrayElementCount() const;
 			
-			Type* arrayElementType() const;
+			const Type* arrayElementType() const;
 			
 			std::string toString() const;
 			
@@ -144,52 +184,14 @@ namespace llvm_abi {
 			} subKind_;
 			
 			struct {
-				std::vector<StructMember> members;
+				llvm::SmallVector<StructMember, 8> members;
 			} structType_;
 			
 			struct {
 				size_t elementCount;
-				Type* elementType;
+				const Type* elementType;
 			} arrayType_;
 			
-	};
-	
-	/**
-	 * \brief ABI Struct Member
-	 */
-	class StructMember {
-		public:
-			static StructMember AutoOffset(Type* type) {
-				return StructMember(type, 0);
-			}
-			
-			static StructMember ForceOffset(Type* type, size_t offset) {
-				return StructMember(type, offset);
-			}
-			
-			Type* type() const {
-				return type_;
-			}
-			
-			size_t offset() const {
-				return offset_;
-			}
-			
-		private:
-			StructMember(Type* pType, size_t pOffset)
-				: type_(pType), offset_(pOffset) { }
-			
-			Type* type_;
-			size_t offset_;
-			
-	};
-	
-	/**
-	 * \brief ABI Function Type
-	 */
-	struct FunctionType {
-		Type* returnType;
-		std::vector<Type*> argTypes;
 	};
 	
 }

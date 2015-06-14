@@ -11,10 +11,15 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
-#include <llvm-abi/Builder.hpp>
-#include <llvm-abi/Type.hpp>
+#include <llvm-abi/CallingConvention.hpp>
 
 namespace llvm_abi {
+	
+	class Builder;
+	class FunctionEncoder;
+	class FunctionType;
+	class StructMember;
+	class Type;
 	
 	/**
 	 * \brief ABI Interface
@@ -45,7 +50,7 @@ namespace llvm_abi {
 		 * \param type The type.
 		 * \return The size of the type.
 		 */
-		virtual size_t typeSize(Type* type) const = 0;
+		virtual size_t typeSize(const Type* type) const = 0;
 		
 		/**
 		 * \brief Get the alignment of a type for this ABI.
@@ -53,7 +58,7 @@ namespace llvm_abi {
 		 * \param type The type.
 		 * \return The alignment of the type.
 		 */
-		virtual size_t typeAlign(Type* type) const = 0;
+		virtual size_t typeAlign(const Type* type) const = 0;
 		
 		/**
 		 * \brief Create an array of offsets based on struct member types.
@@ -71,40 +76,61 @@ namespace llvm_abi {
 		virtual llvm::Type* longDoubleType() const = 0;
 		
 		/**
-		 * \brief Encode an array of values with ABI types for an ABI-compliant function call.
+		 * \brief Get the LLVM calling convention for this ABI.
 		 * 
-		 * This method is called to encode values when calling a function, as well as encoding values
-		 * when returning from a function.
-		 * 
-		 * \param builder The builder for generating LLVM instructions.
-		 * \param argValues An array of unencoded values; this is modified to create the encoded equivalents.
-		 * \param argTypes An array of ABI types for each of the values.
+		 * \param The generic ABI calling convention.
+		 * \return The LLVM calling convention ID.
 		 */
-		virtual void encodeValues(Builder& builder, std::vector<llvm::Value*>& argValues, llvm::ArrayRef<Type*> argTypes) = 0;
+		virtual llvm::CallingConv::ID getCallingConvention(CallingConvention callingConvention) const = 0;
 		
 		/**
-		 * \brief Decode an array of values with ABI types for an ABI-compliant function call.
+		 * \brief Get LLVM function type.
 		 * 
-		 * This method is called to decode values when receiving function parameters at the
-		 * beginning of a function, as well as decoding values returned from a function.
+		 * This creates an LLVM function type with an ABI-compliant signature.
 		 * 
-		 * \param builder The builder for generating LLVM instructions.
-		 * \param argValues An array of encoded values; this is modified to create the decoded equivalents.
-		 * \param argTypes An array of ABI types for each of the values.
-		 * \param llvmArgTypes An array of LLVM types for the decoded values.
-		 */
-		virtual void decodeValues(Builder& builder, std::vector<llvm::Value*>& argValues, llvm::ArrayRef<Type*> argTypes, llvm::ArrayRef<llvm::Type*> llvmArgTypes) = 0;
-		
-		/**
-		 * \brief Re-write function type.
-		 * 
-		 * Modify a function type to use an ABI-compliant signature.
-		 * 
-		 * \param The LLVM function type.
 		 * \param The ABI function type.
-		 * \return The re-written LLVM function type.
+		 * \return The LLVM function type.
 		 */
-		virtual llvm::FunctionType* rewriteFunctionType(llvm::FunctionType* llvmFunctionType, const FunctionType& functionType) = 0;
+		virtual llvm::FunctionType* getFunctionType(const FunctionType& functionType) const = 0;
+		
+		/**
+		 * \brief Create a function call.
+		 * 
+		 * Emits a function call, taking the given ABI-independent
+		 * argument values and returning an ABI-independent value.
+		 * 
+		 * This method should be given a function that emits the desired
+		 * call instruction, which provides flexibility (e.g. to use
+		 * an invoke instruction rather than call). This function is
+		 * given the ABI-encoded function arguments and should return the
+		 * function call return value (itself also ABI-encoded).
+		 * 
+		 * \param builder The builder for emitting instructions.
+		 * \param functionType The ABI function type.
+		 * \param callBuilder A function that should emit the necessary call.
+		 * \param argument The ABI-independent function arguments.
+		 * \return The decoded function return value.
+		 */
+		virtual llvm::Value* createCall(Builder& builder,
+		                                const FunctionType& functionType,
+		                                std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
+		                                llvm::ArrayRef<llvm::Value*> arguments) = 0;
+		
+		/**
+		 * \brief Create function.
+		 * 
+		 * Creates a 'function encoder' that can be used to obtain the
+		 * ABI-independent arguments as well as return an ABI-independent
+		 * value.
+		 * 
+		 * \brief builder The builder for emitting instructions.
+		 * \param functionType The ABI function type.
+		 * \param arguments The ABI-encoded function arguments.
+		 * \return A function encoder instance.
+		 */
+		virtual std::unique_ptr<FunctionEncoder> createFunction(Builder& builder,
+		                                                        const FunctionType& functionType,
+		                                                        llvm::ArrayRef<llvm::Value*> arguments) = 0;
 		
 	};
 	
@@ -115,7 +141,7 @@ namespace llvm_abi {
 	 * \param targetTriple the LLVM target triple.
 	 * \return The ABI for the target.
 	 */
-	std::unique_ptr<ABI> createABI(llvm::Module* module, const llvm::Triple& targetTriple);
+	std::unique_ptr<ABI> createABI(llvm::Module& module, const llvm::Triple& targetTriple);
 
 }
 
