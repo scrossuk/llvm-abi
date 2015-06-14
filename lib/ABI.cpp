@@ -4,6 +4,7 @@
 
 #include <llvm-abi/ABI.hpp>
 
+#include "win64/ABI_Win64.hpp"
 #include "x86/ABI_x86.hpp"
 #include "x86_64/ABI_x86_64.hpp"
 
@@ -15,8 +16,7 @@ namespace llvm_abi {
 				return std::unique_ptr<ABI>(new ABI_x86(&module));
 			case llvm::Triple::x86_64: {
 				if (targetTriple.isOSWindows()) {
-					// Windows 64-bit target not yet supported.
-					break;
+					return std::unique_ptr<ABI>(new ABI_Win64(&module));
 				} else {
 					return std::unique_ptr<ABI>(new ABI_x86_64(&module));
 				}
