@@ -19,11 +19,11 @@ namespace llvm_abi {
 		
 		std::string name() const;
 		
-		size_t typeSize(const Type* type) const;
+		size_t typeSize(Type type) const;
 		
-		size_t typeAlign(const Type* type) const;
+		size_t typeAlign(Type type) const;
 		
-		llvm::Type* abiType(const Type* type) const;
+		llvm::Type* abiType(Type type) const;
 		
 		std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 		

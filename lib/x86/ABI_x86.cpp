@@ -16,14 +16,14 @@ namespace llvm_abi {
 		return "x86";
 	}
 	
-	size_t ABI_x86::typeSize(const Type* type) const {
-		switch (type->kind()) {
+	size_t ABI_x86::typeSize(Type type) const {
+		switch (type.kind()) {
 			case VoidType:
 				return 0;
 			case PointerType:
 				return 4;
 			case IntegerType: {
-				switch (type->integerKind()) {
+				switch (type.integerKind()) {
 					case Bool:
 						return 1;
 					case Char:
@@ -54,7 +54,7 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Integer type kind.");
 			}
 			case FloatingPointType: {
-				switch (type->floatingPointKind()) {
+				switch (type.floatingPointKind()) {
 					case Float:
 						return 4;
 					case Double:
@@ -68,7 +68,7 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Float type kind.");
 			}
 			case ComplexType: {
-				switch (type->complexKind()) {
+				switch (type.complexKind()) {
 					case Float:
 						return 8;
 					case Double:
@@ -91,14 +91,14 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	size_t ABI_x86::typeAlign(const Type* type) const {
-		switch (type->kind()) {
+	size_t ABI_x86::typeAlign(Type type) const {
+		switch (type.kind()) {
 			case VoidType:
 				return 0;
 			case PointerType:
 				return 4;
 			case IntegerType: {
-				switch (type->integerKind()) {
+				switch (type.integerKind()) {
 					case Bool:
 						return 1;
 					case Char:
@@ -129,7 +129,7 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Integer type kind.");
 			}
 			case FloatingPointType: {
-				switch (type->floatingPointKind()) {
+				switch (type.floatingPointKind()) {
 					case Float:
 						return 4;
 					case Double:
@@ -142,7 +142,7 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Float type kind.");
 			}
 			case ComplexType: {
-				switch (type->complexKind()) {
+				switch (type.complexKind()) {
 					case Float:
 						return 4;
 					case Double:
@@ -164,8 +164,8 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	llvm::Type* ABI_x86::abiType(const Type* type) const {
-		switch (type->kind()) {
+	llvm::Type* ABI_x86::abiType(Type type) const {
+		switch (type.kind()) {
 			case VoidType:
 				return llvm::Type::getVoidTy(llvmContext_);
 			case PointerType:
@@ -174,7 +174,7 @@ namespace llvm_abi {
 				return llvm::IntegerType::get(llvmContext_, typeSize(type) * 8);
 			}
 			case FloatingPointType: {
-				switch (type->floatingPointKind()) {
+				switch (type.floatingPointKind()) {
 					case Float:
 						return llvm::Type::getFloatTy(llvmContext_);
 					case Double:

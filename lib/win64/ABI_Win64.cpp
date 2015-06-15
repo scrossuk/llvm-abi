@@ -16,15 +16,15 @@ namespace llvm_abi {
 		return "Win64";
 	}
 	
-	size_t ABI_Win64::typeSize(const Type* /*type*/) const {
+	size_t ABI_Win64::typeSize(Type /*type*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	size_t ABI_Win64::typeAlign(const Type* /*type*/) const {
+	size_t ABI_Win64::typeAlign(Type /*type*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	llvm::Type* ABI_Win64::abiType(const Type* /*type*/) const {
+	llvm::Type* ABI_Win64::abiType(Type /*type*/) const {
 		llvm_unreachable("TODO");
 	}
 	

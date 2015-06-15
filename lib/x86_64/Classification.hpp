@@ -15,13 +15,13 @@ namespace llvm_abi {
 			
 			void addField(size_t offset, ArgClass fieldClass);
 			
-			void classifyType(const Type* const type, const size_t offset);
+			void classifyType(Type type, size_t offset);
 			
 			ArgClass classes[2];
 			
 		};
 		
-		Classification classify(const Type* type);
+		Classification classify(Type type);
 		
 	}
 	

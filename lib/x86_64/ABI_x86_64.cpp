@@ -38,21 +38,21 @@ namespace llvm_abi {
 			return offsets;
 		}
 		
-		static bool isFloat32(const Type* type) {
-			return type->isFloatingPoint() && type->floatingPointKind() == Float;
+		static bool isFloat32(const Type type) {
+			return type.isFloatingPoint() && type.floatingPointKind() == Float;
 		}
 		
 		// Returns the type to pass as, or null if no transformation is needed.
-		llvm::Type* computeAbiType(llvm::LLVMContext& context, const Type* type) {
-			if (!((type->isComplex() && type->complexKind() == Float) || type->isStruct())) {
+		llvm::Type* computeAbiType(llvm::LLVMContext& context, const Type type) {
+			if (!((type.isComplex() && type.complexKind() == Float) || type.isStruct())) {
 				return nullptr; // Nothing to do.
 			}
 			
 			// TODO: refactor!
-			if (type->isStruct() && type->structMembers().size() == 2
-				&& type->structMembers().front().type()->isPointer()
-				&& type->structMembers().back().type()->isInteger()
-				&& type->structMembers().back().type()->integerKind() == Int32) {
+			if (type.isStruct() && type.structMembers().size() == 2
+				&& type.structMembers().front().type().isPointer()
+				&& type.structMembers().back().type().isInteger()
+				&& type.structMembers().back().type().integerKind() == Int32) {
 				// Nothing to do.
 				return nullptr;
 			}
@@ -88,10 +88,10 @@ namespace llvm_abi {
 					if (size <= 4) {
 						parts.push_back(llvm::Type::getFloatTy(context));
 					} else {
-						if (type->isStruct()) {
-							const auto& structMembers = type->structMembers();
+						if (type.isStruct()) {
+							const auto& structMembers = type.structMembers();
 							const auto firstMember = structMembers[0].type();
-							if (firstMember->isFloatingPoint() && firstMember->floatingPointKind() == Float) {
+							if (firstMember.isFloatingPoint() && firstMember.floatingPointKind() == Float) {
 								parts.push_back(llvm::VectorType::get(llvm::Type::getFloatTy(context), 2));
 							} else {
 								parts.push_back(llvm::Type::getDoubleTy(context));
@@ -131,8 +131,8 @@ namespace llvm_abi {
 					if (size <= 12) {
 						parts.push_back(llvm::Type::getFloatTy(context));
 					} else {
-						if (type->isStruct()) {
-							const auto& structMembers = type->structMembers();
+						if (type.isStruct()) {
+							const auto& structMembers = type.structMembers();
 							const auto memberOffsets = getStructOffsets(structMembers);
 							
 							size_t memberIndex = 0;
@@ -188,7 +188,7 @@ namespace llvm_abi {
 		return "x86_64";
 	}
 	
-	size_t ABI_x86_64::typeSize(const Type* type) const {
+	size_t ABI_x86_64::typeSize(const Type type) const {
 		const auto iterator = sizeOfCache_.find(type);
 		if (iterator != sizeOfCache_.end()) {
 			return iterator->second;
@@ -199,7 +199,7 @@ namespace llvm_abi {
 		return value;
 	}
 	
-	size_t ABI_x86_64::typeAlign(const Type* type) const {
+	size_t ABI_x86_64::typeAlign(const Type type) const {
 		const auto iterator = alignOfCache_.find(type);
 		if (iterator != alignOfCache_.end()) {
 			return iterator->second;
@@ -210,7 +210,7 @@ namespace llvm_abi {
 		return value;
 	}
 	
-	llvm::Type* ABI_x86_64::encodedType(const Type* type) const {
+	llvm::Type* ABI_x86_64::encodedType(Type type) const {
 		const auto iterator = abiTypeCache_.find(type);
 		if (iterator != abiTypeCache_.end()) {
 			return iterator->second;
@@ -221,8 +221,8 @@ namespace llvm_abi {
 		return llvmABIType;
 	}
 	
-	llvm::Type* ABI_x86_64::abiType(const Type* type) const {
-		switch (type->kind()) {
+	llvm::Type* ABI_x86_64::abiType(Type type) const {
+		switch (type.kind()) {
 			case VoidType:
 				return llvm::Type::getVoidTy(llvmContext_);
 			case PointerType:
@@ -231,7 +231,7 @@ namespace llvm_abi {
 				return llvm::IntegerType::get(llvmContext_, typeSize(type) * 8);
 			}
 			case FloatingPointType: {
-				switch (type->floatingPointKind()) {
+				switch (type.floatingPointKind()) {
 					case Float:
 						return llvm::Type::getFloatTy(llvmContext_);
 					case Double:
@@ -248,14 +248,14 @@ namespace llvm_abi {
 			}
 			case StructType: {
 				llvm::SmallVector<llvm::Type*, 8> members;
-				for (const auto& structMember: type->structMembers()) {
+				for (const auto& structMember: type.structMembers()) {
 					members.push_back(abiType(structMember.type()));
 				}
 				return llvm::StructType::get(llvmContext_, members);
 			}
 			case ArrayType: {
-				return llvm::ArrayType::get(abiType(type->arrayElementType()),
-				                            type->arrayElementCount());
+				return llvm::ArrayType::get(abiType(type.arrayElementType()),
+				                            type.arrayElementCount());
 			}
 		}
 	}
@@ -293,7 +293,7 @@ namespace llvm_abi {
 		return llvm::FunctionType::get(returnType, argTypes, functionType.isVarArg());
 	}
 	
-	static void encodeValues(ABI_x86_64& abi, Builder& builder, llvm::SmallVector<llvm::Value*, 8>& argValues, llvm::ArrayRef<const Type*> argTypes) {
+	static void encodeValues(ABI_x86_64& abi, Builder& builder, llvm::SmallVector<llvm::Value*, 8>& argValues, llvm::ArrayRef<Type> argTypes) {
 		assert(argValues.size() == argTypes.size());
 		
 		for (size_t i = 0; i < argValues.size(); i++) {
@@ -330,7 +330,7 @@ namespace llvm_abi {
 		}
 	}
 	
-	static void decodeValues(ABI_x86_64& abi, Builder& builder, llvm::SmallVector<llvm::Value*, 8>& argValues, llvm::ArrayRef<const Type*> argTypes/*, llvm::ArrayRef<llvm::Type*> llvmArgTypes*/) {
+	static void decodeValues(ABI_x86_64& abi, Builder& builder, llvm::SmallVector<llvm::Value*, 8>& argValues, llvm::ArrayRef<Type> argTypes/*, llvm::ArrayRef<llvm::Type*> llvmArgTypes*/) {
 		assert(argValues.size() == argTypes.size());
 		
 		for (size_t i = 0; i < argValues.size(); i++) {
@@ -381,7 +381,7 @@ namespace llvm_abi {
 		
 		llvm::SmallVector<llvm::Value*, 8> returnValues;
 		returnValues.push_back(returnValue);
-		const Type* returnTypes[] = { functionType.returnType() };
+		Type returnTypes[] = { functionType.returnType() };
 		decodeValues(*this, builder, returnValues, returnTypes);
 		return returnValues[0];
 	}
@@ -406,7 +406,7 @@ namespace llvm_abi {
 		llvm::ReturnInst* returnValue(llvm::Value* const value) {
 			llvm::SmallVector<llvm::Value*, 8> returnValues;
 			returnValues.push_back(value);
-			const Type* returnTypes[] = { functionType_.returnType() };
+			Type returnTypes[] = { functionType_.returnType() };
 			encodeValues(abi_, builder_, returnValues, returnTypes);
 			return builder_.getBuilder().CreateRet(returnValues[0]);
 		}

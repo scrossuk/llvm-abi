@@ -7,9 +7,9 @@ namespace llvm_abi {
 	
 	namespace x86_64 {
 		
-		size_t getTypeAlign(const Type* type);
+		size_t getTypeAlign(Type type);
 		
-		size_t getTypeSize(const Type* type);
+		size_t getTypeSize(Type type);
 		
 	}
 	

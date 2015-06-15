@@ -12,14 +12,14 @@ namespace llvm_abi {
 	
 	namespace x86_64 {
 		
-		size_t getTypeSize(const Type* type) {
-			switch (type->kind()) {
+		size_t getTypeSize(const Type type) {
+			switch (type.kind()) {
 				case VoidType:
 					return 0;
 				case PointerType:
 					return 8;
 				case IntegerType:
-					switch (type->integerKind()) {
+					switch (type.integerKind()) {
 						case Bool:
 						case Char:
 						case Int8:
@@ -45,7 +45,7 @@ namespace llvm_abi {
 					}
 					llvm_unreachable("Unknown integer type.");
 				case FloatingPointType:
-					switch (type->floatingPointKind()) {
+					switch (type.floatingPointKind()) {
 						case Float:
 							return 4;
 							
@@ -60,7 +60,7 @@ namespace llvm_abi {
 					}
 					llvm_unreachable("Unknown floating point type.");
 				case ComplexType:
-					switch (type->complexKind()) {
+					switch (type.complexKind()) {
 						case Float:
 							return 8;
 							
@@ -75,13 +75,13 @@ namespace llvm_abi {
 					}
 					llvm_unreachable("Unknown complex type.");
 				case StructType: {
-					if (type->structMembers().empty()) {
+					if (type.structMembers().empty()) {
 						return getTypeAlign(type);
 					}
 					
 					size_t size = 0;
 					
-					for (const auto& member: type->structMembers()) {
+					for (const auto& member: type.structMembers()) {
 						if (member.offset() < size) {
 							// Add necessary padding before this member.
 							size = roundUpToAlign(size, getTypeAlign(member.type()));
@@ -98,16 +98,16 @@ namespace llvm_abi {
 				}
 				case ArrayType:
 					// TODO: this is probably wrong...
-					return getTypeSize(type->arrayElementType()) * type->arrayElementCount();
+					return getTypeSize(type.arrayElementType()) * type.arrayElementCount();
 			}
 			llvm_unreachable("Unknown ABI type.");
 		}
 		
-		size_t getTypeAlign(const Type* type) {
-			switch (type->kind()) {
+		size_t getTypeAlign(const Type type) {
+			switch (type.kind()) {
 				case StructType: {
 					size_t mostStrictAlign = 1;
-					for (const auto& member: type->structMembers()) {
+					for (const auto& member: type.structMembers()) {
 						const size_t align = getTypeAlign(member.type());
 						mostStrictAlign = std::max<size_t>(mostStrictAlign, align);
 					}
@@ -115,7 +115,7 @@ namespace llvm_abi {
 					return mostStrictAlign;
 				}
 				case ArrayType: {
-					const auto elementAlign = getTypeAlign(type->arrayElementType());
+					const auto elementAlign = getTypeAlign(type.arrayElementType());
 					const size_t minAlign = getTypeSize(type) >= 16 ? 16 : 1;
 					return std::max<size_t>(elementAlign, minAlign);
 				}

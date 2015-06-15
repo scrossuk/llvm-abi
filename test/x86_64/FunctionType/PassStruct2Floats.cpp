@@ -1,26 +1,12 @@
 TEST(x86_64, PassStruct2Floats) {
-	llvm::LLVMContext context;
-	llvm::Module module("test", context);
+	TypeBuilder typeBuilder;
+	const auto structType = typeBuilder.getStructTy({ FloatTy, FloatTy });
 	
-	llvm_abi::Context abiContext;
-	
-	const auto voidType = llvm_abi::Type::Void(abiContext);
-	const auto floatType = llvm_abi::Type::FloatingPoint(abiContext, llvm_abi::Float);
-	
-	const llvm_abi::Type* memberTypes[] = { floatType, floatType };
-	const auto structType = llvm_abi::Type::AutoStruct(abiContext, memberTypes);
-	
-	const llvm_abi::Type* argTypes[] = { structType };
-	llvm_abi::FunctionType functionType(voidType, argTypes);
-	
-	const auto llvmFunctionType = createX86_64ABI(module)->getFunctionType(functionType);
-	
-	EXPECT_FALSE(llvmFunctionType->isVarArg());
-	EXPECT_TRUE(llvmFunctionType->getReturnType()->isVoidTy());
+	const auto functionType = getX86_64FnType(FunctionType(VoidTy, { structType }));
 	
 	// Struct of 2 floats passed as vector of 2 floats.
-	ASSERT_EQ(llvmFunctionType->getNumParams(), 1) << *llvmFunctionType;
-	EXPECT_TRUE(llvmFunctionType->getParamType(0)->isVectorTy()) << *llvmFunctionType;
-	EXPECT_EQ(llvmFunctionType->getParamType(0)->getVectorNumElements(), 2) << *llvmFunctionType;
-	EXPECT_TRUE(llvmFunctionType->getParamType(0)->getVectorElementType()->isFloatTy()) << *llvmFunctionType;
+	ASSERT_EQ(functionType->getNumParams(), 1) << *functionType;
+	EXPECT_TRUE(functionType->getParamType(0)->isVectorTy()) << *functionType;
+	EXPECT_EQ(functionType->getParamType(0)->getVectorNumElements(), 2) << *functionType;
+	EXPECT_TRUE(functionType->getParamType(0)->getVectorElementType()->isFloatTy()) << *functionType;
 }

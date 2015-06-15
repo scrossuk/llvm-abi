@@ -15,8 +15,8 @@
 
 namespace llvm_abi {
 
-	using ABISizeCache = std::unordered_map<const Type*, size_t>;
-	using ABITypeCache = std::unordered_map<const Type*, llvm::Type*>;
+	using ABISizeCache = std::unordered_map<Type, size_t>;
+	using ABITypeCache = std::unordered_map<Type, llvm::Type*>;
 	
 	class ABI_x86_64: public ABI {
 	public:
@@ -31,15 +31,15 @@ namespace llvm_abi {
 			return memcpyIntrinsic_;
 		}
 		
-		llvm::Type* encodedType(const Type* type) const;
+		llvm::Type* encodedType(Type type) const;
 		
 		std::string name() const;
 		
-		size_t typeSize(const Type* type) const;
+		size_t typeSize(Type type) const;
 		
-		size_t typeAlign(const Type* type) const;
+		size_t typeAlign(Type type) const;
 		
-		llvm::Type* abiType(const Type* type) const;
+		llvm::Type* abiType(Type type) const;
 		
 		std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 		

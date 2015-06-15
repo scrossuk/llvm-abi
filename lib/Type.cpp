@@ -1,66 +1,108 @@
 #include <assert.h>
 
+#include <functional>
 #include <vector>
 
 #include <llvm/Support/ErrorHandling.h>
 
-#include <llvm-abi/Context.hpp>
 #include <llvm-abi/Type.hpp>
+#include <llvm-abi/TypeBuilder.hpp>
 
 namespace llvm_abi {
 	
-	const Type* Type::Void(Context& context) {
-		Type type(VoidType);
-		return context.getType(type);
+	Type Type::Void() {
+		return Type(VoidType);
 	}
 	
-	const Type* Type::Pointer(Context& context) {
-		Type type(PointerType);
-		return context.getType(type);
+	Type Type::Pointer() {
+		return Type(PointerType);
 	}
 	
-	const Type* Type::Integer(Context& context, IntegerKind kind) {
+	Type Type::Integer(IntegerKind kind) {
 		Type type(IntegerType);
 		type.subKind_.integerKind = kind;
-		return context.getType(type);
+		return type;
 	}
 	
-	const Type* Type::FloatingPoint(Context& context, FloatingPointKind kind) {
+	Type Type::FloatingPoint(FloatingPointKind kind) {
 		Type type(FloatingPointType);
 		type.subKind_.floatingPointKind = kind;
-		return context.getType(type);
+		return type;
 	}
 	
-	const Type* Type::Complex(Context& context, FloatingPointKind kind) {
+	Type Type::Complex(FloatingPointKind kind) {
 		Type type(ComplexType);
 		type.subKind_.complexKind = kind;
-		return context.getType(type);
+		return type;
 	}
 	
-	const Type* Type::Struct(Context& context, llvm::ArrayRef<StructMember> members) {
+	Type Type::Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<StructMember> members) {
+		TypeData typeData;
+		typeData.structType.members = llvm::SmallVector<StructMember, 8>(members.begin(), members.end());
+		
+		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
+		
 		Type type(StructType);
-		type.structType_.members = llvm::SmallVector<StructMember, 8>(members.begin(), members.end());
-		return context.getType(type);
+		type.subKind_.uniquedPointer = typeDataPtr;
+		return type;
 	}
 	
-	const Type* Type::AutoStruct(Context& context, llvm::ArrayRef<const Type*> memberTypes) {
-		Type type(StructType);
-		type.structType_.members.reserve(memberTypes.size());
+	Type Type::AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
+		TypeData typeData;
+		typeData.structType.members.reserve(memberTypes.size());
 		for (auto& memberType: memberTypes) {
-			type.structType_.members.push_back(StructMember::AutoOffset(memberType));
+			typeData.structType.members.push_back(StructMember::AutoOffset(memberType));
 		}
-		return context.getType(type);
+		
+		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
+		
+		Type type(StructType);
+		type.subKind_.uniquedPointer = typeDataPtr;
+		return type;
 	}
 	
-	const Type* Type::Array(Context& context, size_t elementCount, const Type* elementType) {
+	Type Type::Array(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType) {
+		TypeData typeData;
+		typeData.arrayType.elementCount = elementCount;
+		typeData.arrayType.elementType = elementType;
+		
+		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
+		
 		Type type(ArrayType);
-		type.arrayType_.elementCount = elementCount;
-		type.arrayType_.elementType = elementType;
-		return context.getType(type);
+		type.subKind_.uniquedPointer = typeDataPtr;
+		return type;
 	}
 	
 	Type::Type(TypeKind pKind)
 		: kind_(pKind) { }
+	
+	bool Type::operator==(const Type& type) const {
+		if (kind() != type.kind()) {
+			return false;
+		}
+		
+		switch (kind()) {
+			case VoidType:
+			case PointerType:
+				return true;
+			case IntegerType:
+				return integerKind() == type.integerKind();
+			case FloatingPointType:
+				return floatingPointKind() == type.floatingPointKind();
+			case ComplexType:
+				return complexKind() == type.complexKind();
+			case StructType:
+			case ArrayType: {
+				return subKind_.uniquedPointer == type.subKind_.uniquedPointer;
+			}
+		}
+		
+		llvm_unreachable("Unknown ABI Type kind in operator==().");
+	}
+	
+	bool Type::operator!=(const Type& type) const {
+		return !(*this == type);
+	}
 	
 	bool Type::operator<(const Type& type) const {
 		if (kind() != type.kind()) {
@@ -68,6 +110,7 @@ namespace llvm_abi {
 		}
 		
 		switch (kind()) {
+			case VoidType:
 			case PointerType:
 				return false;
 			case IntegerType:
@@ -76,35 +119,13 @@ namespace llvm_abi {
 				return floatingPointKind() < type.floatingPointKind();
 			case ComplexType:
 				return complexKind() < type.complexKind();
-			case StructType: {
-				if (structMembers().size() != type.structMembers().size()) {
-					return structMembers().size() < type.structMembers().size();
-				}
-				
-				for (size_t i = 0; i < structMembers().size(); i++) {
-					const auto& myMember = structMembers()[i];
-					const auto& otherMember = type.structMembers()[i];
-					
-					if (myMember.type() != otherMember.type()) {
-						return myMember.type() < otherMember.type();
-					}
-					
-					if (myMember.offset() != otherMember.offset()) {
-						return myMember.offset() < otherMember.offset();
-					}
-				}
-				
-				return false;
+			case StructType:
+			case ArrayType: {
+				return subKind_.uniquedPointer < type.subKind_.uniquedPointer;
 			}
-			case ArrayType:
-				if (arrayElementCount() != type.arrayElementCount()) {
-					return arrayElementCount() < type.arrayElementCount();
-				}
-				
-				return arrayElementType() < type.arrayElementType();
-			default:
-				llvm_unreachable("Unknown ABI Type kind in operator<().");
 		}
+		
+		llvm_unreachable("Unknown ABI Type kind in operator<().");
 	}
 	
 	TypeKind Type::kind() const {
@@ -152,7 +173,7 @@ namespace llvm_abi {
 	
 	llvm::ArrayRef<StructMember> Type::structMembers() const {
 		assert(isStruct());
-		return structType_.members;
+		return subKind_.uniquedPointer->structType.members;
 	}
 	
 	bool Type::isArray() const {
@@ -161,12 +182,35 @@ namespace llvm_abi {
 	
 	size_t Type::arrayElementCount() const {
 		assert(isArray());
-		return arrayType_.elementCount;
+		return subKind_.uniquedPointer->arrayType.elementCount;
 	}
 	
-	const Type* Type::arrayElementType() const {
+	Type Type::arrayElementType() const {
 		assert(isArray());
-		return arrayType_.elementType;
+		return subKind_.uniquedPointer->arrayType.elementType;
+	}
+	
+	size_t Type::hash() const {
+		// TODO: improve this!
+		const size_t value = std::hash<unsigned long long>()(kind_);
+		
+		switch (kind()) {
+			case VoidType:
+			case PointerType:
+				return value;
+			case IntegerType:
+				return value ^ std::hash<unsigned long long>()(integerKind());
+			case FloatingPointType:
+				return value ^ std::hash<unsigned long long>()(floatingPointKind());
+			case ComplexType:
+				return value ^ std::hash<unsigned long long>()(complexKind());
+			case StructType:
+			case ArrayType: {
+				return value ^ std::hash<const TypeData*>()(subKind_.uniquedPointer);
+			}
+		}
+		
+		llvm_unreachable("Unknown ABI Type kind in hash().");
 	}
 	
 	static std::string intKindToString(IntegerKind kind) {
@@ -236,15 +280,15 @@ namespace llvm_abi {
 					if (i > 0) {
 						s += ", ";
 					}
-					s += std::string("StructMember(") + members[i].type()->toString() + ")";
+					s += std::string("StructMember(") + members[i].type().toString() + ")";
 				}
 				return s + ")";
 			}
 			case ArrayType:
-				return std::string("Array(") + arrayElementType()->toString() + ")";
+				return std::string("Array(") + arrayElementType().toString() + ")";
 		}
 		
-		llvm_unreachable("Unknown type kind.");
+		llvm_unreachable("Unknown ABI Type kind in toString().");
 	}
 	
 }

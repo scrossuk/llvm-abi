@@ -5,7 +5,8 @@ namespace llvm_abi {
 	namespace x86_64 {
 		
 		// Class merge operation as specified in ABI.
-		ArgClass mergeClasses(ArgClass first, ArgClass second) {
+		ArgClass mergeClasses(const ArgClass first,
+		                      const ArgClass second) {
 			// AMD64-ABI 3.2.3p2: Rule 4. Each field of an object is
 			// classified recursively so that always two fields are
 			// considered. The resulting class is calculated according to

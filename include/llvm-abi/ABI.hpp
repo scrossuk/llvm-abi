@@ -50,7 +50,7 @@ namespace llvm_abi {
 		 * \param type The type.
 		 * \return The size of the type.
 		 */
-		virtual size_t typeSize(const Type* type) const = 0;
+		virtual size_t typeSize(Type type) const = 0;
 		
 		/**
 		 * \brief Get the alignment of a type for this ABI.
@@ -58,7 +58,7 @@ namespace llvm_abi {
 		 * \param type The type.
 		 * \return The alignment of the type.
 		 */
-		virtual size_t typeAlign(const Type* type) const = 0;
+		virtual size_t typeAlign(Type type) const = 0;
 		
 		/**
 		 * \brief Create an array of offsets based on struct member types.
