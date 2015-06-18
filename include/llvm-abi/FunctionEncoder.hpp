@@ -38,6 +38,13 @@ namespace llvm_abi {
 		 */
 		virtual llvm::ReturnInst* returnValue(llvm::Value* value) = 0;
 		
+		/**
+		 * \brief Get return value pointer, if any.
+		 * 
+		 * \return Pointer to return value, or NULL if none exists.
+		 */
+		virtual llvm::Value* returnValuePointer() const = 0;
+		
 	};
 	
 }

@@ -3,10 +3,10 @@
 #include <string>
 
 #include <llvm-abi/ABI.hpp>
+#include <llvm-abi/x86_64/X86_64ABI.hpp>
 
 #include "win64/ABI_Win64.hpp"
 #include "x86/ABI_x86.hpp"
-#include "x86_64/ABI_x86_64.hpp"
 
 namespace llvm_abi {
 	
@@ -18,7 +18,7 @@ namespace llvm_abi {
 				if (targetTriple.isOSWindows()) {
 					return std::unique_ptr<ABI>(new ABI_Win64(&module));
 				} else {
-					return std::unique_ptr<ABI>(new ABI_x86_64(&module));
+					return std::unique_ptr<ABI>(new x86_64::X86_64ABI(&module));
 				}
 			}
 			default:

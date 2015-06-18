@@ -1,10 +1,13 @@
 #include <assert.h>
 
 #include <functional>
+#include <sstream>
 #include <vector>
 
 #include <llvm/Support/ErrorHandling.h>
 
+#include <llvm-abi/ABITypeInfo.hpp>
+#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -22,6 +25,26 @@ namespace llvm_abi {
 		Type type(IntegerType);
 		type.subKind_.integerKind = kind;
 		return type;
+	}
+	
+	Type Type::getFixedSizeInt(const size_t intSizeInBytes) {
+		switch (intSizeInBytes) {
+			case 1:
+				return Int8Ty;
+			case 2:
+				return Int16Ty;
+			case 3:
+				return Int24Ty;
+			case 4:
+				return Int32Ty;
+			case 8:
+				return Int64Ty;
+			case 16:
+				return Int128Ty;
+			default:
+				printf("%llu\n", (unsigned long long) intSizeInBytes);
+				llvm_unreachable("Invalid fixed int size.");
+		}
 	}
 	
 	Type Type::FloatingPoint(FloatingPointKind kind) {
@@ -73,6 +96,18 @@ namespace llvm_abi {
 		return type;
 	}
 	
+	Type Type::Vector(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType) {
+		TypeData typeData;
+		typeData.vectorType.elementCount = elementCount;
+		typeData.vectorType.elementType = elementType;
+		
+		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
+		
+		Type type(VectorType);
+		type.subKind_.uniquedPointer = typeDataPtr;
+		return type;
+	}
+	
 	Type::Type(TypeKind pKind)
 		: kind_(pKind) { }
 	
@@ -92,7 +127,8 @@ namespace llvm_abi {
 			case ComplexType:
 				return complexKind() == type.complexKind();
 			case StructType:
-			case ArrayType: {
+			case ArrayType:
+			case VectorType: {
 				return subKind_.uniquedPointer == type.subKind_.uniquedPointer;
 			}
 		}
@@ -120,7 +156,8 @@ namespace llvm_abi {
 			case ComplexType:
 				return complexKind() < type.complexKind();
 			case StructType:
-			case ArrayType: {
+			case ArrayType:
+			case VectorType: {
 				return subKind_.uniquedPointer < type.subKind_.uniquedPointer;
 			}
 		}
@@ -151,6 +188,18 @@ namespace llvm_abi {
 	
 	bool Type::isFloatingPoint() const {
 		return kind() == FloatingPointType;
+	}
+	
+	bool Type::isFloat() const {
+		return *this == FloatTy;
+	}
+	
+	bool Type::isDouble() const {
+		return *this == DoubleTy;
+	}
+	
+	bool Type::isLongDouble() const {
+		return *this == LongDoubleTy;
 	}
 	
 	FloatingPointKind Type::floatingPointKind() const {
@@ -190,6 +239,45 @@ namespace llvm_abi {
 		return subKind_.uniquedPointer->arrayType.elementType;
 	}
 	
+	bool Type::isVector() const {
+		return kind() == VectorType;
+	}
+	
+	size_t Type::vectorElementCount() const {
+		assert(isVector());
+		return subKind_.uniquedPointer->vectorType.elementCount;
+	}
+	
+	Type Type::vectorElementType() const {
+		assert(isVector());
+		return subKind_.uniquedPointer->vectorType.elementType;
+	}
+	
+	bool Type::hasUnalignedFields(const ABITypeInfo& typeInfo) const {
+		if (!isStruct()) {
+			return false;
+		}
+		
+		size_t offset = 0;
+		
+		for (const auto& member: structMembers()) {
+			// Add necessary padding before this member.
+			offset = roundUpToAlign(offset, typeInfo.getTypeAlign(member.type()));
+			
+			const auto memberOffset = member.offset() == 0 ? offset : member.offset();
+			
+			if (memberOffset != offset ||
+			    member.type().hasUnalignedFields(typeInfo)) {
+				return true;
+			}
+			
+			// Add the member's size.
+			offset += typeInfo.getTypeSize(member.type());
+		}
+		
+		return false;
+	}
+	
 	size_t Type::hash() const {
 		// TODO: improve this!
 		const size_t value = std::hash<unsigned long long>()(kind_);
@@ -205,7 +293,8 @@ namespace llvm_abi {
 			case ComplexType:
 				return value ^ std::hash<unsigned long long>()(complexKind());
 			case StructType:
-			case ArrayType: {
+			case ArrayType:
+			case VectorType: {
 				return value ^ std::hash<const TypeData*>()(subKind_.uniquedPointer);
 			}
 		}
@@ -231,6 +320,8 @@ namespace llvm_abi {
 				return "Int8";
 			case Int16:
 				return "Int16";
+			case Int24:
+				return "Int24";
 			case Int32:
 				return "Int32";
 			case Int64:
@@ -284,8 +375,16 @@ namespace llvm_abi {
 				}
 				return s + ")";
 			}
-			case ArrayType:
-				return std::string("Array(") + arrayElementType().toString() + ")";
+			case ArrayType: {
+				std::ostringstream stream;
+				stream << "Array(" << arrayElementCount() << ", " << arrayElementType().toString() << ")";
+				return stream.str();
+			}
+			case VectorType: {
+				std::ostringstream stream;
+				stream << "Vector(" << vectorElementCount() << ", " << vectorElementType().toString() << ")";
+				return stream.str();
+			}
 		}
 		
 		llvm_unreachable("Unknown ABI Type kind in toString().");

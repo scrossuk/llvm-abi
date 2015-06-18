@@ -41,6 +41,8 @@ namespace llvm_abi {
 			
 			Type getArrayTy(size_t elementCount, Type elementType) const;
 			
+			Type getVectorTy(size_t elementCount, Type elementType) const;
+			
 		private:
 			// Non-copyable.
 			TypeBuilder(const TypeBuilder&) = delete;

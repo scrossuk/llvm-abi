@@ -22,6 +22,7 @@ namespace llvm_abi {
 		LongLong,
 		Int8,
 		Int16,
+		Int24,
 		Int32,
 		Int64,
 		Int128,
@@ -53,10 +54,12 @@ namespace llvm_abi {
 		FloatingPointType,
 		ComplexType,
 		StructType,
-		ArrayType
+		ArrayType,
+		VectorType
 	};
 	
 	// Forward declaration.
+	class ABITypeInfo;
 	class StructMember;
 	class TypeBuilder;
 	
@@ -83,6 +86,8 @@ namespace llvm_abi {
 			 */
 			static Type Integer(IntegerKind kind);
 			
+			static Type getFixedSizeInt(size_t intSizeInBytes);
+			
 			/**
 			 * \brief Floating Point Type
 			 */
@@ -108,6 +113,11 @@ namespace llvm_abi {
 			 */
 			static Type Array(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType);
 			
+			/**
+			 * \brief Vector Type
+			 */
+			static Type Vector(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType);
+			
 			Type() : kind_(VoidType) { }
 			
 			bool operator==(const Type& type) const;
@@ -125,6 +135,9 @@ namespace llvm_abi {
 			IntegerKind integerKind() const;
 			
 			bool isFloatingPoint() const;
+			bool isFloat() const;
+			bool isDouble() const;
+			bool isLongDouble() const;
 			
 			FloatingPointKind floatingPointKind() const;
 			
@@ -141,6 +154,14 @@ namespace llvm_abi {
 			size_t arrayElementCount() const;
 			
 			Type arrayElementType() const;
+			
+			bool isVector() const;
+			
+			size_t vectorElementCount() const;
+			
+			Type vectorElementType() const;
+			
+			bool hasUnalignedFields(const ABITypeInfo& typeInfo) const;
 			
 			size_t hash() const;
 			
@@ -226,6 +247,14 @@ namespace llvm_abi {
 			: elementCount(0) { }
 		} arrayType;
 		
+		struct VectorTypeData {
+			size_t elementCount;
+			Type elementType;
+			
+			VectorTypeData()
+			: elementCount(0) { }
+		} vectorType;
+		
 		bool operator<(const TypeData& other) const {
 			if (structType.members != other.structType.members) {
 				return structType.members < other.structType.members;
@@ -239,11 +268,21 @@ namespace llvm_abi {
 				return arrayType.elementType < other.arrayType.elementType;
 			}
 			
+			if (vectorType.elementCount != other.vectorType.elementCount) {
+				return vectorType.elementCount < other.vectorType.elementCount;
+			}
+			
+			if (vectorType.elementType != other.vectorType.elementType) {
+				return vectorType.elementType < other.vectorType.elementType;
+			}
+			
 			return false;
 		}
 	};
 	
 	static const Type VoidTy = Type::Void();
+	
+	static const Type PointerTy = Type::Pointer();
 	
 	static const Type BoolTy = Type::Integer(Bool);
 	static const Type CharTy = Type::Integer(Char);
@@ -252,8 +291,16 @@ namespace llvm_abi {
 	static const Type LongTy = Type::Integer(Long);
 	static const Type LongLongTy = Type::Integer(LongLong);
 	
+	static const Type Int8Ty = Type::Integer(Int8);
+	static const Type Int16Ty = Type::Integer(Int16);
+	static const Type Int24Ty = Type::Integer(Int24);
+	static const Type Int32Ty = Type::Integer(Int32);
+	static const Type Int64Ty = Type::Integer(Int64);
+	static const Type Int128Ty = Type::Integer(Int128);
+	
 	static const Type FloatTy = Type::FloatingPoint(Float);
 	static const Type DoubleTy = Type::FloatingPoint(Double);
+	static const Type LongDoubleTy = Type::FloatingPoint(LongDouble);
 	
 }
 

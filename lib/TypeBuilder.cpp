@@ -71,5 +71,10 @@ namespace llvm_abi {
 		return Type::Array(*this, elementCount, elementType);
 	}
 	
+	Type TypeBuilder::getVectorTy(const size_t elementCount,
+	                              const Type elementType) const {
+		return Type::Vector(*this, elementCount, elementType);
+	}
+	
 }
 
