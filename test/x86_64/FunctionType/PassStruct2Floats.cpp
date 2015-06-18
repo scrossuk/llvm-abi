@@ -4,6 +4,9 @@ TEST(x86_64, PassStruct2Floats) {
 	
 	const auto functionType = getX86_64FnType(FunctionType(VoidTy, { structType }));
 	
+	EXPECT_FALSE(functionType->isVarArg());
+	EXPECT_TRUE(functionType->getReturnType()->isVoidTy());
+	
 	// Struct of 2 floats passed as vector of 2 floats.
 	ASSERT_EQ(functionType->getNumParams(), 1) << *functionType;
 	EXPECT_TRUE(functionType->getParamType(0)->isVectorTy()) << *functionType;
