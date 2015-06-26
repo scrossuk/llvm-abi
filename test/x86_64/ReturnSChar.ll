@@ -1,5 +1,5 @@
 ; ABI: x86_64-none-linux-gnu
-; FUNCTION-TYPE: char ()
+; FUNCTION-TYPE: schar ()
 
 declare signext i8 @callee()
 
