@@ -24,9 +24,6 @@ namespace llvm_abi {
 		: llvmContext_(module->getContext()),
 		module_(module),
 		typeInfo_(llvmContext_) {
-			const auto i8PtrType = llvm::Type::getInt8PtrTy(llvmContext_);
-			const auto i64Type = llvm::Type::getInt64Ty(llvmContext_);
-			llvm::Type* types[] = { i8PtrType, i8PtrType, i64Type };
 		}
 		
 		X86_64ABI::~X86_64ABI() { }
