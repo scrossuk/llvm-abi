@@ -5,6 +5,7 @@
 
 namespace llvm_abi {
 	
+	class DataSize;
 	class StructMember;
 	class Type;
 	class TypeBuilder;
@@ -27,15 +28,39 @@ namespace llvm_abi {
 		 * \param type The ABI type.
 		 * \return The size of the type.
 		 */
-		virtual size_t getTypeSize(Type type) const = 0;
+		virtual DataSize getTypeRawSize(Type type) const = 0;
 		
 		/**
-		 * \brief Get the alignment of a type for this ABI.
+		 * \brief Get the allocation size of a type for this ABI.
+		 * 
+		 * \param type The ABI type.
+		 * \return The size of the type.
+		 */
+		virtual DataSize getTypeAllocSize(Type type) const = 0;
+		
+		/**
+		 * \brief Get the store size of a type for this ABI.
+		 * 
+		 * \param type The ABI type.
+		 * \return The size of the type.
+		 */
+		virtual DataSize getTypeStoreSize(Type type) const = 0;
+		
+		/**
+		 * \brief Get the required alignment of a type for this ABI.
 		 * 
 		 * \param type The ABI type.
 		 * \return The alignment of the type.
 		 */
-		virtual size_t getTypeAlign(Type type) const = 0;
+		virtual DataSize getTypeRequiredAlign(Type type) const = 0;
+		
+		/**
+		 * \brief Get the preferred alignment of a type for this ABI.
+		 * 
+		 * \param type The ABI type.
+		 * \return The alignment of the type.
+		 */
+		virtual DataSize getTypePreferredAlign(Type type) const = 0;
 		
 		/**
 		 * \brief Get the LLVM type used to represent the ABI type given.
@@ -51,7 +76,7 @@ namespace llvm_abi {
 		 * \param structMembers The member types of the struct.
 		 * \return The offsets of each member of the struct.
 		 */
-		virtual llvm::SmallVector<size_t, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
+		virtual llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
 		
 		/**
 		 * \brief Queries whether 'char' is signed for this ABI.

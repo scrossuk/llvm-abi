@@ -6,6 +6,8 @@
 
 #include <llvm/ADT/ArrayRef.h>
 
+#include <llvm-abi/DataSize.hpp>
+
 namespace llvm_abi {
 	
 	/**
@@ -191,11 +193,11 @@ namespace llvm_abi {
 	class StructMember {
 		public:
 			static StructMember AutoOffset(const Type type) {
-				return StructMember(type, 0);
+				return StructMember(type, DataSize::Bytes(0));
 			}
 			
 			static StructMember ForceOffset(const Type type,
-			                                const size_t offset) {
+			                                const DataSize offset) {
 				return StructMember(type, offset);
 			}
 			
@@ -203,7 +205,7 @@ namespace llvm_abi {
 				return type_;
 			}
 			
-			size_t offset() const {
+			DataSize offset() const {
 				return offset_;
 			}
 			
@@ -226,11 +228,11 @@ namespace llvm_abi {
 			
 		private:
 			StructMember(const Type pType,
-			             const size_t pOffset)
+			             const DataSize pOffset)
 			: type_(pType), offset_(pOffset) { }
 			
 			Type type_;
-			size_t offset_;
+			DataSize offset_;
 			
 	};
 	

@@ -9,7 +9,6 @@
 #include <llvm-abi/ArgInfo.hpp>
 #include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/FunctionType.hpp>
-#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 

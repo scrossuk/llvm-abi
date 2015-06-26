@@ -7,7 +7,6 @@
 #include <llvm/Support/ErrorHandling.h>
 
 #include <llvm-abi/ABITypeInfo.hpp>
-#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -258,13 +257,13 @@ namespace llvm_abi {
 			return false;
 		}
 		
-		size_t offset = 0;
+		auto offset = DataSize::Bytes(0);
 		
 		for (const auto& member: structMembers()) {
 			// Add necessary padding before this member.
-			offset = roundUpToAlign(offset, typeInfo.getTypeAlign(member.type()));
+			offset = offset.roundUpToAlign(typeInfo.getTypeRequiredAlign(member.type()));
 			
-			const auto memberOffset = member.offset() == 0 ? offset : member.offset();
+			const auto memberOffset = member.offset().asBits() == 0 ? offset : member.offset();
 			
 			if (memberOffset != offset ||
 			    member.type().hasUnalignedFields(typeInfo)) {
@@ -272,7 +271,7 @@ namespace llvm_abi {
 			}
 			
 			// Add the member's size.
-			offset += typeInfo.getTypeSize(member.type());
+			offset += typeInfo.getTypeAllocSize(member.type());
 		}
 		
 		return false;

@@ -2,10 +2,10 @@
 
 #include <llvm-abi/ABI.hpp>
 #include <llvm-abi/Builder.hpp>
+#include <llvm-abi/DataSize.hpp>
 #include <llvm-abi/FunctionEncoder.hpp>
 #include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/FunctionType.hpp>
-#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 
 #include <llvm-abi/x86_64/ArgClass.hpp>
@@ -55,7 +55,7 @@ namespace llvm_abi {
 			llvm::SmallVector<llvm::Type*, 2> parts;
 			parts.reserve(2);
 			
-			const auto size = typeInfo.getTypeSize(type);
+			const auto size = typeInfo.getTypeAllocSize(type).asBytes();
 			
 			switch (classification.low()) {
 				case Integer: {
@@ -116,7 +116,7 @@ namespace llvm_abi {
 							const auto memberOffsets = typeInfo.calculateStructOffsets(structMembers);
 							
 							size_t memberIndex = 0;
-							while (memberIndex < structMembers.size() && memberOffsets[memberIndex] < 8) {
+							while (memberIndex < structMembers.size() && memberOffsets[memberIndex].asBytes() < 8) {
 								memberIndex++;
 							}
 							
@@ -173,7 +173,7 @@ namespace llvm_abi {
 				return iterator->second;
 			}
 			
-			const auto value = typeInfo_.getTypeSize(type);
+			const auto value = typeInfo_.getTypeAllocSize(type).asBytes();
 			sizeOfCache_.insert(std::make_pair(type, value));
 			return value;
 		}
@@ -184,7 +184,7 @@ namespace llvm_abi {
 				return iterator->second;
 			}
 			
-			const auto value = typeInfo_.getTypeAlign(type);
+			const auto value = typeInfo_.getTypeRequiredAlign(type).asBytes();
 			alignOfCache_.insert(std::make_pair(type, value));
 			return value;
 		}
@@ -208,7 +208,12 @@ namespace llvm_abi {
 		
 		std::vector<size_t> X86_64ABI::calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const {
 			auto result = typeInfo_.calculateStructOffsets(structMembers);
-			return std::vector<size_t>(result.begin(), result.end());
+			std::vector<size_t> offsets;
+			offsets.reserve(result.size());
+			for (const auto& resultValue: result) {
+				offsets.push_back(resultValue.asBytes());
+			}
+			return offsets;
 		}
 		
 		llvm::Type* X86_64ABI::longDoubleType() const {

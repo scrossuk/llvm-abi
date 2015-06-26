@@ -20,13 +20,19 @@ namespace llvm_abi {
 			
 			const TypeBuilder& typeBuilder() const;
 			
-			size_t getTypeSize(Type type) const;
+			DataSize getTypeRawSize(Type type) const;
 			
-			size_t getTypeAlign(Type type) const;
+			DataSize getTypeAllocSize(Type type) const;
+			
+			DataSize getTypeStoreSize(Type type) const;
+			
+			DataSize getTypeRequiredAlign(Type type) const;
+			
+			DataSize getTypePreferredAlign(Type type) const;
 			
 			llvm::Type* getLLVMType(const Type type) const;
 			
-			llvm::SmallVector<size_t, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
+			llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 			
 			bool isCharSigned() const;
 			
