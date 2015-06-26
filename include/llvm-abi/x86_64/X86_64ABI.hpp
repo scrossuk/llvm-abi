@@ -43,6 +43,8 @@ namespace llvm_abi {
 			
 			size_t typeAlign(Type type) const;
 			
+			llvm::Type* getLLVMType(Type type) const;
+			
 			std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 			
 			llvm::Type* longDoubleType() const;
