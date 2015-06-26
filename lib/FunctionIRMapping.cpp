@@ -154,6 +154,7 @@ namespace llvm_abi {
 		     argumentNumber < functionIRMapping.arguments().size();
 		     argumentNumber++) {
 			const auto& argInfo = functionIRMapping.arguments()[argumentNumber].argInfo;
+			const auto argumentType = functionType.argumentTypes()[argumentNumber];
 			
 			// Insert a padding type to ensure proper alignment.
 			if (functionIRMapping.hasPaddingArg(argumentNumber)) {
@@ -175,7 +176,8 @@ namespace llvm_abi {
 					assert(numIRArgs == 1);
 					// Indirect arguments are always on
 					// the stack, which is addr space #0.
-					argumentTypes[firstIRArg] = llvm::Type::getInt8PtrTy(context);
+					argumentTypes[firstIRArg] =
+						typeInfo.getLLVMType(argumentType)->getPointerTo();
 					break;
 				}
 				
