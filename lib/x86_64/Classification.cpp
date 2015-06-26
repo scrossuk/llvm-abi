@@ -78,27 +78,27 @@ namespace llvm_abi {
 				}
 			} else if (type.isArray()) {
 				const auto& elementType = type.arrayElementType();
-				const auto elementSize = typeInfo.getTypeSize(elementType);
+				const auto elementSize = typeInfo.getTypeAllocSize(elementType);
 				
 				for (size_t i = 0; i < type.arrayElementCount(); i++) {
-					classifyType(typeInfo, elementType, offset + i * elementSize);
+					classifyType(typeInfo, elementType, offset + i * elementSize.asBytes());
 				}
 			} else if (type.isStruct()) {
 				const auto& structMembers = type.structMembers();
 				
-				size_t structOffset = 0;
+				auto structOffset = DataSize::Bytes(0);
 				for (const auto& member: structMembers) {
 					if (member.offset() < structOffset) {
 						// Add necessary padding before this member.
-						structOffset = roundUpToAlign(structOffset, typeInfo.getTypeAlign(member.type()));
+						structOffset = structOffset.roundUpToAlign(typeInfo.getTypeRequiredAlign(member.type()));
 					} else {
 						structOffset = member.offset();
 					}
 					
-					classifyType(typeInfo, member.type(), offset + structOffset);
+					classifyType(typeInfo, member.type(), offset + structOffset.asBytes());
 					
 					// Add the member's size.
-					structOffset += typeInfo.getTypeSize(member.type());
+					structOffset += typeInfo.getTypeAllocSize(member.type());
 				}
 			} else {
 				llvm_unreachable("Unknown type kind.");

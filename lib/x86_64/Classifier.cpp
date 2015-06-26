@@ -7,8 +7,8 @@
 
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/ArgInfo.hpp>
+#include <llvm-abi/DataSize.hpp>
 #include <llvm-abi/FunctionType.hpp>
-#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -39,8 +39,8 @@ namespace llvm_abi {
 		/**
 		 * \brief Get field containing the offset given.
 		 */
-		size_t getFieldContainingOffset(llvm::ArrayRef<size_t> fieldOffsets,
-		                                const size_t offset) {
+		size_t getFieldContainingOffset(llvm::ArrayRef<DataSize> fieldOffsets,
+		                                const DataSize offset) {
 			// Get field containing the offset given.
 			size_t fieldIndex = 0;
 			
@@ -172,7 +172,7 @@ namespace llvm_abi {
 			// We don't consider a struct a single-element struct
 			// if it has padding beyond the element type.
 			if (!foundType.isVoid() &&
-			    typeInfo.getTypeSize(foundType) != typeInfo.getTypeSize(type)) {
+			    typeInfo.getTypeAllocSize(foundType) != typeInfo.getTypeAllocSize(type)) {
 				return VoidTy;
 			}
 			
@@ -222,7 +222,7 @@ namespace llvm_abi {
 			
 			// Compute the byval alignment. We specify the alignment of the byval in all
 			// cases so that the mid-level optimizer knows the alignment of the byval.
-			unsigned align = std::max<size_t>(typeInfo.getTypeAlign(type), 8U);
+			const auto align = std::max<DataSize>(typeInfo.getTypeRequiredAlign(type), DataSize::Bytes(8));
 			
 			// Attempt to avoid passing indirect results using byval when possible. This
 			// is important for good codegen.
@@ -246,17 +246,16 @@ namespace llvm_abi {
 			// We can revisit this if the backend grows support for 'onstack' parameter
 			// attributes. See PR12193.
 			if (freeIntRegs == 0) {
-				const size_t size = typeInfo.getTypeSize(type);
-				//printf("%s : %d\n", type.toString().c_str(), (int) size);
+				const auto size = typeInfo.getTypeAllocSize(type);
 				
 				// If this type fits in an eightbyte, coerce it into the matching integral
 				// type, which will end up on the stack (with alignment 8).
-				if (align == 8 && size <= 8) {
+				if (align.asBytes() == 8 && size.asBytes() <= 8) {
 					return ArgInfo::getDirect(Type::FixedWidthInteger(size));
 				}
 			}
 			
-			return ArgInfo::getIndirect(align);
+			return ArgInfo::getIndirect(align.asBytes());
 		}
 		
 		/// The ABI specifies that a value should be passed in a full vector XMM/YMM
@@ -272,17 +271,17 @@ namespace llvm_abi {
 			// If the preferred type is a 16-byte vector, prefer
 			// to pass it.
 			if (type.isVector()) {
+				const auto width = typeInfo.getTypeRawSize(type);
 				const auto elementType = type.vectorElementType();
-				const size_t bitWidth = typeInfo.getTypeSize(type) * 8;
-				const size_t elementSizeInBits = typeInfo.getTypeSize(elementType) * 8;
-				if ((bitWidth >= 128 && bitWidth <= 256) &&
+				const auto elementSize = typeInfo.getTypeRawSize(elementType);
+				if ((width.asBits() >= 128 && width.asBits() <= 256) &&
 					(elementType.isFloat() || elementType.isDouble() ||
 					 (elementType.isInteger() &&
-					  (elementSizeInBits == 8 ||
-					   elementSizeInBits == 16 ||
-					   elementSizeInBits == 32 ||
-					   elementSizeInBits == 64 ||
-					   elementSizeInBits == 128)))) {
+					  (elementSize.asBits() == 8 ||
+					   elementSize.asBits() == 16 ||
+					   elementSize.asBits() == 32 ||
+					   elementSize.asBits() == 64 ||
+					   elementSize.asBits() == 128)))) {
 					return type;
 				}
 			}
@@ -306,27 +305,27 @@ namespace llvm_abi {
 			// If the bytes being queried are off the end of the type, there is no user
 			// data hiding here. This handles analysis of builtins, vectors and other
 			// types that don't contain interesting padding.
-			if ((typeInfo.getTypeSize(type) * 8) <= startBit) {
+			if (typeInfo.getTypeAllocSize(type).asBits() <= startBit) {
 				return true;
 			}
 			
 			if (type.isArray()) {
-				const auto elementSize = typeInfo.getTypeSize(type.arrayElementType());
+				const auto elementSize = typeInfo.getTypeAllocSize(type.arrayElementType());
 				const auto elementCount = type.arrayElementCount();
 				
 				for (size_t i = 0; i < elementCount; i++) {
-					const size_t elementOffset = (i * elementSize) * 8;
-					if (elementOffset >= endBit) {
+					const auto elementOffset = elementSize * i;
+					if (elementOffset.asBits() >= endBit) {
 						// If the element is after the span we care about, then we're done.
 						break;
 					}
 					
-					const size_t elementStart = (elementOffset < startBit) ? (startBit - elementOffset) : 0;
+					const size_t elementStart = (elementOffset.asBits() < startBit) ? (startBit - elementOffset.asBits()) : 0;
 					
 					if (!bitsContainNoUserData(typeInfo,
 					                           type.arrayElementType(),
 					                           elementStart,
-					                           endBit - elementOffset)) {
+					                           endBit - elementOffset.asBits())) {
 						return false;
 					}
 				}
@@ -345,18 +344,18 @@ namespace llvm_abi {
 				// much.
 				for (size_t i = 0; i < type.structMembers().size(); i++) {
 					const auto& structMember = type.structMembers()[i];
-					const auto fieldOffset = structOffsets[i] * 8;
+					const auto fieldOffset = structOffsets[i];
 					
-					if (fieldOffset >= endBit) {
+					if (fieldOffset.asBits() >= endBit) {
 						// If we found a field after the region we care about, then we're done.
 						break;
 					}
 					
-					const auto fieldStart = (fieldOffset < startBit) ? (startBit - fieldOffset) : 0;
+					const auto fieldStart = (fieldOffset.asBits() < startBit) ? (startBit - fieldOffset.asBits()) : 0;
 					if (!bitsContainNoUserData(typeInfo,
 					                           structMember.type(),
 					                           fieldStart,
-					                           endBit - fieldOffset)) {
+					                           endBit - fieldOffset.asBits())) {
 						return false;
 					}
 				}
@@ -377,9 +376,9 @@ namespace llvm_abi {
 		 */
 		static bool containsFloatAtOffset(const ABITypeInfo& typeInfo,
 		                                  const Type type,
-		                                  const size_t offset) {
+		                                  const DataSize offset) {
 			// Base case if we find a float.
-			if (offset == 0 && type.isFloat()) {
+			if (offset.asBytes() == 0 && type.isFloat()) {
 				return true;
 			}
 			
@@ -397,8 +396,8 @@ namespace llvm_abi {
 			// If this is an array, recurse into the field at the specified offset.
 			if (type.isArray()) {
 				const auto elementType = type.arrayElementType();
-				const auto elementSize = typeInfo.getTypeSize(elementType);
-				const auto elementOffset = (offset / elementSize) * elementSize;
+				const auto elementSize = typeInfo.getTypeAllocSize(elementType);
+				const auto elementOffset = elementSize * (offset / elementSize);
 				assert(elementOffset <= offset);
 				const auto relativeOffset = offset - elementOffset;
 				return containsFloatAtOffset(typeInfo,
@@ -418,18 +417,19 @@ namespace llvm_abi {
 		Type
 		getSseTypeAtOffset(const ABITypeInfo& typeInfo,
 		                   const Type type,
-		                   const size_t offset,
+		                   const DataSize offset,
 		                   const Type sourceType,
-		                   const size_t sourceOffset) {
-			assert(sourceOffset == 0 || sourceOffset == 8);
+		                   const DataSize sourceOffset) {
+			assert(sourceOffset.asBytes() == 0 ||
+			       sourceOffset.asBytes() == 8);
 			
 			// The only three choices we have are either double,
 			// <2 x float>, or float.
 			
 			if (bitsContainNoUserData(typeInfo,
 			                          sourceType,
-			                          sourceOffset * 8 + 32,
-			                          sourceOffset * 8 + 64)) {
+			                          sourceOffset.asBits() + 32,
+			                          sourceOffset.asBits() + 64)) {
 				// We pass as float if the last 4 bytes is just
 				// padding.  This happens for structs that
 				// contain 3 floats.
@@ -440,7 +440,7 @@ namespace llvm_abi {
 			// contains a float at offset+0 and offset+4.  Walk
 			// the type to find out if this is the case.
 			if (containsFloatAtOffset(typeInfo, type, offset) &&
-			    containsFloatAtOffset(typeInfo, type, offset + 4)) {
+			    containsFloatAtOffset(typeInfo, type, offset + DataSize::Bytes(4))) {
 				return typeInfo.typeBuilder().getVectorTy(2, FloatTy);
 			}
 			
@@ -470,20 +470,21 @@ namespace llvm_abi {
 		Type
 		getINTEGERTypeAtOffset(const ABITypeInfo& typeInfo,
 		                       const Type type,
-		                       const size_t offset,
+		                       const DataSize offset,
 		                       const Type sourceType,
-		                       const size_t sourceOffset) {
-			assert(sourceOffset == 0 || sourceOffset == 8);
+		                       const DataSize sourceOffset) {
+			assert(sourceOffset.asBytes() == 0 ||
+			       sourceOffset.asBytes() == 8);
 			
 			// If we're dealing with an un-offset type, then
 			// it means that we're returning an 8-byte unit
 			// starting with it.  See if we can safely use it.
-			if (offset == 0) {
-				const auto typeSizeInBytes = typeInfo.getTypeSize(type);
+			if (offset.asBytes() == 0) {
+				const auto typeSize = typeInfo.getTypeAllocSize(type);
 				
 				// Pointers and int64's always fill the 8-byte unit.
 				if ((type.isPointer() || type.isInteger()) &&
-				    typeSizeInBytes == 8) {
+				    typeSize.asBytes() == 8) {
 					return type;
 				}
 				
@@ -494,21 +495,19 @@ namespace llvm_abi {
 				// not on struct{double,int,int} because we
 				// wouldn't return the second int.
 				if ((type.isPointer() || type.isInteger()) &&
-				    (typeSizeInBytes == 1 ||
-				     typeSizeInBytes == 2 || 
-				     typeSizeInBytes == 4)) {
-					const size_t bitWidth = typeSizeInBytes * 8;
-					
+				    (typeSize.asBytes() == 1 ||
+				     typeSize.asBytes() == 2 || 
+				     typeSize.asBytes() == 4)) {
 					if (bitsContainNoUserData(typeInfo,
 					                          sourceType,
-					                          sourceOffset * 8 + bitWidth,
-					                          sourceOffset * 8 + 64)) {
+					                          sourceOffset.asBits() + typeSize.asBits(),
+					                          sourceOffset.asBits() + 64)) {
 						return type;
 					}
 				}
 			}
 			
-			if (type.isStruct() && offset < typeInfo.getTypeSize(type)) {
+			if (type.isStruct() && offset < typeInfo.getTypeAllocSize(type)) {
 				// If this is a struct, recurse into the field at the specified offset.
 				const auto fieldOffsets = typeInfo.calculateStructOffsets(type.structMembers());
 				const auto fieldIndex = getFieldContainingOffset(fieldOffsets, offset);
@@ -524,8 +523,8 @@ namespace llvm_abi {
 			
 			if (type.isArray()) {
 				const auto elementType = type.arrayElementType();
-				const auto elementSize = typeInfo.getTypeSize(elementType);
-				const auto elementOffset = (offset / elementSize) * elementSize;
+				const auto elementSize = typeInfo.getTypeAllocSize(elementType);
+				const auto elementOffset = elementSize * (offset / elementSize);
 				assert(elementOffset <= offset);
 				return getINTEGERTypeAtOffset(typeInfo,
 				                              elementType,
@@ -536,12 +535,12 @@ namespace llvm_abi {
 			
 			// Okay, we don't have any better idea of what to pass, so we pass this in an
 			// integer register that isn't too big to fit the rest of the struct.
-			const auto typeSizeInBytes = typeInfo.getTypeSize(sourceType);
-			assert(typeSizeInBytes != sourceOffset && "Empty field?");
+			const auto typeSize = typeInfo.getTypeAllocSize(sourceType);
+			assert(typeSize != sourceOffset && "Empty field?");
 			
 			// It is always safe to classify this as an integer
 			// type up to i64 that isn't larger than the structure.
-			const auto intSize = std::min<size_t>(typeSizeInBytes - sourceOffset, 8);
+			const auto intSize = std::min<DataSize>(typeSize - sourceOffset, DataSize::Bytes(8));
 			return Type::FixedWidthInteger(intSize);
 		}
 		
@@ -563,11 +562,11 @@ namespace llvm_abi {
 			// parts we inferred are both 4-byte types (e.g. i32 and
 			// i32) then the resultant struct type ({i32,i32}) won't
 			// have the second element at offset 8.  Check for this:
-			const auto lowSize = typeInfo.getTypeSize(lowType);
-			const auto highAlign = typeInfo.getTypeAlign(highType);
-			const auto highStart = roundUpToAlign(lowSize, highAlign);
+			const auto lowSize = typeInfo.getTypeAllocSize(lowType);
+			const auto highAlign = typeInfo.getTypeRequiredAlign(highType);
+			const auto highStart = lowSize.roundUpToAlign(highAlign);
 			
-			assert(highStart != 0 && highStart <= 8 &&
+			assert(highStart.asBytes() != 0 && highStart.asBytes() <= 8 &&
 			       "Invalid x86-64 argument pair!");
 			
 			// To handle this, we have to increase the size of the
@@ -575,7 +574,7 @@ namespace llvm_abi {
 			// 8 byte offset.  We can't increase the size of the
 			// second element because it might make us access off the
 			// end of the struct.
-			if (highStart != 8) {
+			if (highStart.asBytes() != 8) {
 				// There are only two sorts of types the ABI
 				// generation code can produce for the low part
 				// of a pair that aren't 8 bytes in size: float
@@ -592,7 +591,7 @@ namespace llvm_abi {
 			const auto resultType = typeInfo.typeBuilder().getStructTy({ lowType, highType });
 			
 			// Verify that the second element is at an 8-byte offset.
-			assert(typeInfo.calculateStructOffsets(resultType.structMembers())[1] == 8 &&
+			assert(typeInfo.calculateStructOffsets(resultType.structMembers())[1].asBytes() == 8 &&
 			       "Invalid x86-64 argument pair!");
 			
 			return resultType;
@@ -604,7 +603,7 @@ namespace llvm_abi {
 		Classification Classifier::classify(const Type type) {
 			Classification classification;
 			
-			if (typeInfo_.getTypeSize(type) > 32 ||
+			if (typeInfo_.getTypeAllocSize(type).asBytes() > 32 ||
 			    type.hasUnalignedFields(typeInfo_)) {
 				// If size exceeds "four eightbytes" or type
 				// has "unaligned fields", pass in memory.
@@ -618,7 +617,7 @@ namespace llvm_abi {
 			// and the first eight-byte isn’t SSE or any other
 			// eightbyte isn’t SSEUP, the whole argument is passed
 			// in memory.
-			if (typeInfo_.getTypeSize(type) > 16 &&
+			if (typeInfo_.getTypeAllocSize(type).asBytes() > 16 &&
 			    (classification.low() != Sse ||
 			     classification.high() != SseUp)) {
 				classification.addField(0, Memory);
@@ -691,8 +690,8 @@ namespace llvm_abi {
 					
 					// Pick an 8-byte type based on the preferred type.
 					resultType = getINTEGERTypeAtOffset(typeInfo_,
-					                                    type, 0,
-					                                    type, 0);
+					                                    type, DataSize::Bytes(0),
+					                                    type, DataSize::Bytes(0));
 					
 					// If we have a sign or zero extended integer,
 					// make sure to return Extend so that the
@@ -715,8 +714,8 @@ namespace llvm_abi {
 				case Sse: {
 					++neededSse;
 					resultType = getSseTypeAtOffset(typeInfo_,
-					                                type, 0,
-					                                type, 0);
+					                                type, DataSize::Bytes(0),
+					                                type, DataSize::Bytes(0));
 					break;
 				}
 				case X87: {
@@ -770,8 +769,8 @@ namespace llvm_abi {
 				case Integer: {
 					++neededInt;
 					highPartType = getINTEGERTypeAtOffset(typeInfo_,
-					                                      type, 8,
-					                                      type, 8);
+					                                      type, DataSize::Bytes(8),
+					                                      type, DataSize::Bytes(8));
 					if (classification.low() == NoClass) {
 						// Return high part at offset 8 in memory.
 						return ArgInfo::getDirect(highPartType, 8);
@@ -780,8 +779,8 @@ namespace llvm_abi {
 				}
 				case Sse: {
 					highPartType = getSseTypeAtOffset(typeInfo_,
-					                                  type, 8,
-					                                  type, 8);
+					                                  type, DataSize::Bytes(8),
+					                                  type, DataSize::Bytes(8));
 					if (classification.low() == NoClass) {
 						// Return high part at offset 8 in memory.
 						return ArgInfo::getDirect(highPartType, 8);
@@ -809,8 +808,8 @@ namespace llvm_abi {
 					assert(!isArgument && "TODO");
 					if (classification.low() != X87) {
 						highPartType = getSseTypeAtOffset(typeInfo_,
-						                                  type, 8,
-						                                  type, 8);
+						                                  type, DataSize::Bytes(8),
+						                                  type, DataSize::Bytes(8));
 						if (classification.low() == NoClass) {
 							// Return high part at offset 8 in memory.
 							return ArgInfo::getDirect(highPartType, 8);
