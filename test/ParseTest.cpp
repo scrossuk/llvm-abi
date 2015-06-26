@@ -297,11 +297,14 @@ int main(int argc, char** argv) {
 				continue;
 			}
 			
-			assert(nextLine < compareLines.size());
-			
-			if (compareLines[nextLine] != line) {
-				printf("Lines not equal:\n  %s\n  %s\n\n\n",
-				       compareLines[nextLine].c_str(), line.c_str());
+			if (nextLine >= compareLines.size() ||
+			    compareLines[nextLine] != line) {
+				if (nextLine >= compareLines.size()) {
+					printf("Actual output was too long...\n\n");
+				} else if (compareLines[nextLine] != line) {
+					printf("Lines not equal:\n  %s\n  %s\n\n\n",
+					       compareLines[nextLine].c_str(), line.c_str());
+				}
 				printf("---- Expected output:\n");
 				std::ifstream expectedFile(string.c_str());
 				while (std::getline(expectedFile, line)) {
