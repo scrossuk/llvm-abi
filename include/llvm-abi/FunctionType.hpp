@@ -2,6 +2,7 @@
 #define LLVMABI_FUNCTIONTYPE_HPP
 
 #include <initializer_list>
+#include <string>
 
 #include <llvm/ADT/ArrayRef.h>
 
@@ -38,6 +39,24 @@ namespace llvm_abi {
 		
 		llvm::ArrayRef<Type> argumentTypes() const {
 			return argumentTypes_;
+		}
+		
+		std::string toString() const {
+			std::string string;
+			string += "FunctionType(returnType: ";
+			string += returnType().toString();
+			string += ", argumentTypes: [";
+			bool first = true;
+			for (const auto& argType: argumentTypes()) {
+				if (!first) {
+					string += ", ";
+				} else {
+					first = false;
+				}
+				string += argType.toString();
+			}
+			string += "])";
+			return string;
 		}
 		
 	private:
