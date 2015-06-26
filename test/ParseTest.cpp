@@ -35,7 +35,10 @@ std::string getBaseName(const std::string& fileName) {
 	return fileName.substr(0, offset);
 }
 
-std::string makeCType(const Type& type) {
+size_t arrayId = 0;
+size_t structId = 0;
+
+std::string makeCType(const Type& type, std::ostringstream& sourceCodeStream) {
 	switch (type.kind()) {
 		case VoidType:
 			return "void";
@@ -101,24 +104,31 @@ std::string makeCType(const Type& type) {
 			}
 			llvm_unreachable("Unknown complex type.");
 		case StructType: {
-			std::ostringstream stream;
-			stream << "struct { ";
+			sourceCodeStream << "typedef struct { ";
 			
 			int memberId = 0;
 			
 			for (const auto& member: type.structMembers()) {
-				stream << makeCType(member.type()) << " member" << memberId << "; ";
+				sourceCodeStream << makeCType(member.type(), sourceCodeStream) << " member" << memberId << "; ";
 				memberId++;
 			}
 			
-			stream << "}";
+			sourceCodeStream << "}";
 			
+			sourceCodeStream << " Struct" << structId << ";" << std::endl;
+			
+			std::ostringstream stream;
+			stream << "Struct" << structId;
+			structId++;
 			return stream.str();
 		}
 		case ArrayType: {
-			// Cheat by using C++ array.
+			const auto elementTypeString = makeCType(type.arrayElementType(), sourceCodeStream);
+			sourceCodeStream << "typedef ";
+			sourceCodeStream << " std::array<" << elementTypeString << ", " << type.arrayElementCount() << "> Array" << arrayId << ";" << std::endl;
 			std::ostringstream stream;
-			stream << "std::array<" << makeCType(type.arrayElementType()) << ", " << type.arrayElementCount() << ">";
+			stream << "Array" << arrayId;
+			arrayId++;
 			return stream.str();
 		}
 		case VectorType:
@@ -129,11 +139,15 @@ std::string makeCType(const Type& type) {
 std::string makeClangCCode(const FunctionType& functionType) {
 	std::ostringstream stream;
 	
+	stream << "#include <array>" << std::endl << std::endl;
+	
 	{
-		stream << "typedef " << makeCType(functionType.returnType()) << " ReturnType;" << std::endl;
+		const auto returnTypeString = makeCType(functionType.returnType(), stream);
+		stream << "typedef " << returnTypeString << " ReturnType;" << std::endl;
 		int argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
-			stream << "typedef " << makeCType(argType) << " ArgType" << argId << ";" << std::endl;
+			const auto argTypeString = makeCType(argType, stream);
+			stream << "typedef " << argTypeString << " ArgType" << argId << ";" << std::endl;
 			argId++;
 		}
 		stream << std::endl;
@@ -201,7 +215,7 @@ std::string runClangOnFunction(const std::string& clangPath, const FunctionType&
 	tempFile << makeClangCCode(functionType);
 	tempFile.close();
 	
-	const std::string cmd = clangPath + " -S -emit-llvm tempfile.cpp -o tempfile.ll";
+	const std::string cmd = clangPath + " -std=c++11 -S -emit-llvm tempfile.cpp -o tempfile.ll";
 	
 	const int result = system(cmd.c_str());
 	if (result != EXIT_SUCCESS) {
