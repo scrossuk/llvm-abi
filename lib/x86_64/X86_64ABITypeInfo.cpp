@@ -130,6 +130,13 @@ namespace llvm_abi {
 				}
 				case ArrayType: {
 					const auto elementAlign = getTypeRequiredAlign(type.arrayElementType());
+					
+					// AMD64-ABI 3.1.2p3: An array uses the
+					// same alignment as its elements, except
+					// that a local or global array variable
+					// of length at least 16 bytes or a C99
+					// variable-length array variable always
+					// has alignment of at least 16 bytes.
 					const auto minAlign = getTypeAllocSize(type).asBytes() >= 16 ? DataSize::Bytes(16) : DataSize::Bytes(1);
 					return std::max<DataSize>(elementAlign, minAlign);
 				}
