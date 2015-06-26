@@ -35,9 +35,11 @@ namespace llvm_abi {
 				return nullptr;
 			}
 			
-			llvm::Type* encodedType(Type type) const;
-			
 			std::string name() const;
+			
+			const X86_64ABITypeInfo& typeInfo() const {
+				return typeInfo_;
+			}
 			
 			size_t typeSize(Type type) const;
 			
@@ -65,7 +67,7 @@ namespace llvm_abi {
 		private:
 			llvm::LLVMContext& llvmContext_;
 			llvm::Module* module_;
-			x86_64::X86_64ABITypeInfo typeInfo_;
+			X86_64ABITypeInfo typeInfo_;
 			mutable ABITypeCache abiTypeCache_;
 			mutable ABISizeCache alignOfCache_;
 			mutable ABISizeCache sizeOfCache_;
