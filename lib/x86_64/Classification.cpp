@@ -3,7 +3,6 @@
 #include <llvm/Support/ErrorHandling.h>
 
 #include <llvm-abi/ABITypeInfo.hpp>
-#include <llvm-abi/Support.hpp>
 #include <llvm-abi/Type.hpp>
 
 #include <llvm-abi/x86_64/ArgClass.hpp>
