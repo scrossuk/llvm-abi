@@ -13,51 +13,51 @@ namespace llvm_abi {
 	}
 	
 	Type TypeBuilder::getVoidTy() const {
-		return Type::Void();
+		return VoidTy;
 	}
 	
 	Type TypeBuilder::getPointerTy() const {
-		return Type::Pointer();
+		return PointerTy;
 	}
 	
 	Type TypeBuilder::getBoolTy() const {
-		return Type::Integer(Bool);
+		return BoolTy;
 	}
 	
 	Type TypeBuilder::getCharTy() const {
-		return Type::Integer(Char);
+		return CharTy;
 	}
 	
 	Type TypeBuilder::getShortTy() const {
-		return Type::Integer(Short);
+		return ShortTy;
 	}
 	
 	Type TypeBuilder::getIntTy() const {
-		return Type::Integer(Int);
+		return IntTy;
 	}
 	
 	Type TypeBuilder::getLongTy() const {
-		return Type::Integer(Long);
+		return LongTy;
 	}
 	
 	Type TypeBuilder::getLongLongTy() const {
-		return Type::Integer(LongLong);
+		return LongLongTy;
 	}
 	
 	Type TypeBuilder::getFloatTy() const {
-		return Type::FloatingPoint(Float);
+		return FloatTy;
 	}
 	
 	Type TypeBuilder::getDoubleTy() const {
-		return Type::FloatingPoint(Double);
+		return DoubleTy;
 	}
 	
 	Type TypeBuilder::getLongDoubleTy() const {
-		return Type::FloatingPoint(LongDouble);
+		return LongDoubleTy;
 	}
 	
 	Type TypeBuilder::getFloat128Ty() const {
-		return Type::FloatingPoint(Float128);
+		return Float128Ty;
 	}
 	
 	Type TypeBuilder::getStructTy(std::initializer_list<Type> memberTypes) const {

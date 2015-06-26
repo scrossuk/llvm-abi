@@ -22,14 +22,9 @@ namespace llvm_abi {
 		Int,
 		Long,
 		LongLong,
-		Int8,
-		Int16,
-		Int24,
-		Int32,
-		Int64,
-		Int128,
 		SizeT,
-		PtrDiffT
+		PtrDiffT,
+		IntPtrT
 	};
 	
 	/**
@@ -52,7 +47,8 @@ namespace llvm_abi {
 	enum TypeKind {
 		VoidType,
 		PointerType,
-		IntegerType,
+		UnspecifiedWidthIntegerType,
+		FixedWidthIntegerType,
 		FloatingPointType,
 		ComplexType,
 		StructType,
@@ -86,9 +82,12 @@ namespace llvm_abi {
 			/**
 			 * \brief Integer Type
 			 */
-			static Type Integer(IntegerKind kind);
+			static Type UnspecifiedWidthInteger(IntegerKind kind);
 			
-			static Type getFixedSizeInt(size_t intSizeInBytes);
+			/**
+			 * \brief Fixed Size Integer Type
+			 */
+			static Type FixedWidthInteger(DataSize width);
 			
 			/**
 			 * \brief Floating Point Type
@@ -134,7 +133,13 @@ namespace llvm_abi {
 			
 			bool isInteger() const;
 			
+			bool isUnspecifiedWidthInteger() const;
+			
 			IntegerKind integerKind() const;
+			
+			bool isFixedWidthInteger() const;
+			
+			DataSize integerWidth() const;
 			
 			bool isFloatingPoint() const;
 			bool isFloat() const;
@@ -178,6 +183,7 @@ namespace llvm_abi {
 			
 			union {
 				IntegerKind integerKind;
+				DataSize integerWidth;
 				FloatingPointKind floatingPointKind;
 				FloatingPointKind complexKind;
 				
@@ -286,23 +292,28 @@ namespace llvm_abi {
 	
 	static const Type PointerTy = Type::Pointer();
 	
-	static const Type BoolTy = Type::Integer(Bool);
-	static const Type CharTy = Type::Integer(Char);
-	static const Type ShortTy = Type::Integer(Short);
-	static const Type IntTy = Type::Integer(Int);
-	static const Type LongTy = Type::Integer(Long);
-	static const Type LongLongTy = Type::Integer(LongLong);
+	static const Type BoolTy = Type::UnspecifiedWidthInteger(Bool);
+	static const Type CharTy = Type::UnspecifiedWidthInteger(Char);
+	static const Type ShortTy = Type::UnspecifiedWidthInteger(Short);
+	static const Type IntTy = Type::UnspecifiedWidthInteger(Int);
+	static const Type LongTy = Type::UnspecifiedWidthInteger(Long);
+	static const Type LongLongTy = Type::UnspecifiedWidthInteger(LongLong);
 	
-	static const Type Int8Ty = Type::Integer(Int8);
-	static const Type Int16Ty = Type::Integer(Int16);
-	static const Type Int24Ty = Type::Integer(Int24);
-	static const Type Int32Ty = Type::Integer(Int32);
-	static const Type Int64Ty = Type::Integer(Int64);
-	static const Type Int128Ty = Type::Integer(Int128);
+	static const Type IntPtrTy = Type::UnspecifiedWidthInteger(IntPtrT);
+	static const Type PtrDiffTy = Type::UnspecifiedWidthInteger(PtrDiffT);
+	static const Type SizeTy = Type::UnspecifiedWidthInteger(SizeT);
+	
+	static const Type Int8Ty = Type::FixedWidthInteger(DataSize::Bits(8));
+	static const Type Int16Ty = Type::FixedWidthInteger(DataSize::Bits(16));
+	static const Type Int24Ty = Type::FixedWidthInteger(DataSize::Bits(24));
+	static const Type Int32Ty = Type::FixedWidthInteger(DataSize::Bits(32));
+	static const Type Int64Ty = Type::FixedWidthInteger(DataSize::Bits(64));
+	static const Type Int128Ty = Type::FixedWidthInteger(DataSize::Bits(128));
 	
 	static const Type FloatTy = Type::FloatingPoint(Float);
 	static const Type DoubleTy = Type::FloatingPoint(Double);
 	static const Type LongDoubleTy = Type::FloatingPoint(LongDouble);
+	static const Type Float128Ty = Type::FloatingPoint(Float128);
 	
 }
 

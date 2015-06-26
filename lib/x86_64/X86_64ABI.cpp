@@ -33,8 +33,8 @@ namespace llvm_abi {
 			// TODO: refactor!
 			if (type.isStruct() && type.structMembers().size() == 2
 				&& type.structMembers().front().type().isPointer()
-				&& type.structMembers().back().type().isInteger()
-				&& type.structMembers().back().type().integerKind() == Int32) {
+				&& type.structMembers().back().type().isFixedWidthInteger()
+				&& type.structMembers().back().type().integerWidth().asBits() == 32) {
 				// Nothing to do.
 				return nullptr;
 			}

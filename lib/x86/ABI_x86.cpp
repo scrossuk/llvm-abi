@@ -22,7 +22,7 @@ namespace llvm_abi {
 				return 0;
 			case PointerType:
 				return 4;
-			case IntegerType: {
+			case UnspecifiedWidthIntegerType: {
 				switch (type.integerKind()) {
 					case Bool:
 						return 1;
@@ -36,22 +36,15 @@ namespace llvm_abi {
 						return 4;
 					case LongLong:
 						return 8;
-					case Int8:
-						return 1;
-					case Int16:
-						return 2;
-					case Int32:
-						return 4;
-					case Int64:
-						return 8;
-					case Int128:
-						return 16;
 					case SizeT:
 						return 4;
 					case PtrDiffT:
 						return 4;
 				}
 				llvm_unreachable("Unknown Integer type kind.");
+			}
+			case FixedWidthIntegerType: {
+				return type.integerWidth().roundUpToPowerOf2Bytes().asBytes();;
 			}
 			case FloatingPointType: {
 				switch (type.floatingPointKind()) {
@@ -97,7 +90,7 @@ namespace llvm_abi {
 				return 0;
 			case PointerType:
 				return 4;
-			case IntegerType: {
+			case UnspecifiedWidthIntegerType: {
 				switch (type.integerKind()) {
 					case Bool:
 						return 1;
@@ -111,22 +104,15 @@ namespace llvm_abi {
 						return 4;
 					case LongLong:
 						return 4;
-					case Int8:
-						return 1;
-					case Int16:
-						return 2;
-					case Int32:
-						return 4;
-					case Int64:
-						return 4;
-					case Int128:
-						return 4;
 					case SizeT:
 						return 4;
 					case PtrDiffT:
 						return 4;
 				}
 				llvm_unreachable("Unknown Integer type kind.");
+			}
+			case FixedWidthIntegerType: {
+				return type.integerWidth().roundUpToPowerOf2Bytes().asBytes();
 			}
 			case FloatingPointType: {
 				switch (type.floatingPointKind()) {
@@ -170,7 +156,8 @@ namespace llvm_abi {
 				return llvm::Type::getVoidTy(llvmContext_);
 			case PointerType:
 				return llvm::Type::getInt8PtrTy(llvmContext_);
-			case IntegerType: {
+			case UnspecifiedWidthIntegerType:
+			case FixedWidthIntegerType: {
 				return llvm::IntegerType::get(llvmContext_, typeSize(type) * 8);
 			}
 			case FloatingPointType: {

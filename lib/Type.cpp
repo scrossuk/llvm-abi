@@ -20,30 +20,16 @@ namespace llvm_abi {
 		return Type(PointerType);
 	}
 	
-	Type Type::Integer(IntegerKind kind) {
-		Type type(IntegerType);
+	Type Type::UnspecifiedWidthInteger(IntegerKind kind) {
+		Type type(UnspecifiedWidthIntegerType);
 		type.subKind_.integerKind = kind;
 		return type;
 	}
 	
-	Type Type::getFixedSizeInt(const size_t intSizeInBytes) {
-		switch (intSizeInBytes) {
-			case 1:
-				return Int8Ty;
-			case 2:
-				return Int16Ty;
-			case 3:
-				return Int24Ty;
-			case 4:
-				return Int32Ty;
-			case 8:
-				return Int64Ty;
-			case 16:
-				return Int128Ty;
-			default:
-				printf("%llu\n", (unsigned long long) intSizeInBytes);
-				llvm_unreachable("Invalid fixed int size.");
-		}
+	Type Type::FixedWidthInteger(const DataSize width) {
+		Type type(FixedWidthIntegerType);
+		type.subKind_.integerWidth = width;
+		return type;
 	}
 	
 	Type Type::FloatingPoint(FloatingPointKind kind) {
@@ -119,8 +105,10 @@ namespace llvm_abi {
 			case VoidType:
 			case PointerType:
 				return true;
-			case IntegerType:
+			case UnspecifiedWidthIntegerType:
 				return integerKind() == type.integerKind();
+			case FixedWidthIntegerType:
+				return integerWidth() == type.integerWidth();
 			case FloatingPointType:
 				return floatingPointKind() == type.floatingPointKind();
 			case ComplexType:
@@ -148,8 +136,10 @@ namespace llvm_abi {
 			case VoidType:
 			case PointerType:
 				return false;
-			case IntegerType:
+			case UnspecifiedWidthIntegerType:
 				return integerKind() < type.integerKind();
+			case FixedWidthIntegerType:
+				return integerWidth() < type.integerWidth();
 			case FloatingPointType:
 				return floatingPointKind() < type.floatingPointKind();
 			case ComplexType:
@@ -177,12 +167,26 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isInteger() const {
-		return kind() == IntegerType;
+		return isUnspecifiedWidthInteger() ||
+		       isFixedWidthInteger();
+	}
+	
+	bool Type::isUnspecifiedWidthInteger() const {
+		return kind() == UnspecifiedWidthIntegerType;
 	}
 	
 	IntegerKind Type::integerKind() const {
-		assert(isInteger());
+		assert(isUnspecifiedWidthInteger());
 		return subKind_.integerKind;
+	}
+	
+	bool Type::isFixedWidthInteger() const {
+		return kind() == FixedWidthIntegerType;
+	}
+	
+	DataSize Type::integerWidth() const {
+		assert(isFixedWidthInteger());
+		return subKind_.integerWidth;
 	}
 	
 	bool Type::isFloatingPoint() const {
@@ -285,8 +289,10 @@ namespace llvm_abi {
 			case VoidType:
 			case PointerType:
 				return value;
-			case IntegerType:
+			case UnspecifiedWidthIntegerType:
 				return value ^ std::hash<unsigned long long>()(integerKind());
+			case FixedWidthIntegerType:
+				return value ^ std::hash<unsigned long long>()(integerWidth().asBits());
 			case FloatingPointType:
 				return value ^ std::hash<unsigned long long>()(floatingPointKind());
 			case ComplexType:
@@ -315,22 +321,12 @@ namespace llvm_abi {
 				return "Long";
 			case LongLong:
 				return "LongLong";
-			case Int8:
-				return "Int8";
-			case Int16:
-				return "Int16";
-			case Int24:
-				return "Int24";
-			case Int32:
-				return "Int32";
-			case Int64:
-				return "Int64";
-			case Int128:
-				return "Int128";
 			case SizeT:
 				return "SizeT";
 			case PtrDiffT:
 				return "PtrDiffT";
+			case IntPtrT:
+				return "IntPtrT";
 		}
 		
 		llvm_unreachable("Unknown integer type kind.");
@@ -357,8 +353,13 @@ namespace llvm_abi {
 				return "Void";
 			case PointerType:
 				return "Pointer";
-			case IntegerType:
-				return std::string("Integer(") + intKindToString(integerKind()) + ")";
+			case UnspecifiedWidthIntegerType:
+				return std::string("UnspecifiedWidthInteger(") + intKindToString(integerKind()) + ")";
+			case FixedWidthIntegerType: {
+				std::ostringstream stream;
+				stream << "FixedWidthInteger(" << integerWidth().asBits() << " bits)";
+				return stream.str();
+			}
 			case FloatingPointType:
 				return std::string("FloatingPoint(") + floatKindToString(floatingPointKind()) + ")";
 			case ComplexType:

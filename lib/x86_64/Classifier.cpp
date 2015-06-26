@@ -252,7 +252,7 @@ namespace llvm_abi {
 				// If this type fits in an eightbyte, coerce it into the matching integral
 				// type, which will end up on the stack (with alignment 8).
 				if (align == 8 && size <= 8) {
-					return ArgInfo::getDirect(Type::getFixedSizeInt(size));
+					return ArgInfo::getDirect(Type::FixedWidthInteger(size));
 				}
 			}
 			
@@ -542,7 +542,7 @@ namespace llvm_abi {
 			// It is always safe to classify this as an integer
 			// type up to i64 that isn't larger than the structure.
 			const auto intSize = std::min<size_t>(typeSizeInBytes - sourceOffset, 8);
-			return Type::getFixedSizeInt(intSize);
+			return Type::FixedWidthInteger(intSize);
 		}
 		
 		/**
