@@ -107,7 +107,7 @@ public:
 		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(functionType)));
 		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(functionType)));
 		
-		const auto entryBasicBlock = llvm::BasicBlock::Create(context_, "entry", callerFunction);
+		const auto entryBasicBlock = llvm::BasicBlock::Create(context_, "", callerFunction);
 		(void) entryBasicBlock;
 		
 		TestBuilder builder(*callerFunction);
