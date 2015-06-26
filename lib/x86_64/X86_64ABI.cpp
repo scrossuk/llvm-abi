@@ -2,6 +2,7 @@
 
 #include <llvm-abi/ABI.hpp>
 #include <llvm-abi/Builder.hpp>
+#include <llvm-abi/Caller.hpp>
 #include <llvm-abi/DataSize.hpp>
 #include <llvm-abi/FunctionEncoder.hpp>
 #include <llvm-abi/FunctionIRMapping.hpp>
@@ -322,16 +323,23 @@ namespace llvm_abi {
 		                                    const FunctionType& functionType,
 		                                    std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
 		                                    llvm::ArrayRef<llvm::Value*> arguments) {
-			llvm::SmallVector<llvm::Value*, 8> argumentValues(arguments.begin(), arguments.end());
-			encodeValues(*this, builder, argumentValues, functionType.argumentTypes());
+			Classifier classifier(typeInfo_);
+			const auto argInfoArray =
+				classifier.classifyFunctionType(functionType);
+			assert(argInfoArray.size() >= 1);
 			
-			const auto returnValue = callBuilder(argumentValues);
+			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
 			
-			llvm::SmallVector<llvm::Value*, 8> returnValues;
-			returnValues.push_back(returnValue);
-			Type returnTypes[] = { functionType.returnType() };
-			decodeValues(*this, builder, returnValues, returnTypes);
-			return returnValues[0];
+			Caller caller(typeInfo_,
+			              functionType,
+			              functionIRMapping,
+			              builder);
+			
+			const auto encodedArguments = caller.encodeArguments(arguments);
+			
+			const auto returnValue = callBuilder(encodedArguments);
+			
+			return caller.decodeReturnValue(encodedArguments, returnValue);
 		}
 		
 		class FunctionEncoder_x86_64: public FunctionEncoder {
@@ -352,6 +360,10 @@ namespace llvm_abi {
 			}
 			
 			llvm::ReturnInst* returnValue(llvm::Value* const value) {
+				if (value->getType()->isVoidTy()) {
+					return builder_.getBuilder().CreateRetVoid();
+				}
+				
 				llvm::SmallVector<llvm::Value*, 8> returnValues;
 				returnValues.push_back(value);
 				Type returnTypes[] = { functionType_.returnType() };
