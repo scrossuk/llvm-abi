@@ -14,6 +14,18 @@ namespace llvm_abi {
 	                                   const llvm::Twine& name = "") {
 		const auto allocaInst = builder.getEntryBuilder().CreateAlloca(typeInfo.getLLVMType(type));
 		allocaInst->setName(name);
+		return allocaInst;
+	}
+	
+	static
+	llvm::AllocaInst* createMemTemp(const ABITypeInfo& typeInfo,
+	                                Builder& builder,
+	                                const Type type,
+	                                const llvm::Twine& name = "") {
+		const auto allocaInst = createTempAlloca(typeInfo,
+		                                         builder,
+		                                         type,
+		                                         name);
 		allocaInst->setAlignment(typeInfo.getTypeRequiredAlign(type).asBytes());
 		return allocaInst;
 	}
@@ -402,10 +414,10 @@ namespace llvm_abi {
 					assert(numIRArgs == 1);
 					if (!isArgumentInMemory) {
 						// Make a temporary alloca to pass the argument.
-						const auto allocaInst = createTempAlloca(typeInfo_,
-						                                         builder_,
-						                                         argumentType,
-						                                         "indirect.arg.mem");
+						const auto allocaInst = createMemTemp(typeInfo_,
+						                                      builder_,
+						                                      argumentType,
+						                                      "indirect.arg.mem");
 						if (argInfo.getIndirectAlign() > allocaInst->getAlignment()) {
 							allocaInst->setAlignment(argInfo.getIndirectAlign());
 						}
@@ -464,10 +476,10 @@ namespace llvm_abi {
 					
 					llvm::Value* sourcePtr = nullptr;
 					if (!isArgumentInMemory) {
-						sourcePtr = createTempAlloca(typeInfo_,
-						                             builder_,
-						                             argumentType,
-						                             "coerce.arg.source");
+						sourcePtr = createMemTemp(typeInfo_,
+						                          builder_,
+						                          argumentType,
+						                          "coerce.arg.source");
 						builder_.getBuilder().CreateStore(argumentValue, sourcePtr);
 					} else {
 						assert(argumentValue->getType() == typeInfo_.getLLVMType(argumentType)->getPointerTo());
@@ -494,8 +506,8 @@ namespace llvm_abi {
 						if (sourceSize < destSize) {
 							const auto tempAlloca = createTempAlloca(typeInfo_,
 							                                         builder_,
-							                                         coerceType);
-							tempAlloca->setName(sourcePtr->getName() + ".coerce");
+							                                         coerceType,
+							                                         sourcePtr->getName() + ".coerce");
 							builder_.getBuilder().CreateMemCpy(tempAlloca,
 							                                   sourcePtr,
 							                                   sourceSize.asBytes(),
@@ -566,10 +578,10 @@ namespace llvm_abi {
 						auto destPtr = returnValuePtr;
 						
 						if (destPtr == nullptr) {
-							destPtr = createTempAlloca(typeInfo_,
-							                           builder_,
-							                           returnType,
-							                           "agg.tmp");
+							destPtr = createMemTemp(typeInfo_,
+							                        builder_,
+							                        returnType,
+							                        "agg.tmp");
 						}
 						
 						buildAggStore(builder_,
@@ -590,14 +602,12 @@ namespace llvm_abi {
 					}
 				}
 				
-				auto destPtr = returnValuePtr;
+				auto destPtr = createMemTemp(typeInfo_,
+				                             builder_,
+				                             returnType,
+				                             "coerce");
 				
-				if (destPtr == nullptr) {
-					destPtr = createTempAlloca(typeInfo_,
-					                           builder_,
-					                           returnType,
-					                           "coerce");
-				}
+				auto destType = returnType;
 				
 				// If the value is offset in memory, apply the offset now.
 				llvm::Value* storePtr = destPtr;
@@ -605,6 +615,7 @@ namespace llvm_abi {
 					storePtr = builder_.getBuilder().CreateBitCast(storePtr, builder_.getBuilder().getInt8PtrTy());
 					storePtr = builder_.getBuilder().CreateConstGEP1_32(storePtr, returnArgInfo.getDirectOffset());
 					storePtr = builder_.getBuilder().CreateBitCast(storePtr, llvm::PointerType::getUnqual(typeInfo_.getLLVMType(coerceType)));
+					destType = coerceType;
 				}
 				
 				createCoercedStore(typeInfo_,
@@ -612,7 +623,7 @@ namespace llvm_abi {
 				                   encodedReturnValue,
 				                   storePtr,
 				                   coerceType,
-				                   returnType);
+				                   destType);
 				
 				return builder_.getBuilder().CreateLoad(destPtr);
 			}
