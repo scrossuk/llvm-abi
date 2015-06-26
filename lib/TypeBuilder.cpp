@@ -66,6 +66,10 @@ namespace llvm_abi {
 					                     memberTypes.end()));
 	}
 	
+	Type TypeBuilder::getStructTy(llvm::ArrayRef<Type> memberTypes) const {
+		return Type::AutoStruct(*this, memberTypes);
+	}
+	
 	Type TypeBuilder::getArrayTy(const size_t elementCount,
 	                             const Type elementType) const {
 		return Type::Array(*this, elementCount, elementType);

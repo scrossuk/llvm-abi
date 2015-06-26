@@ -38,6 +38,7 @@ namespace llvm_abi {
 			Type getFloat128Ty() const;
 			
 			Type getStructTy(std::initializer_list<Type> memberTypes) const;
+			Type getStructTy(llvm::ArrayRef<Type> memberTypes) const;
 			
 			Type getArrayTy(size_t elementCount, Type elementType) const;
 			
