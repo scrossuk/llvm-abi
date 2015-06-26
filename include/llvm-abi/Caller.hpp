@@ -43,7 +43,9 @@ namespace llvm_abi {
 		 * \brief Decode return value.
 		 */
 		llvm::Value*
-		decodeReturnValue(llvm::Value* returnValue);
+		decodeReturnValue(llvm::ArrayRef<llvm::Value*> encodedArguments,
+		                  llvm::Value* encodedReturnValue,
+		                  llvm::Value* returnValuePtr = nullptr);
 		
 	private:
 		const ABITypeInfo& typeInfo_;
