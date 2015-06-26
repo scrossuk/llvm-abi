@@ -112,15 +112,9 @@ public:
 			encodedArgumentValues.push_back(it);
 		}
 		
-		// TODO: Fix function encoder!
-// 		auto functionEncoder = abi_->createFunction(builder,
-// 		                                            functionType,
-// 		                                            encodedArgumentValues);
-		
-		llvm::SmallVector<llvm::Value*, 8> fakeArguments;
-		for (const auto& argType: functionType.argumentTypes()) {
-			fakeArguments.push_back(getConstantValue(argType));
-		}
+		auto functionEncoder = abi_->createFunction(builder,
+		                                            functionType,
+		                                            encodedArgumentValues);
 		
 		const auto returnValue = abi_->createCall(
 			builder,
@@ -128,19 +122,10 @@ public:
 			[&](llvm::ArrayRef<llvm::Value*> values) -> llvm::Value* {
 				return builder.getBuilder().CreateCall(calleeFunction, values);
 			},
-			// TODO: Fix function encoder!
- 			//functionEncoder->arguments()
-			fakeArguments
+			functionEncoder->arguments()
 		);
 		
-		// TODO: Fix function encoder!
-		// functionEncoder->returnValue(returnValue);
-		const auto returnType = abi_->getFunctionType(functionType)->getReturnType();
-		if (returnValue->getType() == returnType && !returnType->isVoidTy()) {
-			builder.getBuilder().CreateRet(returnValue);
-		} else {
-			builder.getBuilder().CreateRet(llvm::UndefValue::get(returnType));
-		}
+		functionEncoder->returnValue(returnValue);
 		
 		std::string filename;
 		filename += "test-";
