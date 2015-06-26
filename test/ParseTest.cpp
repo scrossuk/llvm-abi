@@ -178,6 +178,7 @@ std::string makeClangCCode(const FunctionType& functionType) {
 		bool first = true;
 		int argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
+			(void) argType;
 			if (first) {
 				first = false;
 			} else {
@@ -197,6 +198,7 @@ std::string makeClangCCode(const FunctionType& functionType) {
 		bool first = true;
 		int argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
+			(void) argType;
 			if (first) {
 				first = false;
 			} else {
@@ -211,6 +213,7 @@ std::string makeClangCCode(const FunctionType& functionType) {
 		first = true;
 		argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
+			(void) argType;
 			if (first) {
 				first = false;
 			} else {
