@@ -164,7 +164,7 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	llvm::Type* ABI_x86::abiType(Type type) const {
+	llvm::Type* ABI_x86::getLLVMType(const Type type) const {
 		switch (type.kind()) {
 			case VoidType:
 				return llvm::Type::getVoidTy(llvmContext_);

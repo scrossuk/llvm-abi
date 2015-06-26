@@ -61,6 +61,14 @@ namespace llvm_abi {
 		virtual size_t typeAlign(Type type) const = 0;
 		
 		/**
+		 * \brief Get the LLVM type used to represent the ABI type given.
+		 * 
+		 * \param type The ABI type.
+		 * \return The LLVM type representing the ABI type.
+		 */
+		virtual llvm::Type* getLLVMType(Type type) const = 0;
+		
+		/**
 		 * \brief Create an array of offsets based on struct member types.
 		 * 
 		 * \param structMembers The member types of the struct.

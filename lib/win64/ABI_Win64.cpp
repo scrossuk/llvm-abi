@@ -24,7 +24,7 @@ namespace llvm_abi {
 		llvm_unreachable("TODO");
 	}
 	
-	llvm::Type* ABI_Win64::abiType(Type /*type*/) const {
+	llvm::Type* ABI_Win64::getLLVMType(Type /*type*/) const {
 		llvm_unreachable("TODO");
 	}
 	

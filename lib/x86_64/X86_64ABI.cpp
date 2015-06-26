@@ -189,6 +189,10 @@ namespace llvm_abi {
 			return value;
 		}
 		
+		llvm::Type* X86_64ABI::getLLVMType(const Type type) const {
+			return typeInfo_.getLLVMType(type);
+		}
+		
 		llvm::Type* X86_64ABI::encodedType(Type type) const {
 			const auto iterator = abiTypeCache_.find(type);
 			if (iterator != abiTypeCache_.end()) {
