@@ -4,7 +4,6 @@
 declare x86_fp80 @callee()
 
 define x86_fp80 @caller() {
-entry:
-  %0 = call x86_fp80 @callee()
-  ret x86_fp80 %0
+  %1 = call x86_fp80 @callee()
+  ret x86_fp80 %1
 }

@@ -4,7 +4,6 @@
 declare i32 @callee()
 
 define i32 @caller() {
-entry:
-  %0 = call i32 @callee()
-  ret i32 %0
+  %1 = call i32 @callee()
+  ret i32 %1
 }

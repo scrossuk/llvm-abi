@@ -4,7 +4,6 @@
 declare void @callee(i32)
 
 define void @caller(i32) {
-entry:
   call void @callee(i32 %0)
   ret void
 }

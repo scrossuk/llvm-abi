@@ -4,7 +4,6 @@
 declare float @callee()
 
 define float @caller() {
-entry:
-  %0 = call float @callee()
-  ret float %0
+  %1 = call float @callee()
+  ret float %1
 }

@@ -4,7 +4,6 @@
 declare double @callee()
 
 define double @caller() {
-entry:
-  %0 = call double @callee()
-  ret double %0
+  %1 = call double @callee()
+  ret double %1
 }
