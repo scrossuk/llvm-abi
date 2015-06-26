@@ -154,11 +154,11 @@ namespace llvm_abi {
 		
 		X86_64ABI::X86_64ABI(llvm::Module* module)
 		: llvmContext_(module->getContext()),
+		module_(module),
 		typeInfo_(llvmContext_) {
 			const auto i8PtrType = llvm::Type::getInt8PtrTy(llvmContext_);
 			const auto i64Type = llvm::Type::getInt64Ty(llvmContext_);
 			llvm::Type* types[] = { i8PtrType, i8PtrType, i64Type };
-			memcpyIntrinsic_ = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::memcpy, types);
 		}
 		
 		X86_64ABI::~X86_64ABI() { }
@@ -311,11 +311,8 @@ namespace llvm_abi {
 				const auto sourceValue = currentBuilder.CreatePointerCast(encodedValuePtr, i8PtrType);
 				const auto destValue = currentBuilder.CreatePointerCast(argValuePtr, i8PtrType);
 				
-				llvm::Value* args[] = { destValue, sourceValue,
-					llvm::ConstantInt::get(i64Type, abi.typeSize(argType)),
-					llvm::ConstantInt::get(i32Type, abi.typeAlign(argType)),
-					llvm::ConstantInt::get(i1Type, 0) };
-				currentBuilder.CreateCall(abi.memcpyIntrinsic(), args);
+				currentBuilder.CreateMemCpy(destValue, sourceValue,
+				                            abi.typeSize(argType), abi.typeAlign(argType), false);
 				
 				argValues[i] = currentBuilder.CreateLoad(argValuePtr);
 			}

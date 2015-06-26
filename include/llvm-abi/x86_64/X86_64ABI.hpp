@@ -32,7 +32,7 @@ namespace llvm_abi {
 			}
 			
 			llvm::Value* memcpyIntrinsic() const {
-				return memcpyIntrinsic_;
+				return nullptr;
 			}
 			
 			llvm::Type* encodedType(Type type) const;
@@ -64,11 +64,11 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			llvm::Module* module_;
 			x86_64::X86_64ABITypeInfo typeInfo_;
 			mutable ABITypeCache abiTypeCache_;
 			mutable ABISizeCache alignOfCache_;
 			mutable ABISizeCache sizeOfCache_;
-			llvm::Value* memcpyIntrinsic_;
 			
 		};
 		
