@@ -23,17 +23,23 @@ static const char* const X86_64_TRIPLE = "x86_64-none-linux-gnu";
 class TestBuilder: public Builder {
 public:
 	TestBuilder(llvm::Function& function)
-	: builder_(&(function.getEntryBlock())) { }
+	: function_(function),
+	builder_(&(function.getEntryBlock())) { }
 	
 	IRBuilder& getEntryBuilder() {
+		if (!function_.getEntryBlock().empty()) {
+			builder_.SetInsertPoint(function_.getEntryBlock().begin());
+		}
 		return builder_;
 	}
 	
 	IRBuilder& getBuilder() {
+		builder_.SetInsertPoint(&(function_.getEntryBlock()));
 		return builder_;
 	}
 	
 private:
+	llvm::Function& function_;
 	IRBuilder builder_;
 	
 };
