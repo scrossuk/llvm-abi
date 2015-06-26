@@ -50,32 +50,52 @@ std::string makeCType(const Type& type, std::ostringstream& sourceCodeStream) {
 					return "bool";
 				case Char:
 					return "char";
+				case SChar:
+					return "signed char";
+				case UChar:
+					return "unsigned char";
 				case Short:
 					return "short";
+				case UShort:
+					return "unsigned short";
 				case Int:
 					return "int";
+				case UInt:
+					return "unsigned int";
 				case Long:
 					return "long";
+				case ULong:
+					return "unsigned long";
 				case SizeT:
 					return "size_t";
+				case SSizeT:
+					return "ssize_t";
 				case PtrDiffT:
 					return "ptrdiff_t";
 				case IntPtrT:
 					return "intptr_t";
+				case UIntPtrT:
+					return "uintptr_t";
 				case LongLong:
 					return "long long";
+				case ULongLong:
+					return "unsigned long long";
 			}
 			llvm_unreachable("Unknown integer type.");
 		case FixedWidthIntegerType:
 			switch (type.integerWidth().roundUpToPowerOf2Bytes().asBytes()) {
 				case 1:
-					return "int8_t";
+					return type.integerIsSigned() ?
+					       "int8_t" : "uint8_t";
 				case 2:
-					return "int16_t";
+					return type.integerIsSigned() ?
+					       "int16_t" : "uint16_t";
 				case 4:
-					return "int32_t";
+					return type.integerIsSigned() ?
+					       "int32_t" : "uint32_t";
 				case 8:
-					return "int64_t";
+					return type.integerIsSigned() ?
+					       "int64_t" : "uint64_t";
 				default:
 					llvm_unreachable("Unknown integer width.");
 			}

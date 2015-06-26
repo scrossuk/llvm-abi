@@ -46,14 +46,26 @@ namespace llvm_abi {
 				return BoolTy;
 			} else if (text == "char") {
 				return CharTy;
+			} else if (text == "schar") {
+				return SCharTy;
+			} else if (text == "uchar") {
+				return UCharTy;
 			} else if (text == "short") {
 				return ShortTy;
+			} else if (text == "ushort") {
+				return UShortTy;
 			} else if (text == "int") {
 				return IntTy;
+			} else if (text == "uint") {
+				return UIntTy;
 			} else if (text == "long") {
 				return LongTy;
+			} else if (text == "ulong") {
+				return ULongTy;
 			} else if (text == "longlong") {
 				return LongLongTy;
+			} else if (text == "ulonglong") {
+				return ULongLongTy;
 			} else if (text == "float") {
 				return FloatTy;
 			} else if (text == "double") {

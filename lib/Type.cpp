@@ -26,9 +26,10 @@ namespace llvm_abi {
 		return type;
 	}
 	
-	Type Type::FixedWidthInteger(const DataSize width) {
+	Type Type::FixedWidthInteger(const DataSize width, const bool isSigned) {
 		Type type(FixedWidthIntegerType);
-		type.subKind_.integerWidth = width;
+		type.subKind_.fixedWidthInteger.width = width;
+		type.subKind_.fixedWidthInteger.isSigned = isSigned;
 		return type;
 	}
 	
@@ -108,7 +109,8 @@ namespace llvm_abi {
 			case UnspecifiedWidthIntegerType:
 				return integerKind() == type.integerKind();
 			case FixedWidthIntegerType:
-				return integerWidth() == type.integerWidth();
+				return integerWidth() == type.integerWidth() &&
+				       integerIsSigned() == type.integerIsSigned();
 			case FloatingPointType:
 				return floatingPointKind() == type.floatingPointKind();
 			case ComplexType:
@@ -138,8 +140,13 @@ namespace llvm_abi {
 				return false;
 			case UnspecifiedWidthIntegerType:
 				return integerKind() < type.integerKind();
-			case FixedWidthIntegerType:
-				return integerWidth() < type.integerWidth();
+			case FixedWidthIntegerType: {
+				if (integerWidth() != type.integerWidth()) {
+					return integerWidth() < type.integerWidth();
+				} else {
+					return integerIsSigned() < type.integerIsSigned();
+				}
+			}
 			case FloatingPointType:
 				return floatingPointKind() < type.floatingPointKind();
 			case ComplexType:
@@ -186,7 +193,12 @@ namespace llvm_abi {
 	
 	DataSize Type::integerWidth() const {
 		assert(isFixedWidthInteger());
-		return subKind_.integerWidth;
+		return subKind_.fixedWidthInteger.width;
+	}
+	
+	bool Type::integerIsSigned() const {
+		assert(isFixedWidthInteger());
+		return subKind_.fixedWidthInteger.isSigned;
 	}
 	
 	bool Type::isFloatingPoint() const {
@@ -292,7 +304,8 @@ namespace llvm_abi {
 			case UnspecifiedWidthIntegerType:
 				return value ^ std::hash<unsigned long long>()(integerKind());
 			case FixedWidthIntegerType:
-				return value ^ std::hash<unsigned long long>()(integerWidth().asBits());
+				return (value ^ std::hash<unsigned long long>()(integerWidth().asBits()) ^
+				        std::hash<bool>()(integerIsSigned()));
 			case FloatingPointType:
 				return value ^ std::hash<unsigned long long>()(floatingPointKind());
 			case ComplexType:
@@ -313,20 +326,36 @@ namespace llvm_abi {
 				return "Bool";
 			case Char:
 				return "Char";
+			case SChar:
+				return "SChar";
+			case UChar:
+				return "UChar";
 			case Short:
 				return "Short";
+			case UShort:
+				return "UShort";
 			case Int:
 				return "Int";
+			case UInt:
+				return "UInt";
 			case Long:
 				return "Long";
+			case ULong:
+				return "ULong";
 			case LongLong:
 				return "LongLong";
+			case ULongLong:
+				return "ULongLong";
 			case SizeT:
 				return "SizeT";
+			case SSizeT:
+				return "SSizeT";
 			case PtrDiffT:
 				return "PtrDiffT";
 			case IntPtrT:
 				return "IntPtrT";
+			case UIntPtrT:
+				return "UIntPtrT";
 		}
 		
 		llvm_unreachable("Unknown integer type kind.");
@@ -357,7 +386,8 @@ namespace llvm_abi {
 				return std::string("UnspecifiedWidthInteger(") + intKindToString(integerKind()) + ")";
 			case FixedWidthIntegerType: {
 				std::ostringstream stream;
-				stream << "FixedWidthInteger(" << integerWidth().asBits() << " bits)";
+				stream << "FixedWidthInteger(" << integerWidth().asBits() << " bits, ";
+				stream << (integerIsSigned() ? "signed" : "unsigned") << ")";
 				return stream.str();
 			}
 			case FloatingPointType:

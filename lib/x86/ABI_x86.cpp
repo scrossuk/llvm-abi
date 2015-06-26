@@ -27,17 +27,26 @@ namespace llvm_abi {
 					case Bool:
 						return 1;
 					case Char:
+					case SChar:
+					case UChar:
 						return 1;
 					case Short:
+					case UShort:
 						return 2;
 					case Int:
+					case UInt:
 						return 4;
 					case Long:
+					case ULong:
 						return 4;
 					case LongLong:
+					case ULongLong:
 						return 8;
 					case SizeT:
+					case SSizeT:
 						return 4;
+					case IntPtrT:
+					case UIntPtrT:
 					case PtrDiffT:
 						return 4;
 				}
@@ -95,17 +104,26 @@ namespace llvm_abi {
 					case Bool:
 						return 1;
 					case Char:
+					case SChar:
+					case UChar:
 						return 1;
 					case Short:
+					case UShort:
 						return 2;
 					case Int:
+					case UInt:
 						return 4;
 					case Long:
+					case ULong:
 						return 4;
 					case LongLong:
+					case ULongLong:
 						return 4;
 					case SizeT:
+					case SSizeT:
 						return 4;
+					case IntPtrT:
+					case UIntPtrT:
 					case PtrDiffT:
 						return 4;
 				}

@@ -18,13 +18,21 @@ namespace llvm_abi {
 	enum IntegerKind {
 		Bool,
 		Char,
+		SChar,
+		UChar,
 		Short,
+		UShort,
 		Int,
+		UInt,
 		Long,
+		ULong,
 		LongLong,
+		ULongLong,
 		SizeT,
+		SSizeT,
 		PtrDiffT,
-		IntPtrT
+		IntPtrT,
+		UIntPtrT
 	};
 	
 	/**
@@ -87,7 +95,7 @@ namespace llvm_abi {
 			/**
 			 * \brief Fixed Size Integer Type
 			 */
-			static Type FixedWidthInteger(DataSize width);
+			static Type FixedWidthInteger(DataSize width, bool isSigned);
 			
 			/**
 			 * \brief Floating Point Type
@@ -140,6 +148,7 @@ namespace llvm_abi {
 			bool isFixedWidthInteger() const;
 			
 			DataSize integerWidth() const;
+			bool integerIsSigned() const;
 			
 			bool isFloatingPoint() const;
 			bool isFloat() const;
@@ -183,6 +192,10 @@ namespace llvm_abi {
 			
 			union {
 				IntegerKind integerKind;
+				struct {
+					DataSize width;
+					bool isSigned;
+				} fixedWidthInteger;
 				DataSize integerWidth;
 				FloatingPointKind floatingPointKind;
 				FloatingPointKind complexKind;
@@ -294,21 +307,35 @@ namespace llvm_abi {
 	
 	static const Type BoolTy = Type::UnspecifiedWidthInteger(Bool);
 	static const Type CharTy = Type::UnspecifiedWidthInteger(Char);
+	static const Type SCharTy = Type::UnspecifiedWidthInteger(SChar);
+	static const Type UCharTy = Type::UnspecifiedWidthInteger(UChar);
 	static const Type ShortTy = Type::UnspecifiedWidthInteger(Short);
+	static const Type UShortTy = Type::UnspecifiedWidthInteger(UShort);
 	static const Type IntTy = Type::UnspecifiedWidthInteger(Int);
+	static const Type UIntTy = Type::UnspecifiedWidthInteger(UInt);
 	static const Type LongTy = Type::UnspecifiedWidthInteger(Long);
+	static const Type ULongTy = Type::UnspecifiedWidthInteger(ULong);
 	static const Type LongLongTy = Type::UnspecifiedWidthInteger(LongLong);
+	static const Type ULongLongTy = Type::UnspecifiedWidthInteger(ULongLong);
 	
 	static const Type IntPtrTy = Type::UnspecifiedWidthInteger(IntPtrT);
+	static const Type UIntPtrTy = Type::UnspecifiedWidthInteger(UIntPtrT);
 	static const Type PtrDiffTy = Type::UnspecifiedWidthInteger(PtrDiffT);
 	static const Type SizeTy = Type::UnspecifiedWidthInteger(SizeT);
+	static const Type SSizeTy = Type::UnspecifiedWidthInteger(SSizeT);
 	
-	static const Type Int8Ty = Type::FixedWidthInteger(DataSize::Bits(8));
-	static const Type Int16Ty = Type::FixedWidthInteger(DataSize::Bits(16));
-	static const Type Int24Ty = Type::FixedWidthInteger(DataSize::Bits(24));
-	static const Type Int32Ty = Type::FixedWidthInteger(DataSize::Bits(32));
-	static const Type Int64Ty = Type::FixedWidthInteger(DataSize::Bits(64));
-	static const Type Int128Ty = Type::FixedWidthInteger(DataSize::Bits(128));
+	static const Type Int8Ty = Type::FixedWidthInteger(DataSize::Bits(8), /*isSigned=*/true);
+	static const Type UInt8Ty = Type::FixedWidthInteger(DataSize::Bits(8), /*isSigned=*/false);
+	static const Type Int16Ty = Type::FixedWidthInteger(DataSize::Bits(16), /*isSigned=*/true);
+	static const Type UInt16Ty = Type::FixedWidthInteger(DataSize::Bits(16), /*isSigned=*/false);
+	static const Type Int24Ty = Type::FixedWidthInteger(DataSize::Bits(24), /*isSigned=*/true);
+	static const Type UInt24Ty = Type::FixedWidthInteger(DataSize::Bits(24), /*isSigned=*/false);
+	static const Type Int32Ty = Type::FixedWidthInteger(DataSize::Bits(32), /*isSigned=*/true);
+	static const Type UInt32Ty = Type::FixedWidthInteger(DataSize::Bits(32), /*isSigned=*/false);
+	static const Type Int64Ty = Type::FixedWidthInteger(DataSize::Bits(64), /*isSigned=*/true);
+	static const Type UInt64Ty = Type::FixedWidthInteger(DataSize::Bits(64), /*isSigned=*/false);
+	static const Type Int128Ty = Type::FixedWidthInteger(DataSize::Bits(128), /*isSigned=*/true);
+	static const Type UInt128Ty = Type::FixedWidthInteger(DataSize::Bits(128), /*isSigned=*/false);
 	
 	static const Type FloatTy = Type::FloatingPoint(Float);
 	static const Type DoubleTy = Type::FloatingPoint(Double);

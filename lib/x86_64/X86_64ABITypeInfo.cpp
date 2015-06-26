@@ -31,16 +31,24 @@ namespace llvm_abi {
 					switch (type.integerKind()) {
 						case Bool:
 						case Char:
+						case UChar:
+						case SChar:
 							return DataSize::Bytes(1);
 						case Short:
+						case UShort:
 							return DataSize::Bytes(2);
 						case Int:
+						case UInt:
 							return DataSize::Bytes(4);
 						case Long:
+						case ULong:
 						case SizeT:
+						case SSizeT:
 						case PtrDiffT:
 						case IntPtrT:
+						case UIntPtrT:
 						case LongLong:
+						case ULongLong:
 							return DataSize::Bytes(8);
 					}
 					llvm_unreachable("Unknown integer type.");
