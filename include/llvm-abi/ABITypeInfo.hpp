@@ -79,6 +79,13 @@ namespace llvm_abi {
 		virtual llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
 		
 		/**
+		 * \brief Queries whether ABI is big-endian.
+		 * 
+		 * \return Whether ABI is big-endian.
+		 */
+		virtual bool isBigEndian() const = 0;
+		
+		/**
 		 * \brief Queries whether 'char' is signed for this ABI.
 		 * 
 		 * \return Whether 'char' is signed.

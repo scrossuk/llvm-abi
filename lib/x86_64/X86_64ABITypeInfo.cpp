@@ -217,6 +217,10 @@ namespace llvm_abi {
 			return offsets;
 		}
 		
+		bool X86_64ABITypeInfo::isBigEndian() const {
+			return false;
+		}
+		
 		bool X86_64ABITypeInfo::isCharSigned() const {
 			return true;
 		}
