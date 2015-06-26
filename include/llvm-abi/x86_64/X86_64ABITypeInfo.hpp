@@ -34,6 +34,8 @@ namespace llvm_abi {
 			
 			llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 			
+			bool isBigEndian() const;
+			
 			bool isCharSigned() const;
 			
 		private:
