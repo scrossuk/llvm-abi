@@ -24,6 +24,7 @@ namespace llvm_abi {
 		: llvmContext_(module->getContext()),
 		module_(module),
 		typeInfo_(llvmContext_) {
+			(void) module_;
 		}
 		
 		X86_64ABI::~X86_64ABI() { }
