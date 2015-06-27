@@ -23,7 +23,8 @@ namespace llvm_abi {
 		bool isIntegralType(const Type type) {
 			return type.isPointer() ||
 			       type.isInteger() ||
-			       type.isFloatingPoint();
+			       type.isFloatingPoint() ||
+			       type.isVector();
 		}
 		
 		bool isAggregateTypeForABI(const Type type) {
