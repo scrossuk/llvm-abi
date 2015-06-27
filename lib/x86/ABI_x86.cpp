@@ -234,6 +234,11 @@ namespace llvm_abi {
 		llvm_unreachable("TODO");
 	}
 	
+	llvm::AttributeSet ABI_x86::getAttributes(const FunctionType& /*functionType*/,
+	                                          const llvm::AttributeSet /*existingAttributes*/) const {
+		llvm_unreachable("TODO");
+	}
+	
 	llvm::Value* ABI_x86::createCall(Builder& /*builder*/,
 	                                 const FunctionType& /*functionType*/,
 	                                 std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> /*callBuilder*/,

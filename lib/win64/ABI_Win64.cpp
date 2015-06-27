@@ -50,6 +50,11 @@ namespace llvm_abi {
 		llvm_unreachable("TODO");
 	}
 	
+	llvm::AttributeSet ABI_Win64::getAttributes(const FunctionType& /*functionType*/,
+	                                            const llvm::AttributeSet /*existingAttributes*/) const {
+		llvm_unreachable("TODO");
+	}
+	
 	llvm::Value* ABI_Win64::createCall(Builder& /*builder*/,
 	                                   const FunctionType& /*functionType*/,
 	                                   std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> /*callBuilder*/,

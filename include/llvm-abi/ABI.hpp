@@ -102,6 +102,22 @@ namespace llvm_abi {
 		virtual llvm::FunctionType* getFunctionType(const FunctionType& functionType) const = 0;
 		
 		/**
+		 * \brief Get function attributes for ABI.
+		 * 
+		 * This creates a set of attributes as needed by the ABI for a
+		 * function of the given type. Existng attributes should be
+		 * passed to this method since some may need to be disabled
+		 * (e.g. 'readnone' disabled when arguments are passed via
+		 * indirect pointers).
+		 * 
+		 * \param functionType The ABI function type.
+		 * \param existingAttributes The existing function attributes.
+		 * \return The set of attributes for the ABI.
+		 */
+		virtual llvm::AttributeSet getAttributes(const FunctionType& functionType,
+		                                         llvm::AttributeSet existingAttributes = llvm::AttributeSet()) const = 0;
+		
+		/**
 		 * \brief Create a function call.
 		 * 
 		 * Emits a function call, taking the given ABI-independent
