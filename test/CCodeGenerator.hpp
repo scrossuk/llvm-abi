@@ -27,7 +27,8 @@ namespace llvm_abi {
 		CCodeGenerator()
 		: arrayId_(0),
 		functionId_(0),
-		structId_(0) {
+		structId_(0),
+		vectorId_(0) {
 			// For std::array<>.
 			sourceCodeStream_ << "#include <array>" << std::endl << std::endl;
 		}
@@ -153,8 +154,18 @@ namespace llvm_abi {
 					arrayId_++;
 					return stream.str();
 				}
-				case VectorType:
+				case VectorType: {
+					if (type.vectorElementType() == FloatTy &&
+					    type.vectorElementCount() == 4) {
+						sourceCodeStream_ << "typedef float Vector" << vectorId_ << " __attribute__((__vector_size__(16)));" << std::endl;
+						std::ostringstream stream;
+						stream << "Vector" << vectorId_;
+						vectorId_++;
+						return stream.str();
+					}
+					
 					llvm_unreachable("TODO");
+				}
 			}
 		}
 		
@@ -238,6 +249,7 @@ namespace llvm_abi {
 		size_t arrayId_;
 		size_t functionId_;
 		size_t structId_;
+		size_t vectorId_;
 		
 	};
 	
