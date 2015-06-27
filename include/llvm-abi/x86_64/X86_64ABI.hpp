@@ -27,7 +27,7 @@ namespace llvm_abi {
 			X86_64ABI(llvm::Module* module);
 			~X86_64ABI();
 			
-			llvm::LLVMContext& context() {
+			llvm::LLVMContext& context() const {
 				return llvmContext_;
 			}
 			
