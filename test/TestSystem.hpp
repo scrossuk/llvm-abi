@@ -107,6 +107,10 @@ public:
 		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(functionType)));
 		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(functionType)));
 		
+		const auto attributes = abi_->getAttributes(functionType);
+		calleeFunction->setAttributes(attributes);
+		callerFunction->setAttributes(attributes);
+		
 		const auto entryBasicBlock = llvm::BasicBlock::Create(context_, "", callerFunction);
 		(void) entryBasicBlock;
 		
@@ -126,7 +130,9 @@ public:
 			builder,
 			functionType,
 			[&](llvm::ArrayRef<llvm::Value*> values) -> llvm::Value* {
-				return builder.getBuilder().CreateCall(calleeFunction, values);
+				const auto callInst = builder.getBuilder().CreateCall(calleeFunction, values);
+				callInst->setAttributes(attributes);
+				return callInst;
 			},
 			functionEncoder->arguments()
 		);
