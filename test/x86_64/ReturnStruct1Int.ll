@@ -4,7 +4,7 @@
 declare i32 @callee()
 
 define i32 @caller() {
-  %coerce1 = alloca { i32 }
+  %coerce1 = alloca { i32 }, align 4
   %coerce = alloca { i32 }, align 4
   %1 = call i32 @callee()
   %coerce.dive = getelementptr { i32 }* %coerce, i32 0, i32 0

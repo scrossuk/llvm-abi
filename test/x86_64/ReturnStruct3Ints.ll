@@ -5,7 +5,7 @@ declare { i64, i32 } @callee()
 
 define { i64, i32 } @caller() {
   %coerce.mem.load = alloca { i64, i32 }
-  %coerce1 = alloca { i32, i32, i32 }
+  %coerce1 = alloca { i32, i32, i32 }, align 4
   %coerce.mem.store = alloca { i64, i32 }
   %coerce = alloca { i32, i32, i32 }, align 4
   %1 = call { i64, i32 } @callee()

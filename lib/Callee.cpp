@@ -611,10 +611,10 @@ namespace llvm_abi {
 					// For more complex cases, store the value
 					// into a temporary alloca and then perform
 					// a coerced load from it.
-					llvm::Value* sourcePtr = createTempAlloca(typeInfo_,
-					                                          builder_,
-					                                          returnType,
-					                                          "coerce");
+					llvm::Value* sourcePtr = createMemTemp(typeInfo_,
+					                                       builder_,
+					                                       returnType,
+					                                       "coerce");
 					builder_.getBuilder().CreateStore(returnValue, sourcePtr);
 					
 					auto sourceType = returnType;

@@ -4,7 +4,7 @@
 declare { i64, i32 } @callee()
 
 define { i64, i32 } @caller() {
-  %coerce1 = alloca { i64, i32 }
+  %coerce1 = alloca { i64, i32 }, align 8
   %coerce = alloca { i64, i32 }, align 8
   %1 = call { i64, i32 } @callee()
   store { i64, i32 } %1, { i64, i32 }* %coerce

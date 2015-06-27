@@ -4,7 +4,7 @@
 declare float @callee()
 
 define float @caller() {
-  %coerce1 = alloca { float }
+  %coerce1 = alloca { float }, align 4
   %coerce = alloca { float }, align 4
   %1 = call float @callee()
   %coerce.dive = getelementptr { float }* %coerce, i32 0, i32 0

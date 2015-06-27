@@ -4,7 +4,7 @@
 declare i64 @callee()
 
 define i64 @caller() {
-  %coerce1 = alloca { i32, i32 }
+  %coerce1 = alloca { i32, i32 }, align 4
   %coerce = alloca { i32, i32 }, align 4
   %1 = call i64 @callee()
   %2 = bitcast { i32, i32 }* %coerce to i64*

@@ -4,7 +4,7 @@
 declare <2 x float> @callee()
 
 define <2 x float> @caller() {
-  %coerce1 = alloca { float, float }
+  %coerce1 = alloca { float, float }, align 4
   %coerce = alloca { float, float }, align 4
   %1 = call <2 x float> @callee()
   %2 = bitcast { float, float }* %coerce to <2 x float>*
