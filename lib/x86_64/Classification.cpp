@@ -53,6 +53,10 @@ namespace llvm_abi {
 		void Classification::classifyType(const ABITypeInfo& typeInfo,
 		                                  const Type type,
 		                                  const size_t offset) {
+			// TODO!
+			const bool hasAVX = true;
+			const bool isNamedArg = true;
+			
 			if (type.isVoid()) {
 				addField(offset, NoClass);
 			} else if (type.isInteger() || type.isPointer()) {
@@ -98,6 +102,46 @@ namespace llvm_abi {
 					
 					// Add the member's size.
 					structOffset += typeInfo.getTypeAllocSize(member.type());
+				}
+			} else if (type.isVector()) {
+				const auto size = typeInfo.getTypeAllocSize(type);
+				const auto elementType = type.vectorElementType();
+				
+				if (size.asBits() == 32) {
+					// gcc passes all <4 x char>, <2 x short>,
+					// <1 x int>, <1 x float> as integer.
+					addField(offset, Integer);
+				} else if (size.asBits() == 64) {
+					// gcc passes <1 x double> in memory. :(
+					if (elementType == DoubleTy) {
+						addField(offset, Memory);
+						return;
+					}
+					
+					// gcc passes <1 x long long> as INTEGER.
+					if (elementType == LongLongTy ||
+					    elementType == ULongLongTy ||
+					    elementType == LongTy ||
+					    elementType == ULongTy) {
+						addField(offset, Integer);
+					} else {
+						addField(offset, Sse);
+					}
+				} else if (size.asBits() == 128 ||
+					   (hasAVX && isNamedArg && size.asBits() == 256)) {
+					// Arguments of 256-bits are split into four eightbyte chunks. The
+					// least significant one belongs to class SSE and all the others to class
+					// SSEUP. The original Lo and Hi design considers that types can't be
+					// greater than 128-bits, so a 64-bit split in Hi and Lo makes sense.
+					// This design isn't correct for 256-bits, but since there're no cases
+					// where the upper parts would need to be inspected, avoid adding
+					// complexity and just consider Hi to match the 64-256 part.
+					//
+					// Note that per 3.5.7 of AMD64-ABI, 256-bit args are only passed in
+					// registers if they are "named", i.e. not part of the "..." of a
+					// variadic function.
+					addField(offset, Sse);
+					addField(offset + 8, SseUp);
 				}
 			} else {
 				llvm_unreachable("Unknown type kind.");
