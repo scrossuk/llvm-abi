@@ -179,6 +179,10 @@ namespace llvm_abi {
 			
 			bool hasUnalignedFields(const ABITypeInfo& typeInfo) const;
 			
+			bool hasSignedIntegerRepresentation(const ABITypeInfo& typeInfo) const;
+			
+			bool hasUnsignedIntegerRepresentation(const ABITypeInfo& typeInfo) const;
+			
 			size_t hash() const;
 			
 			std::string toString() const;

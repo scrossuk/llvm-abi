@@ -293,6 +293,92 @@ namespace llvm_abi {
 		return false;
 	}
 	
+	bool Type::hasSignedIntegerRepresentation(const ABITypeInfo& typeInfo) const {
+		switch (kind()) {
+			case VoidType:
+			case PointerType:
+			case FloatingPointType:
+			case ComplexType:
+			case StructType:
+			case ArrayType:
+				return false;
+			case UnspecifiedWidthIntegerType:
+				switch (integerKind()) {
+					case Bool:
+						return false;
+					case Char:
+						return typeInfo.isCharSigned();
+					case SChar:
+					case Short:
+					case Int:
+					case Long:
+					case LongLong:
+					case SSizeT:
+					case IntPtrT:
+						return true;
+					case UChar:
+					case UShort:
+					case UInt:
+					case ULong:
+					case ULongLong:
+					case SizeT:
+					case PtrDiffT:
+					case UIntPtrT:
+						return false;
+				}
+			case FixedWidthIntegerType:
+				return integerIsSigned();
+			case VectorType: {
+				llvm_unreachable("TODO");
+			}
+		}
+		
+		llvm_unreachable("Unknown ABI Type kind in hasSignedIntegerRepresentation().");
+	}
+			
+	bool Type::hasUnsignedIntegerRepresentation(const ABITypeInfo& typeInfo) const {
+		switch (kind()) {
+			case VoidType:
+			case PointerType:
+			case FloatingPointType:
+			case ComplexType:
+			case StructType:
+			case ArrayType:
+				return false;
+			case UnspecifiedWidthIntegerType:
+				switch (integerKind()) {
+					case Bool:
+						return false;
+					case Char:
+						return !typeInfo.isCharSigned();
+					case SChar:
+					case Short:
+					case Int:
+					case Long:
+					case LongLong:
+					case SSizeT:
+					case IntPtrT:
+						return false;
+					case UChar:
+					case UShort:
+					case UInt:
+					case ULong:
+					case ULongLong:
+					case SizeT:
+					case PtrDiffT:
+					case UIntPtrT:
+						return true;
+				}
+			case FixedWidthIntegerType:
+				return !integerIsSigned();
+			case VectorType: {
+				llvm_unreachable("TODO");
+			}
+		}
+		
+		llvm_unreachable("Unknown ABI Type kind in hasUnsignedIntegerRepresentation().");
+	}
+	
 	size_t Type::hash() const {
 		// TODO: improve this!
 		const size_t value = std::hash<unsigned long long>()(kind_);
