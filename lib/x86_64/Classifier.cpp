@@ -33,7 +33,10 @@ namespace llvm_abi {
 		bool isPromotableIntegerType(const Type type) {
 			return type == BoolTy ||
 			       type == CharTy ||
-			       type == ShortTy;
+			       type == SCharTy ||
+			       type == UCharTy ||
+			       type == ShortTy ||
+			       type == UShortTy;
 		}
 		
 		/**
