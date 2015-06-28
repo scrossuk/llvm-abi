@@ -113,6 +113,11 @@ int main(int argc, char** argv) {
 		}
 	}
 	
+	if (abiString.empty()) {
+		printf("ERROR: No ABI specified.\n");
+		return EXIT_FAILURE;
+	}
+	
 	llvm_abi::TokenStream stream(functionTypeString);
 	llvm_abi::TypeParser parser(stream);
 	
