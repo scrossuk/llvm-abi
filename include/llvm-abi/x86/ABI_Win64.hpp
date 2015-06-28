@@ -15,35 +15,39 @@
 
 namespace llvm_abi {
 	
-	class Win64ABI: public ABI {
-	public:
-		Win64ABI(llvm::Module* module);
-		~Win64ABI();
+	namespace x86 {
 		
-		std::string name() const;
+		class Win64ABI: public ABI {
+		public:
+			Win64ABI(llvm::Module* module);
+			~Win64ABI();
+			
+			std::string name() const;
+			
+			const ABITypeInfo& typeInfo() const;
+			
+			llvm::CallingConv::ID getCallingConvention(CallingConvention callingConvention) const;
+			
+			llvm::FunctionType* getFunctionType(const FunctionType& functionType) const;
+			
+			llvm::AttributeSet getAttributes(const FunctionType& functionType,
+			                                 llvm::AttributeSet existingAttributes) const;
+			
+			llvm::Value* createCall(Builder& builder,
+			                        const FunctionType& functionType,
+			                        std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
+			                        llvm::ArrayRef<llvm::Value*> arguments) const;
+			
+			std::unique_ptr<FunctionEncoder> createFunctionEncoder(Builder& builder,
+			                                                       const FunctionType& functionType,
+			                                                       llvm::ArrayRef<llvm::Value*> arguments) const;
+			
+		private:
+			llvm::LLVMContext& llvmContext_;
+			
+		};
 		
-		const ABITypeInfo& typeInfo() const;
-		
-		llvm::CallingConv::ID getCallingConvention(CallingConvention callingConvention) const;
-		
-		llvm::FunctionType* getFunctionType(const FunctionType& functionType) const;
-		
-		llvm::AttributeSet getAttributes(const FunctionType& functionType,
-		                                 llvm::AttributeSet existingAttributes) const;
-		
-		llvm::Value* createCall(Builder& builder,
-		                        const FunctionType& functionType,
-		                        std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
-		                        llvm::ArrayRef<llvm::Value*> arguments) const;
-		
-		std::unique_ptr<FunctionEncoder> createFunctionEncoder(Builder& builder,
-		                                                       const FunctionType& functionType,
-		                                                       llvm::ArrayRef<llvm::Value*> arguments) const;
-		
-	private:
-		llvm::LLVMContext& llvmContext_;
-		
-	};
+	}
 	
 }
 

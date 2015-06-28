@@ -15,10 +15,10 @@ namespace llvm_abi {
 	                               const std::string& cpuName) {
 		switch (targetTriple.getArch()) {
 			case llvm::Triple::x86:
-				return std::unique_ptr<ABI>(new X86ABI(&module));
+				return std::unique_ptr<ABI>(new x86::X86ABI(&module));
 			case llvm::Triple::x86_64: {
 				if (targetTriple.isOSWindows()) {
-					return std::unique_ptr<ABI>(new Win64ABI(&module));
+					return std::unique_ptr<ABI>(new x86::Win64ABI(&module));
 				} else {
 					return std::unique_ptr<ABI>(new x86::X86_64ABI(&module,
 					                                               targetTriple,
