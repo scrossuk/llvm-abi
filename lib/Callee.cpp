@@ -407,22 +407,18 @@ namespace llvm_abi {
 							value = alignedTempAlloca;
 						}
 						
-						// Make sure pointer type is correct.
-						
-						
 						arguments.push_back(builder_.getBuilder().CreateLoad(value));
 					} else {
 						// Load scalar value from indirect argument.
-// 						const auto typeAlign = typeInfo_.getTypeRequiredAlign(argumentType);
-// 						
-// 						value = emitLoadOfScalar(value, false, typeAlign, argumentType);
-// 						
-// 						if (isPromoted) {
-// 							value = emitArgumentDemotion(value);
-// 						}
-// 						
-// 						arguments.push_back(value);
-						llvm_unreachable("TODO");
+						const auto typeAlign = typeInfo_.getTypeRequiredAlign(argumentType);
+						
+						// TODO: this needs to handle issues such
+						// as truncation of bool values, efficiently
+						// loading vectors etc.
+						const auto loadInst = builder_.getBuilder().CreateLoad(value);
+						loadInst->setAlignment(typeAlign.asBytes());
+						
+						arguments.push_back(loadInst);
 					}
 					break;
 				}
