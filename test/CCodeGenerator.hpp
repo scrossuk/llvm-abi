@@ -155,9 +155,10 @@ namespace llvm_abi {
 					return stream.str();
 				}
 				case VectorType: {
-					if (type.vectorElementType() == FloatTy &&
-					    type.vectorElementCount() == 4) {
-						sourceCodeStream_ << "typedef float Vector" << vectorId_ << " __attribute__((__vector_size__(16)));" << std::endl;
+					if (type.vectorElementType() == FloatTy) {
+						const auto vectorSize = type.vectorElementCount() * 4;
+						sourceCodeStream_ << "typedef float Vector" << vectorId_ << " ";
+						sourceCodeStream_ << "__attribute__((__vector_size__(" << vectorSize << ")));" << std::endl;
 						std::ostringstream stream;
 						stream << "Vector" << vectorId_;
 						vectorId_++;
