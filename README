@@ -1,5 +1,0 @@
-----------------
---- llvm-abi ---
-----------------
-
-This directory contains a support library for LLVM-based compiler front-ends that provides cross-platform ABI compliance.
