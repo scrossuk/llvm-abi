@@ -36,7 +36,10 @@ std::string getBaseName(const std::string& fileName) {
 	return fileName.substr(0, offset);
 }
 
-std::string runClangOnFunction(const std::string& clangPath, const FunctionType& functionType) {
+std::string runClangOnFunction(const std::string& abiString,
+                               const std::string& cpuString,
+                               const std::string& clangPath,
+                               const FunctionType& functionType) {
 	if (clangPath.empty()) {
 		printf("WARNING: No clang path provided!\n");
 		return "";
@@ -49,7 +52,11 @@ std::string runClangOnFunction(const std::string& clangPath, const FunctionType&
 	tempFile << cCodeGenerator.generatedSourceCode();
 	tempFile.close();
 	
-	const std::string cmd = clangPath + " -std=c++11 -S -emit-llvm tempfile.cpp -o tempfile.ll";
+	std::string cmd = clangPath + " -target " + abiString + " ";
+	if (!cpuString.empty()) {
+		cmd += "-march=" + cpuString + " ";
+	}
+	cmd += "-std=c++11 -S -emit-llvm tempfile.cpp -o tempfile.ll";
 	
 	const int result = system(cmd.c_str());
 	if (result != EXIT_SUCCESS) {
@@ -70,6 +77,7 @@ int main(int argc, char** argv) {
 	printf("Clang: %s\n", clangPath.c_str());
 	
 	std::string abiString;
+	std::string cpuString;
 	std::string functionTypeString = "";
 	
 	std::ifstream file(string.c_str());
@@ -107,7 +115,7 @@ int main(int argc, char** argv) {
 	
 	const auto functionType = parser.parseFunctionType();
 	
-	TestSystem testSystem(abiString);
+	TestSystem testSystem(abiString, cpuString);
 	
 	printf("Running test for function type: %s\n", functionType.toString().c_str());
 	
@@ -150,7 +158,7 @@ int main(int argc, char** argv) {
 					printf("%s\n", line.c_str());
 				}
 				
-				const auto cCompilerOutput = runClangOnFunction(clangPath, functionType);
+				const auto cCompilerOutput = runClangOnFunction(abiString, cpuString, clangPath, functionType);
 				printf("\n---- C compiler output (%s):\n%s\n\n",
 				       clangPath.c_str(),
 				       cCompilerOutput.c_str());
