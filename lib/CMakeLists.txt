@@ -10,6 +10,8 @@ add_library(llvm-abi
 	x86_64/ArgClass.cpp
 	x86_64/Classification.cpp
 	x86_64/Classifier.cpp
+	x86_64/CPUFeatures.cpp
+	x86_64/CPUKind.cpp
 	x86_64/X86_64ABI.cpp
 	x86_64/X86_64ABITypeInfo.cpp
 )

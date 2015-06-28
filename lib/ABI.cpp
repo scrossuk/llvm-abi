@@ -20,7 +20,9 @@ namespace llvm_abi {
 				if (targetTriple.isOSWindows()) {
 					return std::unique_ptr<ABI>(new ABI_Win64(&module));
 				} else {
-					return std::unique_ptr<ABI>(new x86_64::X86_64ABI(&module));
+					return std::unique_ptr<ABI>(new x86_64::X86_64ABI(&module,
+					                                                  targetTriple,
+					                                                  cpuName));
 				}
 			}
 			default:
