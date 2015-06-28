@@ -107,7 +107,7 @@ namespace llvm_abi {
 		virtual llvm::Value* createCall(Builder& builder,
 		                                const FunctionType& functionType,
 		                                std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
-		                                llvm::ArrayRef<llvm::Value*> arguments) = 0;
+		                                llvm::ArrayRef<llvm::Value*> arguments) const = 0;
 		
 		/**
 		 * \brief Create function.
