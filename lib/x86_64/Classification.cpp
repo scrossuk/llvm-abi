@@ -141,6 +141,8 @@ namespace llvm_abi {
 					// variadic function.
 					addField(offset, Sse);
 					addField(offset + 8, SseUp);
+				} else {
+					addField(offset, Memory);
 				}
 			} else {
 				llvm_unreachable("Unknown type kind.");
