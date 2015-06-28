@@ -46,10 +46,11 @@ private:
 
 class TestSystem {
 public:
-	TestSystem(const std::string& triple)
+	TestSystem(const std::string& triple,
+	           const std::string& cpu)
 	: context_(),
 	module_("", context_),
-	abi_(createABI(module_, llvm::Triple(triple))),
+	abi_(createABI(module_, llvm::Triple(triple), cpu)),
 	nextIntegerValue_(1) { }
 	
 	ABI& abi() {

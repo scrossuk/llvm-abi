@@ -165,7 +165,9 @@ namespace llvm_abi {
 	 * \param targetTriple the LLVM target triple.
 	 * \return The ABI for the target.
 	 */
-	std::unique_ptr<ABI> createABI(llvm::Module& module, const llvm::Triple& targetTriple);
+	std::unique_ptr<ABI> createABI(llvm::Module& module,
+	                               const llvm::Triple& targetTriple,
+	                               const std::string& cpu = "");
 
 }
 

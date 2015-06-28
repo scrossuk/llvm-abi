@@ -10,7 +10,9 @@
 
 namespace llvm_abi {
 	
-	std::unique_ptr<ABI> createABI(llvm::Module& module, const llvm::Triple& targetTriple) {
+	std::unique_ptr<ABI> createABI(llvm::Module& module,
+	                               const llvm::Triple& targetTriple,
+	                               const std::string& cpuName) {
 		switch (targetTriple.getArch()) {
 			case llvm::Triple::x86:
 				return std::unique_ptr<ABI>(new ABI_x86(&module));
