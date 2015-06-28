@@ -232,7 +232,7 @@ namespace llvm_abi {
 		
 		class FunctionEncoder_x86_64: public FunctionEncoder {
 		public:
-			FunctionEncoder_x86_64(X86_64ABI& abi,
+			FunctionEncoder_x86_64(const X86_64ABI& abi,
 			                       Builder& builder,
 		                               const FunctionType& functionType,
 			                       llvm::ArrayRef<llvm::Value*> pArguments)
@@ -274,9 +274,10 @@ namespace llvm_abi {
 			
 		};
 		
-		std::unique_ptr<FunctionEncoder> X86_64ABI::createFunction(Builder& builder,
-		                                                            const FunctionType& functionType,
-		                                                            llvm::ArrayRef<llvm::Value*> arguments) {
+		std::unique_ptr<FunctionEncoder>
+		X86_64ABI::createFunctionEncoder(Builder& builder,
+		                                 const FunctionType& functionType,
+		                                 llvm::ArrayRef<llvm::Value*> arguments) const {
 			return std::unique_ptr<FunctionEncoder>(new FunctionEncoder_x86_64(*this,
 			                                                               builder,
 			                                                               functionType,

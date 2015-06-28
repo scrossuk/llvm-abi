@@ -125,9 +125,9 @@ public:
 			encodedArgumentValues.push_back(it);
 		}
 		
-		auto functionEncoder = abi_->createFunction(builder,
-		                                            functionType,
-		                                            encodedArgumentValues);
+		auto functionEncoder = abi_->createFunctionEncoder(builder,
+		                                                   functionType,
+		                                                   encodedArgumentValues);
 		
 		const auto returnValue = abi_->createCall(
 			builder,

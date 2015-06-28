@@ -57,9 +57,10 @@ namespace llvm_abi {
 		llvm_unreachable("TODO");
 	}
 	
-	std::unique_ptr<FunctionEncoder> ABI_x86::createFunction(Builder& /*builder*/,
-	                                                         const FunctionType& /*functionType*/,
-	                                                         llvm::ArrayRef<llvm::Value*> /*arguments*/) {
+	std::unique_ptr<FunctionEncoder>
+	ABI_x86::createFunctionEncoder(Builder& /*builder*/,
+	                               const FunctionType& /*functionType*/,
+	                               llvm::ArrayRef<llvm::Value*> /*arguments*/) const {
 		llvm_unreachable("TODO");
 	}
 	

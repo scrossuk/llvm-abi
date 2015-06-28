@@ -110,7 +110,7 @@ namespace llvm_abi {
 		                                llvm::ArrayRef<llvm::Value*> arguments) const = 0;
 		
 		/**
-		 * \brief Create function.
+		 * \brief Create function encoder.
 		 * 
 		 * Creates a 'function encoder' that can be used to obtain the
 		 * ABI-independent arguments as well as return an ABI-independent
@@ -121,9 +121,9 @@ namespace llvm_abi {
 		 * \param arguments The ABI-encoded function arguments.
 		 * \return A function encoder instance.
 		 */
-		virtual std::unique_ptr<FunctionEncoder> createFunction(Builder& builder,
-		                                                        const FunctionType& functionType,
-		                                                        llvm::ArrayRef<llvm::Value*> arguments) = 0;
+		virtual std::unique_ptr<FunctionEncoder> createFunctionEncoder(Builder& builder,
+		                                                               const FunctionType& functionType,
+		                                                               llvm::ArrayRef<llvm::Value*> arguments) const = 0;
 		
 	};
 	

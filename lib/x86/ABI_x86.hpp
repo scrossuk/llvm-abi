@@ -35,9 +35,10 @@ namespace llvm_abi {
 		                        std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
 		                        llvm::ArrayRef<llvm::Value*> arguments) const;
 		
-		std::unique_ptr<FunctionEncoder> createFunction(Builder& builder,
-		                                                const FunctionType& functionType,
-		                                                llvm::ArrayRef<llvm::Value*> arguments);
+		std::unique_ptr<FunctionEncoder>
+		createFunctionEncoder(Builder& builder,
+		                      const FunctionType& functionType,
+		                      llvm::ArrayRef<llvm::Value*> arguments) const;
 		
 	private:
 		llvm::LLVMContext& llvmContext_;
