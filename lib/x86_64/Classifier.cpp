@@ -194,19 +194,6 @@ namespace llvm_abi {
 			return ArgInfo::getIndirect(0);
 		}
 		
-		bool IsIllegalVectorType(const ABITypeInfo& /*typeInfo*/,
-		                         const Type /*type*/) {
-			/*if (type.isVector()) {
-				const size_t size = typeInfo.getTypeSize(type);
-				const size_t largestVector = typeInfo.hasAVX() ? 256 : 128;
-				if (size <= 64 || size > largestVector) {
-					return true;
-				}
-			}*/
-			
-			return false;
-		}
-		
 		ArgInfo getIndirectResult(const ABITypeInfo& typeInfo,
 		                          const Type type,
 		                          unsigned freeIntRegs) {
@@ -219,7 +206,7 @@ namespace llvm_abi {
 			// but this code would be much safer if we could mark the argument with
 			// 'onstack'. See PR12193.
 			if (!isAggregateTypeForABI(type) &&
-			    !IsIllegalVectorType(typeInfo, type)) {
+			    (!type.isVector() || typeInfo.isLegalVectorType(type))) {
 				return isPromotableIntegerType(type) ?
 					ArgInfo::getExtend(type) : ArgInfo::getDirect(type);
 			}

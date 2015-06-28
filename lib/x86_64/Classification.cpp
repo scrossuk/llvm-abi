@@ -54,7 +54,6 @@ namespace llvm_abi {
 		                                  const Type type,
 		                                  const size_t offset) {
 			// TODO!
-			const bool hasAVX = true;
 			const bool isNamedArg = true;
 			
 			if (type.isVoid()) {
@@ -128,7 +127,7 @@ namespace llvm_abi {
 						addField(offset, Sse);
 					}
 				} else if (size.asBits() == 128 ||
-					   (hasAVX && isNamedArg && size.asBits() == 256)) {
+					   (isNamedArg && size.asBits() == 256 && typeInfo.isLegalVectorType(type))) {
 					// Arguments of 256-bits are split into four eightbyte chunks. The
 					// least significant one belongs to class SSE and all the others to class
 					// SSEUP. The original Lo and Hi design considers that types can't be
