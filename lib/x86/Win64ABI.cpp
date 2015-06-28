@@ -3,7 +3,7 @@
 #include <llvm-abi/ABI.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include <llvm-abi/x86/ABI_Win64.hpp>
+#include <llvm-abi/x86/Win64ABI.hpp>
 
 namespace llvm_abi {
 	
