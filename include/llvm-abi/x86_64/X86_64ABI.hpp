@@ -13,6 +13,8 @@
 #include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/Type.hpp>
 
+#include <llvm-abi/x86_64/CPUFeatures.hpp>
+#include <llvm-abi/x86_64/CPUKind.hpp>
 #include <llvm-abi/x86_64/X86_64ABITypeInfo.hpp>
 
 namespace llvm_abi {
@@ -24,7 +26,9 @@ namespace llvm_abi {
 		
 		class X86_64ABI: public ABI {
 		public:
-			X86_64ABI(llvm::Module* module);
+			X86_64ABI(llvm::Module* module,
+			          const llvm::Triple& targetTriple,
+			          const std::string& cpuName);
 			~X86_64ABI();
 			
 			llvm::LLVMContext& context() const {
@@ -69,6 +73,8 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			CPUKind cpuKind_;
+			CPUFeatures cpuFeatures_;
 			llvm::Module* module_;
 			X86_64ABITypeInfo typeInfo_;
 			mutable ABITypeCache abiTypeCache_;

@@ -13,6 +13,7 @@
 #include <llvm-abi/x86_64/ArgClass.hpp>
 #include <llvm-abi/x86_64/Classification.hpp>
 #include <llvm-abi/x86_64/Classifier.hpp>
+#include <llvm-abi/x86_64/CPUKind.hpp>
 #include <llvm-abi/x86_64/X86_64ABI.hpp>
 #include <llvm-abi/x86_64/X86_64ABITypeInfo.hpp>
 
@@ -20,10 +21,16 @@ namespace llvm_abi {
 	
 	namespace x86_64 {
 		
-		X86_64ABI::X86_64ABI(llvm::Module* module)
+		X86_64ABI::X86_64ABI(llvm::Module* module,
+		                     const llvm::Triple& targetTriple,
+		                     const std::string& cpuName)
 		: llvmContext_(module->getContext()),
+		cpuKind_(getCPUKind(targetTriple,
+		                    cpuName)),
+		cpuFeatures_(getCPUFeatures(targetTriple,
+		                            cpuKind_)),
 		module_(module),
-		typeInfo_(llvmContext_) {
+		typeInfo_(llvmContext_, cpuFeatures_) {
 			(void) module_;
 		}
 		

@@ -8,14 +8,17 @@
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
+#include <llvm-abi/x86_64/CPUFeatures.hpp>
 #include <llvm-abi/x86_64/X86_64ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	
 	namespace x86_64 {
 		
-		X86_64ABITypeInfo::X86_64ABITypeInfo(llvm::LLVMContext& llvmContext)
-		: llvmContext_(llvmContext) { }
+		X86_64ABITypeInfo::X86_64ABITypeInfo(llvm::LLVMContext& llvmContext,
+		                                     const CPUFeatures& cpuFeatures)
+		: llvmContext_(llvmContext),
+		cpuFeatures_(cpuFeatures) { }
 		
 		const TypeBuilder& X86_64ABITypeInfo::typeBuilder() const {
 			return typeBuilder_;
@@ -228,6 +231,13 @@ namespace llvm_abi {
 			}
 			
 			return offsets;
+		}
+		
+		bool X86_64ABITypeInfo::isLegalVectorType(const Type type) const {
+			assert(type.isVector());
+			const auto size = getTypeAllocSize(type);
+			const size_t largestVector = cpuFeatures_.hasAVX() ? 256 : 128;
+			return size.asBits() > 64 && size.asBits() <= largestVector;
 		}
 		
 		bool X86_64ABITypeInfo::isBigEndian() const {

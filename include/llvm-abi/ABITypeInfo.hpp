@@ -79,6 +79,14 @@ namespace llvm_abi {
 		virtual llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
 		
 		/**
+		 * \brief Queries whether vector type is legal for target.
+		 * 
+		 * \param type The ABI vector type.
+		 * \return Whether the vector type is legal.
+		 */
+		virtual bool isLegalVectorType(Type type) const = 0;
+		
+		/**
 		 * \brief Queries whether ABI is big-endian.
 		 * 
 		 * \return Whether ABI is big-endian.

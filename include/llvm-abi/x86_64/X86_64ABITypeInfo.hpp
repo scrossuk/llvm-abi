@@ -14,9 +14,12 @@ namespace llvm_abi {
 	
 	namespace x86_64 {
 		
+		class CPUFeatures;
+		
 		class X86_64ABITypeInfo: public ABITypeInfo {
 		public:
-			X86_64ABITypeInfo(llvm::LLVMContext& llvmContext);
+			X86_64ABITypeInfo(llvm::LLVMContext& llvmContext,
+			                  const CPUFeatures& cpuFeatures);
 			
 			const TypeBuilder& typeBuilder() const;
 			
@@ -30,9 +33,11 @@ namespace llvm_abi {
 			
 			DataSize getTypePreferredAlign(Type type) const;
 			
-			llvm::Type* getLLVMType(const Type type) const;
+			llvm::Type* getLLVMType(Type type) const;
 			
 			llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
+			
+			bool isLegalVectorType(Type type) const;
 			
 			bool isBigEndian() const;
 			
@@ -40,6 +45,7 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			const CPUFeatures& cpuFeatures_;
 			TypeBuilder typeBuilder_;
 			
 		};
