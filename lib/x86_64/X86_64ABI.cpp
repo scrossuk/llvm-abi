@@ -152,7 +152,7 @@ namespace llvm_abi {
 				case ArgInfo::Expand:
 					llvm_unreachable("Invalid ABI kind for return argument");
 			}
-
+			
 			// Attach return attributes.
 			if (returnAttrs.hasAttributes()) {
 				attributes.push_back(llvm::AttributeSet::get(context(), llvm::AttributeSet::ReturnIndex, returnAttrs));
