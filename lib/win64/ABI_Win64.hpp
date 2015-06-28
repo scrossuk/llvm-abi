@@ -22,15 +22,7 @@ namespace llvm_abi {
 		
 		std::string name() const;
 		
-		size_t typeSize(Type type) const;
-		
-		size_t typeAlign(Type type) const;
-		
-		llvm::Type* getLLVMType(Type type) const;
-		
-		std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
-		
-		llvm::Type* longDoubleType() const;
+		const ABITypeInfo& typeInfo() const;
 		
 		llvm::CallingConv::ID getCallingConvention(CallingConvention callingConvention) const;
 		

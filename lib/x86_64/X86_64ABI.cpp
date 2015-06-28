@@ -40,44 +40,8 @@ namespace llvm_abi {
 			return "x86_64";
 		}
 		
-		size_t X86_64ABI::typeSize(const Type type) const {
-			const auto iterator = sizeOfCache_.find(type);
-			if (iterator != sizeOfCache_.end()) {
-				return iterator->second;
-			}
-			
-			const auto value = typeInfo_.getTypeAllocSize(type).asBytes();
-			sizeOfCache_.insert(std::make_pair(type, value));
-			return value;
-		}
-		
-		size_t X86_64ABI::typeAlign(const Type type) const {
-			const auto iterator = alignOfCache_.find(type);
-			if (iterator != alignOfCache_.end()) {
-				return iterator->second;
-			}
-			
-			const auto value = typeInfo_.getTypeRequiredAlign(type).asBytes();
-			alignOfCache_.insert(std::make_pair(type, value));
-			return value;
-		}
-		
-		llvm::Type* X86_64ABI::getLLVMType(const Type type) const {
-			return typeInfo_.getLLVMType(type);
-		}
-		
-		std::vector<size_t> X86_64ABI::calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const {
-			auto result = typeInfo_.calculateStructOffsets(structMembers);
-			std::vector<size_t> offsets;
-			offsets.reserve(result.size());
-			for (const auto& resultValue: result) {
-				offsets.push_back(resultValue.asBytes());
-			}
-			return offsets;
-		}
-		
-		llvm::Type* X86_64ABI::longDoubleType() const {
-			return llvm::Type::getX86_FP80Ty(llvmContext_);
+		const ABITypeInfo& X86_64ABI::typeInfo() const {
+			return typeInfo_;
 		}
 		
 		llvm::CallingConv::ID X86_64ABI::getCallingConvention(const CallingConvention callingConvention) const {

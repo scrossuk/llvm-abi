@@ -15,6 +15,7 @@
 
 namespace llvm_abi {
 	
+	class ABITypeInfo;
 	class Builder;
 	class FunctionEncoder;
 	class FunctionType;
@@ -45,43 +46,11 @@ namespace llvm_abi {
 		virtual std::string name() const = 0;
 		
 		/**
-		 * \brief Get the size of a type for this ABI.
+		 * \brief Get ABI type information.
 		 * 
-		 * \param type The type.
-		 * \return The size of the type.
+		 * \return ABI type information.
 		 */
-		virtual size_t typeSize(Type type) const = 0;
-		
-		/**
-		 * \brief Get the alignment of a type for this ABI.
-		 * 
-		 * \param type The type.
-		 * \return The alignment of the type.
-		 */
-		virtual size_t typeAlign(Type type) const = 0;
-		
-		/**
-		 * \brief Get the LLVM type used to represent the ABI type given.
-		 * 
-		 * \param type The ABI type.
-		 * \return The LLVM type representing the ABI type.
-		 */
-		virtual llvm::Type* getLLVMType(Type type) const = 0;
-		
-		/**
-		 * \brief Create an array of offsets based on struct member types.
-		 * 
-		 * \param structMembers The member types of the struct.
-		 * \return The offsets of each member of the struct.
-		 */
-		virtual std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
-		
-		/**
-		 * \brief Get the LLVM type used to represent a 'long double' for this ABI.
-		 * 
-		 * \return The LLVM type representing a 'long double'.
-		 */
-		virtual llvm::Type* longDoubleType() const = 0;
+		virtual const ABITypeInfo& typeInfo() const = 0;
 		
 		/**
 		 * \brief Get the LLVM calling convention for this ABI.

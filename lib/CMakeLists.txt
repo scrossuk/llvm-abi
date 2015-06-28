@@ -7,6 +7,7 @@ add_library(llvm-abi
 	TypeBuilder.cpp
 	win64/ABI_Win64.cpp
 	x86/ABI_x86.cpp
+	x86/X86ABITypeInfo.cpp
 	x86_64/ArgClass.cpp
 	x86_64/Classification.cpp
 	x86_64/Classifier.cpp

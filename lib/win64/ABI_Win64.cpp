@@ -16,24 +16,8 @@ namespace llvm_abi {
 		return "Win64";
 	}
 	
-	size_t ABI_Win64::typeSize(Type /*type*/) const {
+	const ABITypeInfo& ABI_Win64::typeInfo() const {
 		llvm_unreachable("TODO");
-	}
-	
-	size_t ABI_Win64::typeAlign(Type /*type*/) const {
-		llvm_unreachable("TODO");
-	}
-	
-	llvm::Type* ABI_Win64::getLLVMType(Type /*type*/) const {
-		llvm_unreachable("TODO");
-	}
-	
-	std::vector<size_t> ABI_Win64::calculateStructOffsets(llvm::ArrayRef<StructMember> /*structMembers*/) const {
-		llvm_unreachable("TODO");
-	}
-	
-	llvm::Type* ABI_Win64::longDoubleType() const {
-		return llvm::Type::getX86_FP80Ty(llvmContext_);
 	}
 	
 	llvm::CallingConv::ID ABI_Win64::getCallingConvention(const CallingConvention callingConvention) const {

@@ -10,6 +10,8 @@
 #include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/Type.hpp>
 
+#include "X86ABITypeInfo.hpp"
+
 namespace llvm_abi {
 
 	class ABI_x86: public ABI {
@@ -19,15 +21,7 @@ namespace llvm_abi {
 		
 		std::string name() const;
 		
-		size_t typeSize(Type type) const;
-		
-		size_t typeAlign(Type type) const;
-		
-		llvm::Type* getLLVMType(Type type) const;
-		
-		std::vector<size_t> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
-		
-		llvm::Type* longDoubleType() const;
+		const ABITypeInfo& typeInfo() const;
 		
 		llvm::CallingConv::ID getCallingConvention(CallingConvention callingConvention) const;
 		
@@ -47,6 +41,7 @@ namespace llvm_abi {
 		
 	private:
 		llvm::LLVMContext& llvmContext_;
+		X86ABITypeInfo typeInfo_;
 		
 	};
 

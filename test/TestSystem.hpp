@@ -10,6 +10,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <llvm-abi/ABI.hpp>
+#include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/Builder.hpp>
 #include <llvm-abi/FunctionEncoder.hpp>
 #include <llvm-abi/FunctionType.hpp>
@@ -58,6 +59,7 @@ public:
 	}
 	
 	llvm::Constant* getConstantValue(const Type type) {
+		const auto& typeInfo = abi_->typeInfo();
 		switch (type.kind()) {
 			case VoidType:
 				return llvm::UndefValue::get(llvm::Type::getVoidTy(context_));
@@ -65,10 +67,10 @@ public:
 				return llvm::ConstantPointerNull::get(llvm::Type::getInt8PtrTy(context_));
 			case UnspecifiedWidthIntegerType:
 			case FixedWidthIntegerType:
-				return llvm::ConstantInt::get(abi_->getLLVMType(type),
+				return llvm::ConstantInt::get(typeInfo.getLLVMType(type),
 				                              nextIntegerValue_++);
 			case FloatingPointType:
-				return llvm::ConstantFP::get(abi_->getLLVMType(type),
+				return llvm::ConstantFP::get(typeInfo.getLLVMType(type),
 				                             static_cast<double>(nextIntegerValue_++));
 			case ComplexType:
 				llvm_unreachable("TODO");
@@ -76,7 +78,7 @@ public:
 				llvm::SmallVector<llvm::Type*, 8> types;
 				llvm::SmallVector<llvm::Constant*, 8> values;
 				for (const auto& structMember: type.structMembers()) {
-					types.push_back(abi_->getLLVMType(structMember.type()));
+					types.push_back(typeInfo.getLLVMType(structMember.type()));
 					values.push_back(getConstantValue(structMember.type()));
 				}
 				
@@ -89,7 +91,7 @@ public:
 					values.push_back(getConstantValue(type.arrayElementType()));
 				}
 				
-				const auto arrayType = llvm::ArrayType::get(abi_->getLLVMType(type.arrayElementType()),
+				const auto arrayType = llvm::ArrayType::get(typeInfo.getLLVMType(type.arrayElementType()),
 				                                            type.arrayElementCount());
 				return llvm::ConstantArray::get(arrayType, values);
 			}
