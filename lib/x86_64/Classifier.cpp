@@ -196,7 +196,7 @@ namespace llvm_abi {
 		
 		ArgInfo getIndirectResult(const ABITypeInfo& typeInfo,
 		                          const Type type,
-		                          unsigned freeIntRegs) {
+		                          const unsigned freeIntRegs) {
 			// If this is a scalar LLVM value then assume LLVM will pass it in the right
 			// place naturally.
 			//
