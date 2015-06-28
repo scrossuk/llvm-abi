@@ -131,6 +131,7 @@ int main(int argc, char** argv) {
 	printf("filename = %s\n", fileName.c_str());
 	
 	testSystem.doTest(fileName, functionType);
+	
 	{
 		std::string filename;
 		filename += "test-";
