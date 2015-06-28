@@ -1,4 +1,4 @@
-#include <llvm-abi/x86_64/ArgClass.hpp>
+#include <llvm-abi/x86/ArgClass.hpp>
 
 namespace llvm_abi {
 	

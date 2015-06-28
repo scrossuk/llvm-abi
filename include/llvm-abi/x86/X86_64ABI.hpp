@@ -13,9 +13,9 @@
 #include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include <llvm-abi/x86_64/CPUFeatures.hpp>
-#include <llvm-abi/x86_64/CPUKind.hpp>
-#include <llvm-abi/x86_64/X86_64ABITypeInfo.hpp>
+#include <llvm-abi/x86/CPUFeatures.hpp>
+#include <llvm-abi/x86/CPUKind.hpp>
+#include <llvm-abi/x86/X86_64ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	

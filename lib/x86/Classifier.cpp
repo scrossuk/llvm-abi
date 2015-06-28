@@ -12,9 +12,9 @@
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
-#include <llvm-abi/x86_64/ArgClass.hpp>
-#include <llvm-abi/x86_64/Classification.hpp>
-#include <llvm-abi/x86_64/Classifier.hpp>
+#include <llvm-abi/x86/ArgClass.hpp>
+#include <llvm-abi/x86/Classification.hpp>
+#include <llvm-abi/x86/Classifier.hpp>
 
 namespace llvm_abi {
 	

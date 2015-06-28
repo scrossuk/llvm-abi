@@ -4,8 +4,8 @@
 #include <llvm/ADT/StringSwitch.h>
 #include <llvm/ADT/Triple.h>
 
-#include <llvm-abi/x86_64/CPUFeatures.hpp>
-#include <llvm-abi/x86_64/CPUKind.hpp>
+#include <llvm-abi/x86/CPUFeatures.hpp>
+#include <llvm-abi/x86/CPUKind.hpp>
 
 namespace llvm_abi {
 	

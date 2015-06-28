@@ -5,8 +5,8 @@
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include <llvm-abi/x86_64/ArgClass.hpp>
-#include <llvm-abi/x86_64/Classification.hpp>
+#include <llvm-abi/x86/ArgClass.hpp>
+#include <llvm-abi/x86/Classification.hpp>
 
 namespace llvm_abi {
 	

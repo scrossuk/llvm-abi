@@ -10,12 +10,12 @@
 #include <llvm-abi/FunctionType.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include <llvm-abi/x86_64/ArgClass.hpp>
-#include <llvm-abi/x86_64/Classification.hpp>
-#include <llvm-abi/x86_64/Classifier.hpp>
-#include <llvm-abi/x86_64/CPUKind.hpp>
-#include <llvm-abi/x86_64/X86_64ABI.hpp>
-#include <llvm-abi/x86_64/X86_64ABITypeInfo.hpp>
+#include <llvm-abi/x86/ArgClass.hpp>
+#include <llvm-abi/x86/Classification.hpp>
+#include <llvm-abi/x86/Classifier.hpp>
+#include <llvm-abi/x86/CPUKind.hpp>
+#include <llvm-abi/x86/X86_64ABI.hpp>
+#include <llvm-abi/x86/X86_64ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	

@@ -3,9 +3,9 @@
 #include <string>
 
 #include <llvm-abi/ABI.hpp>
-#include <llvm-abi/x86_64/X86_64ABI.hpp>
+#include <llvm-abi/x86/X86_64ABI.hpp>
 
-#include "win64/ABI_Win64.hpp"
+#include "x86/ABI_Win64.hpp"
 #include "x86/ABI_x86.hpp"
 
 namespace llvm_abi {

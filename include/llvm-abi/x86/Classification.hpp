@@ -1,7 +1,7 @@
 #ifndef LLVMABI_X86_64_CLASSIFICATION_HPP
 #define LLVMABI_X86_64_CLASSIFICATION_HPP
 
-#include <llvm-abi/x86_64/ArgClass.hpp>
+#include <llvm-abi/x86/ArgClass.hpp>
 
 namespace llvm_abi {
 	
