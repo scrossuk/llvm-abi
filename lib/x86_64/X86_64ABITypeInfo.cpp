@@ -153,7 +153,12 @@ namespace llvm_abi {
 				}
 				case VectorType: {
 					const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
-					const auto minAlign = getTypeAllocSize(type).asBytes() >= 16 ? DataSize::Bytes(16) : DataSize::Bytes(1);
+					const auto minAlign =
+						getTypeAllocSize(type).asBytes() >= 32 ?
+							DataSize::Bytes(32) :
+							getTypeAllocSize(type).asBytes() >= 16 ?
+								DataSize::Bytes(16) :
+								DataSize::Bytes(1);
 					return std::max<DataSize>(elementAlign, minAlign);
 				}
 				default:
