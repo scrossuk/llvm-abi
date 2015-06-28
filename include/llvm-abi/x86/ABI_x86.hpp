@@ -1,5 +1,5 @@
-#ifndef LLVMABI_X86_ABI_X86_HPP
-#define LLVMABI_X86_ABI_X86_HPP
+#ifndef LLVMABI_X86_X86ABI_HPP
+#define LLVMABI_X86_X86ABI_HPP
 
 #include <vector>
 
@@ -14,10 +14,10 @@
 
 namespace llvm_abi {
 
-	class ABI_x86: public ABI {
+	class X86ABI: public ABI {
 	public:
-		ABI_x86(llvm::Module* module);
-		~ABI_x86();
+		X86ABI(llvm::Module* module);
+		~X86ABI();
 		
 		std::string name() const;
 		

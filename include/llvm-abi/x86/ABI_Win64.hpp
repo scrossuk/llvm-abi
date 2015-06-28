@@ -1,5 +1,5 @@
-#ifndef LLVMABI_X86_ABI_WIN64_HPP
-#define LLVMABI_X86_ABI_WIN64_HPP
+#ifndef LLVMABI_X86_WIN64ABI_HPP
+#define LLVMABI_X86_WIN64ABI_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -15,10 +15,10 @@
 
 namespace llvm_abi {
 	
-	class ABI_Win64: public ABI {
+	class Win64ABI: public ABI {
 	public:
-		ABI_Win64(llvm::Module* module);
-		~ABI_Win64();
+		Win64ABI(llvm::Module* module);
+		~Win64ABI();
 		
 		std::string name() const;
 		

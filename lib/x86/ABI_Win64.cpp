@@ -7,20 +7,20 @@
 
 namespace llvm_abi {
 	
-	ABI_Win64::ABI_Win64(llvm::Module* module)
+	Win64ABI::Win64ABI(llvm::Module* module)
 	: llvmContext_(module->getContext()) { }
 	
-	ABI_Win64::~ABI_Win64() { }
+	Win64ABI::~Win64ABI() { }
 	
-	std::string ABI_Win64::name() const {
+	std::string Win64ABI::name() const {
 		return "Win64";
 	}
 	
-	const ABITypeInfo& ABI_Win64::typeInfo() const {
+	const ABITypeInfo& Win64ABI::typeInfo() const {
 		llvm_unreachable("TODO");
 	}
 	
-	llvm::CallingConv::ID ABI_Win64::getCallingConvention(const CallingConvention callingConvention) const {
+	llvm::CallingConv::ID Win64ABI::getCallingConvention(const CallingConvention callingConvention) const {
 		switch (callingConvention) {
 			case CC_CDefault:
 			case CC_CppDefault:
@@ -30,23 +30,23 @@ namespace llvm_abi {
 		}
 	}
 	
-	llvm::FunctionType* ABI_Win64::getFunctionType(const FunctionType& /*functionType*/) const {
+	llvm::FunctionType* Win64ABI::getFunctionType(const FunctionType& /*functionType*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	llvm::AttributeSet ABI_Win64::getAttributes(const FunctionType& /*functionType*/,
+	llvm::AttributeSet Win64ABI::getAttributes(const FunctionType& /*functionType*/,
 	                                            const llvm::AttributeSet /*existingAttributes*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	llvm::Value* ABI_Win64::createCall(Builder& /*builder*/,
+	llvm::Value* Win64ABI::createCall(Builder& /*builder*/,
 	                                   const FunctionType& /*functionType*/,
 	                                   std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> /*callBuilder*/,
 	                                   llvm::ArrayRef<llvm::Value*> /*arguments*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	std::unique_ptr<FunctionEncoder> ABI_Win64::createFunctionEncoder(Builder& /*builder*/,
+	std::unique_ptr<FunctionEncoder> Win64ABI::createFunctionEncoder(Builder& /*builder*/,
 	                                                                  const FunctionType& /*functionType*/,
 	                                                                  llvm::ArrayRef<llvm::Value*> /*arguments*/) const {
 		llvm_unreachable("TODO");
