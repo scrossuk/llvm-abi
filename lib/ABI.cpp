@@ -3,10 +3,10 @@
 #include <string>
 
 #include <llvm-abi/ABI.hpp>
-#include <llvm-abi/x86/X86_64ABI.hpp>
 
-#include "x86/ABI_Win64.hpp"
-#include "x86/ABI_x86.hpp"
+#include <llvm-abi/x86/ABI_Win64.hpp>
+#include <llvm-abi/x86/ABI_x86.hpp>
+#include <llvm-abi/x86/X86_64ABI.hpp>
 
 namespace llvm_abi {
 	

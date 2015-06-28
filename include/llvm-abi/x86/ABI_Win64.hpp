@@ -1,5 +1,5 @@
-#ifndef LLVMABI_ABI_WIN64_HPP
-#define LLVMABI_ABI_WIN64_HPP
+#ifndef LLVMABI_X86_ABI_WIN64_HPP
+#define LLVMABI_X86_ABI_WIN64_HPP
 
 #include <unordered_map>
 #include <vector>

@@ -3,8 +3,8 @@
 #include <llvm-abi/ABI.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include "ABI_x86.hpp"
-#include "X86ABITypeInfo.hpp"
+#include <llvm-abi/x86/ABI_x86.hpp>
+#include <llvm-abi/x86/X86ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	

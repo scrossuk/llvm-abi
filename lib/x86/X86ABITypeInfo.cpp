@@ -6,7 +6,7 @@
 #include <llvm-abi/DataSize.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include "X86ABITypeInfo.hpp"
+#include <llvm-abi/x86/X86ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	

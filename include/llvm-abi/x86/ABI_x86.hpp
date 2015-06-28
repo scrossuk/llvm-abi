@@ -1,5 +1,5 @@
-#ifndef LLVMABI_ABI_X86_HPP
-#define LLVMABI_ABI_X86_HPP
+#ifndef LLVMABI_X86_ABI_X86_HPP
+#define LLVMABI_X86_ABI_X86_HPP
 
 #include <vector>
 
@@ -10,7 +10,7 @@
 #include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include "X86ABITypeInfo.hpp"
+#include <llvm-abi/x86/X86ABITypeInfo.hpp>
 
 namespace llvm_abi {
 
