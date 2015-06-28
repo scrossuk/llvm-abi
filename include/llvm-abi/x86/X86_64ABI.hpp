@@ -19,7 +19,7 @@
 
 namespace llvm_abi {
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		using ABISizeCache = std::unordered_map<Type, size_t>;
 		using ABITypeCache = std::unordered_map<Type, llvm::Type*>;

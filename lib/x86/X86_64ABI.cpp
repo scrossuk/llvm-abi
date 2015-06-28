@@ -19,7 +19,7 @@
 
 namespace llvm_abi {
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		X86_64ABI::X86_64ABI(llvm::Module* module,
 		                     const llvm::Triple& targetTriple,

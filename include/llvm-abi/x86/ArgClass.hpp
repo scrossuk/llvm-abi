@@ -3,7 +3,7 @@
 
 namespace llvm_abi {
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		/**
 		 * \brief x86_64 Argument Class

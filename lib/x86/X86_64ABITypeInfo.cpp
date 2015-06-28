@@ -13,7 +13,7 @@
 
 namespace llvm_abi {
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		X86_64ABITypeInfo::X86_64ABITypeInfo(llvm::LLVMContext& llvmContext,
 		                                     const CPUFeatures& cpuFeatures)

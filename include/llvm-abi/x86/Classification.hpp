@@ -7,7 +7,7 @@ namespace llvm_abi {
 	
 	class ABITypeInfo;
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		class Classification {
 		public:

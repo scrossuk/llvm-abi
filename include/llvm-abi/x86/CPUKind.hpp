@@ -7,7 +7,7 @@
 
 namespace llvm_abi {
 	
-	namespace x86_64 {
+	namespace x86 {
 		
 		/// \brief Enumeration of all of the X86 CPUs supported by Clang.
 		///
