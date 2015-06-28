@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
 	std::ifstream file(string.c_str());
 	
 	const std::string ABI_COMMAND = "ABI";
+	const std::string CPU_COMMAND = "CPU";
 	const std::string FUNCTION_TYPE_COMMAND = "FUNCTION-TYPE";
 	
 	std::vector<std::string> compareLines;
@@ -102,6 +103,8 @@ int main(int argc, char** argv) {
 			// This is a command.
 			if (line.substr(i, ABI_COMMAND.size()) == ABI_COMMAND) {
 				abiString = line.substr(i + ABI_COMMAND.size() + 2);
+			} else if (line.substr(i, CPU_COMMAND.size()) == CPU_COMMAND) {
+				cpuString = line.substr(i + CPU_COMMAND.size() + 2);
 			} else if (line.substr(i, FUNCTION_TYPE_COMMAND.size()) == FUNCTION_TYPE_COMMAND) {
 				functionTypeString = line.substr(i + FUNCTION_TYPE_COMMAND.size() + 1);
 			}
