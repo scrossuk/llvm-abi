@@ -593,7 +593,9 @@ namespace llvm_abi {
 		Classifier::Classifier(const ABITypeInfo& typeInfo)
 		: typeInfo_(typeInfo) { }
 		
-		Classification Classifier::classify(const Type type) {
+		Classification Classifier::classify(const Type type,
+		                                    // TODO!
+		                                    const bool /*isNamedArg*/) {
 			Classification classification;
 			
 			if (typeInfo_.getTypeAllocSize(type).asBytes() > 32 ||
@@ -623,12 +625,14 @@ namespace llvm_abi {
 		                                 const bool isArgument,
 		                                 const unsigned freeIntRegs,
 		                                 unsigned& neededInt,
-		                                 unsigned& neededSse) {
+		                                 unsigned& neededSse,
+		                                 bool isNamedArg) {
 			// type = useFirstFieldIfTransparentUnion(type);
 			
 			// AMD64-ABI 3.2.3p4: Rule 1. Classify the return type with the
 			// classification algorithm.
-			const auto classification = classify(type);
+			const auto classification = classify(type,
+			                                     isNamedArg);
 			
 			// Sanity check classification.
 			assert(classification.high() != Memory ||
@@ -834,7 +838,8 @@ namespace llvm_abi {
 			                    isArgument,
 			                    freeIntRegs,
 			                    neededInt,
-			                    neededSse);
+			                    neededSse,
+			                    /*isNamedArg=*/true);
 		}
 		
 		llvm::SmallVector<ArgInfo, 8>
@@ -860,14 +865,15 @@ namespace llvm_abi {
 				++freeIntRegs;
 			}*/
 			
-			//const unsigned numRequiredArgs = functionType.argumentTypes().size();
+			const size_t numRequiredArgs = functionType.argumentTypes().size();
 			
 			// AMD64-ABI 3.2.3p3: Once arguments are classified, the registers
 			// get assigned (in left-to-right order) for passing as follows...
 			for (size_t i = 0; i < argumentTypes.size(); i++) {
-				//const bool IsNamedArg = i < numRequiredArgs;
+				const bool isNamedArg = i < numRequiredArgs;
 				const auto argType = argumentTypes[i];
 				
+				assert(!isNamedArg || argType == functionType.argumentTypes()[i]);
 				
 				const bool isArgument = true;
 				unsigned neededInt = 0;
@@ -876,7 +882,8 @@ namespace llvm_abi {
 				                               isArgument,
 				                               freeIntRegs,
 				                               neededInt,
-				                               neededSse);
+				                               neededSse,
+				                               isNamedArg);
 				// AMD64-ABI 3.2.3p3: If there are no registers available for any
 				// eightbyte of an argument, the whole argument is passed on the
 				// stack. If registers have already been assigned for some

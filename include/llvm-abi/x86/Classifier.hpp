@@ -15,13 +15,15 @@ namespace llvm_abi {
 		public:
 			Classifier(const ABITypeInfo& typeInfo);
 			
-			Classification classify(const Type type);
+			Classification classify(const Type type,
+			                        bool isNamedArg);
 			
 			ArgInfo classifyType(Type type,
 			                     bool isArgument,
 			                     unsigned freeIntRegs,
 			                     unsigned &neededInt,
-			                     unsigned &neededSse);
+			                     unsigned &neededSse,
+			                     bool isNamedArg);
 			
 			ArgInfo classifyReturnType(Type type);
 			
