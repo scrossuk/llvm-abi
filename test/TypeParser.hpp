@@ -13,7 +13,7 @@
 #include "TokenStream.hpp"
 
 namespace llvm_abi {
-
+	
 	class TypeParser {
 	public:
 		TypeParser(TokenStream& stream)
