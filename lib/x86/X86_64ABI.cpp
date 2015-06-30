@@ -9,6 +9,7 @@
 #include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/FunctionType.hpp>
 #include <llvm-abi/Type.hpp>
+#include <llvm-abi/TypePromoter.hpp>
 
 #include <llvm-abi/x86/ArgClass.hpp>
 #include <llvm-abi/x86/Classification.hpp>
@@ -220,7 +221,16 @@ namespace llvm_abi {
 		llvm::Value* X86_64ABI::createCall(Builder& builder,
 		                                    const FunctionType& functionType,
 		                                    std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
-		                                    llvm::ArrayRef<TypedValue> arguments) const {
+		                                    llvm::ArrayRef<TypedValue> rawArguments) const {
+			
+			TypePromoter typePromoter(typeInfo(),
+			                          builder);
+			
+			// Promote any varargs arguments (that haven't already been
+			// promoted). This changes char => int, float => double etc.
+			const auto arguments = typePromoter.promoteArguments(functionType,
+			                                                     rawArguments);
+			
 			llvm::SmallVector<Type, 8> argumentTypes;
 			for (const auto& value: arguments) {
 				argumentTypes.push_back(value.second);
