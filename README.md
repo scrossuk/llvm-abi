@@ -45,7 +45,6 @@ necessary parts from Clang.
 In terms of features, there are at least the following gaping holes in the
 library:
 
-* **Calling varargs function** - To be addressed very soon!
 * **CPU selection** - There's a lot of functionality in Clang for selecting a
                       generic CPU (we typically don't select the native CPU
                       because similar CPUs with the same architecture may not
