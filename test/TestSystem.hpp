@@ -51,59 +51,10 @@ public:
 	           const std::string& cpu)
 	: context_(),
 	module_("", context_),
-	abi_(createABI(module_, llvm::Triple(triple), cpu)),
-	nextIntegerValue_(1) { }
+	abi_(createABI(module_, llvm::Triple(triple), cpu)) { }
 	
 	ABI& abi() {
 		return *abi_;
-	}
-	
-	llvm::Constant* getConstantValue(const Type type) {
-		const auto& typeInfo = abi_->typeInfo();
-		switch (type.kind()) {
-			case VoidType:
-				return llvm::UndefValue::get(llvm::Type::getVoidTy(context_));
-			case PointerType:
-				return llvm::ConstantPointerNull::get(llvm::Type::getInt8PtrTy(context_));
-			case UnspecifiedWidthIntegerType:
-			case FixedWidthIntegerType:
-				return llvm::ConstantInt::get(typeInfo.getLLVMType(type),
-				                              nextIntegerValue_++);
-			case FloatingPointType:
-				return llvm::ConstantFP::get(typeInfo.getLLVMType(type),
-				                             static_cast<double>(nextIntegerValue_++));
-			case ComplexType:
-				llvm_unreachable("TODO");
-			case StructType: {
-				llvm::SmallVector<llvm::Type*, 8> types;
-				llvm::SmallVector<llvm::Constant*, 8> values;
-				for (const auto& structMember: type.structMembers()) {
-					types.push_back(typeInfo.getLLVMType(structMember.type()));
-					values.push_back(getConstantValue(structMember.type()));
-				}
-				
-				const auto structType = llvm::StructType::get(context_, types);
-				return llvm::ConstantStruct::get(structType, values);
-			}
-			case ArrayType: {
-				llvm::SmallVector<llvm::Constant*, 8> values;
-				for (size_t i = 0; i < type.arrayElementCount(); i++) {
-					values.push_back(getConstantValue(type.arrayElementType()));
-				}
-				
-				const auto arrayType = llvm::ArrayType::get(typeInfo.getLLVMType(type.arrayElementType()),
-				                                            type.arrayElementCount());
-				return llvm::ConstantArray::get(arrayType, values);
-			}
-			case VectorType: {
-				llvm::SmallVector<llvm::Constant*, 8> values;
-				for (size_t i = 0; i < type.vectorElementCount(); i++) {
-					values.push_back(getConstantValue(type.vectorElementType()));
-				}
-				
-				return llvm::ConstantVector::get(values);
-			}
-		}
 	}
 	
 	FunctionType makeCallerFunctionType(const TestFunctionType& testFunctionType) const {
@@ -197,7 +148,6 @@ private:
 	llvm::LLVMContext context_;
 	llvm::Module module_;
 	std::unique_ptr<ABI> abi_;
-	uint64_t nextIntegerValue_;
 	
 };
 
