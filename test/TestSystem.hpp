@@ -106,13 +106,37 @@ public:
 		}
 	}
 	
+	FunctionType makeCallerFunctionType(const TestFunctionType& testFunctionType) const {
+		const auto& functionType = testFunctionType.functionType;
+		if (!functionType.isVarArg()) {
+			return functionType;
+		}
+		
+		const auto& varArgsTypes = testFunctionType.varArgsTypes;
+		
+		llvm::SmallVector<Type, 8> argumentTypes;
+		argumentTypes.reserve(functionType.argumentTypes().size() + varArgsTypes.size());
+		
+		for (const auto& argType: functionType.argumentTypes()) {
+			argumentTypes.push_back(argType);
+		}
+		
+		for (const auto& argType: varArgsTypes) {
+			argumentTypes.push_back(argType);
+		}
+		
+		return FunctionType(functionType.returnType(),
+		                    argumentTypes,
+		                    /*isVarArg=*/false);
+	}
+	
 	void doTest(const std::string& testName, const TestFunctionType& testFunctionType) {
 		const auto& calleeFunctionType = testFunctionType.functionType;
 		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(calleeFunctionType)));
 		const auto calleeAttributes = abi_->getAttributes(calleeFunctionType);
 		calleeFunction->setAttributes(calleeAttributes);
 		
-		const auto callerFunctionType = testFunctionType.functionType;
+		const auto callerFunctionType = makeCallerFunctionType(testFunctionType);
 		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(callerFunctionType)));
 		const auto callerAttributes = abi_->getAttributes(callerFunctionType);
 		callerFunction->setAttributes(callerAttributes);
