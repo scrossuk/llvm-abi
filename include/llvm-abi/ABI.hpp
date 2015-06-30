@@ -12,6 +12,7 @@
 #include <llvm/IR/Value.h>
 
 #include <llvm-abi/CallingConvention.hpp>
+#include <llvm-abi/TypedValue.hpp>
 
 namespace llvm_abi {
 	
@@ -107,7 +108,7 @@ namespace llvm_abi {
 		virtual llvm::Value* createCall(Builder& builder,
 		                                const FunctionType& functionType,
 		                                std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
-		                                llvm::ArrayRef<llvm::Value*> arguments) const = 0;
+		                                llvm::ArrayRef<TypedValue> arguments) const = 0;
 		
 		/**
 		 * \brief Create function encoder.

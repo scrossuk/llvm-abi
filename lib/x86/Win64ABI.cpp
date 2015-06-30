@@ -44,7 +44,7 @@ namespace llvm_abi {
 		llvm::Value* Win64ABI::createCall(Builder& /*builder*/,
 		                                   const FunctionType& /*functionType*/,
 		                                   std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> /*callBuilder*/,
-		                                   llvm::ArrayRef<llvm::Value*> /*arguments*/) const {
+		                                   llvm::ArrayRef<TypedValue> /*arguments*/) const {
 			llvm_unreachable("TODO");
 		}
 		

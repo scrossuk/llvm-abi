@@ -838,7 +838,8 @@ namespace llvm_abi {
 		}
 		
 		llvm::SmallVector<ArgInfo, 8>
-		Classifier::classifyFunctionType(const FunctionType& functionType) {
+		Classifier::classifyFunctionType(const FunctionType& functionType,
+		                                 llvm::ArrayRef<Type> argumentTypes) {
 			ArgInfo returnInfo = classifyReturnType(functionType.returnType());
 			
 			llvm::SmallVector<ArgInfo, 8> argInfoArray;
@@ -863,10 +864,10 @@ namespace llvm_abi {
 			
 			// AMD64-ABI 3.2.3p3: Once arguments are classified, the registers
 			// get assigned (in left-to-right order) for passing as follows...
-			for (size_t i = 0; i < functionType.argumentTypes().size(); i++) {
+			for (size_t i = 0; i < argumentTypes.size(); i++) {
 				//const bool IsNamedArg = i < numRequiredArgs;
+				const auto argType = argumentTypes[i];
 				
-				const auto argType = functionType.argumentTypes()[i];
 				
 				const bool isArgument = true;
 				unsigned neededInt = 0;

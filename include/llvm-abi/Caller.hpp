@@ -5,6 +5,7 @@
 #include <llvm/IR/Value.h>
 
 #include <llvm-abi/FunctionType.hpp>
+#include <llvm-abi/TypedValue.hpp>
 
 namespace llvm_abi {
 	
@@ -36,7 +37,7 @@ namespace llvm_abi {
 		 * \return The ABI-encoded arguments.
 		 */
 		llvm::SmallVector<llvm::Value*, 8>
-		encodeArguments(llvm::ArrayRef<llvm::Value*> arguments,
+		encodeArguments(llvm::ArrayRef<TypedValue> arguments,
 		                llvm::Value* returnValuePtr = nullptr);
 		
 		/**

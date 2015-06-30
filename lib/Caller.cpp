@@ -339,7 +339,7 @@ namespace llvm_abi {
 	}
 	
 	llvm::SmallVector<llvm::Value*, 8>
-	Caller::encodeArguments(llvm::ArrayRef<llvm::Value*> arguments,
+	Caller::encodeArguments(llvm::ArrayRef<TypedValue> arguments,
 	                        llvm::Value* const returnValuePtr) {
 		// Number of arguments must be equal to or exceed (in the case
 		// of varargs) the number of specified argument types.
@@ -382,11 +382,16 @@ namespace llvm_abi {
 		for (size_t argumentNumber = 0;
 		     argumentNumber < arguments.size();
 		     argumentNumber++) {
-			const auto argumentValue = arguments[argumentNumber];
+			const auto argumentValue = arguments[argumentNumber].first;
+			const auto& argumentType = arguments[argumentNumber].second;
 			const auto& argInfo = functionIRMapping_.arguments()[argumentNumber].argInfo;
+			
 			// TODO: add support for values already being in memory.
 			const bool isArgumentInMemory = false;
-			const auto& argumentType = functionType_.argumentTypes()[argumentNumber];
+			
+			const bool isVarArgArgument = argumentNumber >= functionType_.argumentTypes().size();
+			(void) isVarArgArgument;
+			assert(isVarArgArgument || argumentType == functionType_.argumentTypes()[argumentNumber]);
 			
 			assert(argumentValue->getType() == typeInfo_.getLLVMType(argumentType));
 			

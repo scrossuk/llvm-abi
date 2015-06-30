@@ -26,7 +26,8 @@ namespace llvm_abi {
 			ArgInfo classifyReturnType(Type type);
 			
 			llvm::SmallVector<ArgInfo, 8>
-			classifyFunctionType(const FunctionType& functionType);
+			classifyFunctionType(const FunctionType& functionType,
+			                     llvm::ArrayRef<Type> argumentTypes);
 			
 		private:
 			const ABITypeInfo& typeInfo_;

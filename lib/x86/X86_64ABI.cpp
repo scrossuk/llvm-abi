@@ -57,7 +57,8 @@ namespace llvm_abi {
 		llvm::FunctionType* X86_64ABI::getFunctionType(const FunctionType& functionType) const {
 			Classifier classifier(typeInfo_);
 			const auto argInfoArray =
-				classifier.classifyFunctionType(functionType);
+				classifier.classifyFunctionType(functionType,
+				                                functionType.argumentTypes());
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
@@ -70,10 +71,12 @@ namespace llvm_abi {
 		
 		static
 		FunctionIRMapping computeIRMapping(const ABITypeInfo& typeInfo,
-		                                   const FunctionType& functionType) {
+		                                   const FunctionType& functionType,
+		                                   llvm::ArrayRef<Type> argumentTypes) {
 			Classifier classifier(typeInfo);
 			const auto argInfoArray =
-				classifier.classifyFunctionType(functionType);
+				classifier.classifyFunctionType(functionType,
+				                                argumentTypes);
 			assert(argInfoArray.size() >= 1);
 			
 			return getFunctionIRMapping(argInfoArray);
@@ -82,7 +85,9 @@ namespace llvm_abi {
 		llvm::AttributeSet X86_64ABI::getAttributes(const FunctionType& functionType, const llvm::AttributeSet existingAttributes) const {
 			llvm::SmallVector<llvm::AttributeSet, 8> attributes;
 			
-			const auto functionIRMapping = computeIRMapping(typeInfo_, functionType);
+			const auto functionIRMapping = computeIRMapping(typeInfo_,
+			                                                functionType,
+			                                                functionType.argumentTypes());
 			
 			llvm::AttrBuilder functionAttrs(existingAttributes, llvm::AttributeSet::FunctionIndex);
 			llvm::AttrBuilder returnAttrs(existingAttributes, llvm::AttributeSet::ReturnIndex);
@@ -215,8 +220,15 @@ namespace llvm_abi {
 		llvm::Value* X86_64ABI::createCall(Builder& builder,
 		                                    const FunctionType& functionType,
 		                                    std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
-		                                    llvm::ArrayRef<llvm::Value*> arguments) const {
-			const auto functionIRMapping = computeIRMapping(typeInfo_, functionType);
+		                                    llvm::ArrayRef<TypedValue> arguments) const {
+			llvm::SmallVector<Type, 8> argumentTypes;
+			for (const auto& value: arguments) {
+				argumentTypes.push_back(value.second);
+			}
+			
+			const auto functionIRMapping = computeIRMapping(typeInfo_,
+			                                                functionType,
+			                                                argumentTypes);
 			
 			Caller caller(typeInfo_,
 			              functionType,
@@ -238,7 +250,8 @@ namespace llvm_abi {
 			                       llvm::ArrayRef<llvm::Value*> pArguments)
 			: builder_(builder),
 			functionIRMapping_(computeIRMapping(abi.typeInfo(),
-			                                    functionType)),
+			                                    functionType,
+			                                    functionType.argumentTypes())),
 			callee_(abi.typeInfo(),
 			        functionType,
 			        functionIRMapping_,

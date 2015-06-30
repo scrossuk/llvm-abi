@@ -129,6 +129,14 @@ public:
 		                                                   functionType,
 		                                                   encodedArgumentValues);
 		
+		llvm::SmallVector<TypedValue, 8> arguments;
+		
+		for (size_t i = 0; i < functionEncoder->arguments().size(); i++) {
+			const auto argValue = functionEncoder->arguments()[i];
+			const auto argType = functionType.argumentTypes()[i];
+			arguments.push_back(TypedValue(argValue, argType));
+		}
+		
 		const auto returnValue = abi_->createCall(
 			builder,
 			functionType,
@@ -137,7 +145,7 @@ public:
 				callInst->setAttributes(attributes);
 				return callInst;
 			},
-			functionEncoder->arguments()
+			arguments
 		);
 		
 		functionEncoder->returnValue(returnValue);
