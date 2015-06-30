@@ -208,7 +208,7 @@ namespace llvm_abi {
 			
 			llvm::SmallVector<Type, 8> argumentTypes;
 			
-			while (stream_.peek() != ')') {
+			while (stream_.peek() != ')' && stream_.peek() != '.') {
 				argumentTypes.push_back(parseType());
 				assert(stream_.peek() == ',' || stream_.peek() == ')');
 				if (stream_.peek() == ',') {
@@ -217,6 +217,10 @@ namespace llvm_abi {
 			}
 			
 			llvm::SmallVector<Type, 8> varArgsTypes;
+			const bool isVarArg = (stream_.peek() == '.');
+			if (isVarArg) {
+				varArgsTypes = parseVarArgsTypes();
+			}
 			
 			assert(stream_.peek() == ')');
 			stream_.consume();
