@@ -172,6 +172,33 @@ namespace llvm_abi {
 			}
 		}
 		
+		llvm::SmallVector<Type, 8> parseVarArgsTypes() {
+			assert(stream_.peek() == '.');
+			stream_.consume();
+			assert(stream_.peek() == '.');
+			stream_.consume();
+			assert(stream_.peek() == '.');
+			stream_.consume();
+			
+			assert(stream_.peek() == '(');
+			stream_.consume();
+			
+			llvm::SmallVector<Type, 8> varArgsTypes;
+			
+			while (stream_.peek() != ')') {
+				varArgsTypes.push_back(parseType());
+				assert(stream_.peek() == ',' || stream_.peek() == ')');
+				if (stream_.peek() == ',') {
+					stream_.consume();
+				}
+			}
+			
+			assert(stream_.peek() == ')');
+			stream_.consume();
+			
+			return varArgsTypes;
+		}
+		
 		FunctionType parseFunctionType() {
 			const auto returnType = parseType();
 			
