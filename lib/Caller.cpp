@@ -341,7 +341,9 @@ namespace llvm_abi {
 	llvm::SmallVector<llvm::Value*, 8>
 	Caller::encodeArguments(llvm::ArrayRef<llvm::Value*> arguments,
 	                        llvm::Value* const returnValuePtr) {
-		assert(functionType_.argumentTypes().size() == arguments.size());
+		// Number of arguments must be equal to or exceed (in the case
+		// of varargs) the number of specified argument types.
+		assert(arguments.size() >= functionType_.argumentTypes().size());
 		
 		llvm::SmallVector<llvm::Value*, 8> irCallArgs(functionIRMapping_.totalIRArgs());
 		const auto& returnArgInfo = functionIRMapping_.returnArgInfo();
