@@ -107,12 +107,15 @@ public:
 	}
 	
 	void doTest(const std::string& testName, const FunctionType& functionType) {
-		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(functionType)));
-		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(functionType)));
+		const auto& calleeFunctionType = functionType;
+		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(calleeFunctionType)));
+		const auto calleeAttributes = abi_->getAttributes(calleeFunctionType);
+		calleeFunction->setAttributes(calleeAttributes);
 		
-		const auto attributes = abi_->getAttributes(functionType);
-		calleeFunction->setAttributes(attributes);
-		callerFunction->setAttributes(attributes);
+		const auto callerFunctionType = functionType;
+		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(callerFunctionType)));
+		const auto callerAttributes = abi_->getAttributes(callerFunctionType);
+		callerFunction->setAttributes(callerAttributes);
 		
 		const auto entryBasicBlock = llvm::BasicBlock::Create(context_, "", callerFunction);
 		(void) entryBasicBlock;
@@ -126,23 +129,23 @@ public:
 		}
 		
 		auto functionEncoder = abi_->createFunctionEncoder(builder,
-		                                                   functionType,
+		                                                   callerFunctionType,
 		                                                   encodedArgumentValues);
 		
 		llvm::SmallVector<TypedValue, 8> arguments;
 		
 		for (size_t i = 0; i < functionEncoder->arguments().size(); i++) {
 			const auto argValue = functionEncoder->arguments()[i];
-			const auto argType = functionType.argumentTypes()[i];
+			const auto argType = callerFunctionType.argumentTypes()[i];
 			arguments.push_back(TypedValue(argValue, argType));
 		}
 		
 		const auto returnValue = abi_->createCall(
 			builder,
-			functionType,
+			calleeFunctionType,
 			[&](llvm::ArrayRef<llvm::Value*> values) -> llvm::Value* {
 				const auto callInst = builder.getBuilder().CreateCall(calleeFunction, values);
-				callInst->setAttributes(attributes);
+				callInst->setAttributes(calleeAttributes);
 				return callInst;
 			},
 			arguments
@@ -157,8 +160,10 @@ public:
 		filename += ".output.ll";
 		
 		std::ofstream file(filename.c_str());
-		file << "; Generated from: " << std::endl;
-		file << "; " << functionType.toString() << std::endl;
+		file << "; Callee function type: " << std::endl;
+		file << "; " << calleeFunctionType.toString() << std::endl;
+		file << "; Caller function type: " << std::endl;
+		file << "; " << callerFunctionType.toString() << std::endl;
 		
 		llvm::raw_os_ostream ostream(file);
 		ostream << module_;
