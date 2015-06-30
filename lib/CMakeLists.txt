@@ -5,6 +5,7 @@ add_library(llvm-abi
 	FunctionIRMapping.cpp
 	Type.cpp
 	TypeBuilder.cpp
+	TypePromoter.cpp
 	x86/ArgClass.cpp
 	x86/Classification.cpp
 	x86/Classifier.cpp
