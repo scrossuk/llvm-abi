@@ -9,6 +9,8 @@
 #include <llvm-abi/FunctionType.hpp>
 #include <llvm-abi/Type.hpp>
 
+#include "TestFunctionType.hpp"
+
 namespace llvm_abi {
 	
 	/**
@@ -170,7 +172,8 @@ namespace llvm_abi {
 			}
 		}
 		
-		size_t emitFunctionTypes(const FunctionType& functionType) {
+		size_t emitFunctionTypes(const TestFunctionType& testFunctionType) {
+			const auto& functionType = testFunctionType.functionType;
 			const auto returnTypeString = emitType(functionType.returnType());
 			sourceCodeStream_ << "typedef " << returnTypeString << " Fn" << functionId_ << "ReturnType;" << std::endl;
 			int argId = 0;
@@ -184,8 +187,9 @@ namespace llvm_abi {
 			return functionId_++;
 		}
 		
-		void emitCalleeFunction(const FunctionType& functionType,
+		void emitCalleeFunction(const TestFunctionType& testFunctionType,
 		                        const size_t functionId) {
+			const auto& functionType = testFunctionType.functionType;
 			sourceCodeStream_ << "extern \"C\" Fn" << functionId << "ReturnType callee(";
 			bool first = true;
 			int argId = 0;
@@ -205,8 +209,9 @@ namespace llvm_abi {
 			sourceCodeStream_ << ");" << std::endl << std::endl;
 		}
 		
-		void emitCallerFunction(const FunctionType& functionType,
+		void emitCallerFunction(const TestFunctionType& testFunctionType,
 		                        const size_t functionId) {
+			const auto& functionType = testFunctionType.functionType;
 			sourceCodeStream_ << "extern \"C\" Fn" << functionId << "ReturnType caller(";
 			bool first = true;
 			int argId = 0;
@@ -239,7 +244,7 @@ namespace llvm_abi {
 			sourceCodeStream_ << "}" << std::endl;
 		}
 		
-		void emitCalleeAndCallerFunctions(const FunctionType& functionType) {
+		void emitCalleeAndCallerFunctions(const TestFunctionType& functionType) {
 			const auto functionId = emitFunctionTypes(functionType);
 			emitCalleeFunction(functionType, functionId);
 			emitCallerFunction(functionType, functionId);

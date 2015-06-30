@@ -9,6 +9,7 @@
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
+#include "TestFunctionType.hpp"
 #include "TokenStream.hpp"
 
 namespace llvm_abi {
@@ -199,7 +200,7 @@ namespace llvm_abi {
 			return varArgsTypes;
 		}
 		
-		FunctionType parseFunctionType() {
+		TestFunctionType parseFunctionType() {
 			const auto returnType = parseType();
 			
 			assert(stream_.peek() == '(');
@@ -215,10 +216,15 @@ namespace llvm_abi {
 				}
 			}
 			
+			llvm::SmallVector<Type, 8> varArgsTypes;
+			
 			assert(stream_.peek() == ')');
 			stream_.consume();
 			
-			return FunctionType(returnType, argumentTypes);
+			return TestFunctionType(FunctionType(returnType,
+			                                     argumentTypes,
+			                                     isVarArg),
+			                        varArgsTypes);
 		}
 		
 	private:

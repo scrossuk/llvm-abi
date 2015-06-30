@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "CCodeGenerator.hpp"
+#include "TestFunctionType.hpp"
 #include "TestSystem.hpp"
 #include "TokenStream.hpp"
 #include "TypeParser.hpp"
@@ -39,14 +40,14 @@ std::string getBaseName(const std::string& fileName) {
 std::string runClangOnFunction(const std::string& abiString,
                                const std::string& cpuString,
                                const std::string& clangPath,
-                               const FunctionType& functionType) {
+                               const TestFunctionType& testFunctionType) {
 	if (clangPath.empty()) {
 		printf("WARNING: No clang path provided!\n");
 		return "";
 	}
 	
 	CCodeGenerator cCodeGenerator;
-	cCodeGenerator.emitCalleeAndCallerFunctions(functionType);
+	cCodeGenerator.emitCalleeAndCallerFunctions(testFunctionType);
 	
 	std::ofstream tempFile("tempfile.cpp");
 	tempFile << cCodeGenerator.generatedSourceCode();
@@ -121,16 +122,16 @@ int main(int argc, char** argv) {
 	llvm_abi::TokenStream stream(functionTypeString);
 	llvm_abi::TypeParser parser(stream);
 	
-	const auto functionType = parser.parseFunctionType();
+	const auto testFunctionType = parser.parseFunctionType();
 	
 	TestSystem testSystem(abiString, cpuString);
 	
-	printf("Running test for function type: %s\n", functionType.toString().c_str());
+	printf("Running test for function type: %s\n", testFunctionType.functionType.toString().c_str());
 	
 	const auto fileName = getBaseName(getFileName(string));
 	printf("filename = %s\n", fileName.c_str());
 	
-	testSystem.doTest(fileName, functionType);
+	testSystem.doTest(fileName, testFunctionType);
 	
 	{
 		std::string filename;
@@ -167,7 +168,7 @@ int main(int argc, char** argv) {
 					printf("%s\n", line.c_str());
 				}
 				
-				const auto cCompilerOutput = runClangOnFunction(abiString, cpuString, clangPath, functionType);
+				const auto cCompilerOutput = runClangOnFunction(abiString, cpuString, clangPath, testFunctionType);
 				printf("\n---- C compiler output (%s):\n%s\n\n",
 				       clangPath.c_str(),
 				       cCompilerOutput.c_str());
