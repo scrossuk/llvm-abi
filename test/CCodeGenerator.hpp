@@ -182,6 +182,12 @@ namespace llvm_abi {
 				sourceCodeStream_ << "typedef " << argTypeString << " Fn" << functionId_ << "ArgType" << argId << ";" << std::endl;
 				argId++;
 			}
+			int varArgId = 0;
+			for (const auto& varArgType: testFunctionType.varArgsTypes) {
+				const auto argTypeString = emitType(varArgType);
+				sourceCodeStream_ << "typedef " << argTypeString << " Fn" << functionId_ << "VarArgType" << varArgId << ";" << std::endl;
+				varArgId++;
+			}
 			sourceCodeStream_ << std::endl;
 			
 			return functionId_++;
@@ -203,6 +209,12 @@ namespace llvm_abi {
 				sourceCodeStream_ << "Fn" << functionId << "ArgType" << argId << " arg" << argId;
 				argId++;
 			}
+			
+			if (functionType.isVarArg()) {
+				assert(!functionType.argumentTypes().empty());
+				sourceCodeStream_ << ", ...";
+			}
+			
 			if (functionType.argumentTypes().empty()) {
 				sourceCodeStream_ << "void";
 			}
@@ -225,6 +237,15 @@ namespace llvm_abi {
 				sourceCodeStream_ << "Fn" << functionId << "ArgType" << argId << " arg" << argId;
 				argId++;
 			}
+			
+			int varArgId = 0;
+			for (const auto& varArgType: testFunctionType.varArgsTypes) {
+				(void) varArgType;
+				sourceCodeStream_ << ", ";
+				sourceCodeStream_ << "Fn" << functionId << "VarArgType" << varArgId << " varArg" << varArgId;
+				varArgId++;
+			}
+			
 			sourceCodeStream_ << ") {" << std::endl;
 			
 			sourceCodeStream_ << "     return callee(";
@@ -240,6 +261,15 @@ namespace llvm_abi {
 				sourceCodeStream_ << "arg" << argId;
 				argId++;
 			}
+			
+			varArgId = 0;
+			for (const auto& varArgType: testFunctionType.varArgsTypes) {
+				(void) varArgType;
+				sourceCodeStream_ << ", ";
+				sourceCodeStream_ << "varArg" << varArgId;
+				varArgId++;
+			}
+			
 			sourceCodeStream_ << ");" << std::endl;
 			sourceCodeStream_ << "}" << std::endl;
 		}
