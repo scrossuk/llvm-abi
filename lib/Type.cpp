@@ -290,6 +290,27 @@ namespace llvm_abi {
 		return subKind_.uniquedPointer->vectorType.elementType;
 	}
 	
+	bool Type::hasFlexibleArrayMember() const {
+		if (isStruct()) {
+			if (structMembers().empty()) {
+				return false;
+			}
+			
+			const auto& lastMember = structMembers().back().type();
+			return lastMember.isArray() &&
+			       lastMember.arrayElementCount() == 0;
+		} else if (isUnion()) {
+			for (const auto& member: unionMembers()) {
+				if (member.hasFlexibleArrayMember()) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			return false;
+		}
+	}
+	
 	bool Type::hasUnalignedFields(const ABITypeInfo& typeInfo) const {
 		if (!isStruct()) {
 			return false;

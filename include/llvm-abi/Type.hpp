@@ -175,6 +175,8 @@ namespace llvm_abi {
 			
 			llvm::ArrayRef<Type> unionMembers() const;
 			
+			bool hasFlexibleArrayMember() const;
+			
 			bool isArray() const;
 			
 			size_t arrayElementCount() const;
