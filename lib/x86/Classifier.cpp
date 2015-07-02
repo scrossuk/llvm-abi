@@ -594,8 +594,7 @@ namespace llvm_abi {
 		: typeInfo_(typeInfo) { }
 		
 		Classification Classifier::classify(const Type type,
-		                                    // TODO!
-		                                    const bool /*isNamedArg*/) {
+		                                    const bool isNamedArg) {
 			Classification classification;
 			
 			if (typeInfo_.getTypeAllocSize(type).asBytes() > 32 ||
@@ -606,7 +605,10 @@ namespace llvm_abi {
 				return classification;
 			}
 			
-			classification.classifyType(typeInfo_, type, 0);
+			classification.classifyType(typeInfo_,
+			                            type,
+			                            /*offset=*/0,
+			                            isNamedArg);
 			
 			// If the size of the aggregate exceeds two eightbytes
 			// and the first eight-byte isn’t SSE or any other

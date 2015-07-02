@@ -52,7 +52,8 @@ namespace llvm_abi {
 		
 		void Classification::classifyType(const ABITypeInfo& typeInfo,
 		                                  const Type type,
-		                                  const size_t offset) {
+		                                  const size_t offset,
+		                                  const bool isNamedArg) {
 			// TODO!
 			const bool isNamedArg = true;
 			
