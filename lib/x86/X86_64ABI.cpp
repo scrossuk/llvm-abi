@@ -227,12 +227,12 @@ namespace llvm_abi {
 		                                    std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
 		                                    llvm::ArrayRef<TypedValue> rawArguments) const {
 			
-			TypePromoter typePromoter(typeInfo(),
-			                          builder);
+			TypePromoter typePromoter(typeInfo());
 			
 			// Promote any varargs arguments (that haven't already been
 			// promoted). This changes char => int, float => double etc.
-			const auto arguments = typePromoter.promoteArguments(functionType,
+			const auto arguments = typePromoter.promoteArguments(builder,
+			                                                     functionType,
 			                                                     rawArguments);
 			
 			llvm::SmallVector<Type, 8> argumentTypes;

@@ -7,48 +7,48 @@
 
 namespace llvm_abi {
 	
-	TypePromoter::TypePromoter(const ABITypeInfo& typeInfo,
-	                           Builder& builder)
-	: typeInfo_(typeInfo),
-	builder_(builder) { }
+	TypePromoter::TypePromoter(const ABITypeInfo& typeInfo)
+	: typeInfo_(typeInfo) { }
 	
-	TypedValue TypePromoter::promoteValue(llvm::Value* const value,
-	                                      const Type type) {
+	TypedValue TypePromoter::promoteValue(Builder& builder,
+	                                      const TypedValue value,
+	                                      const Type type) const {
+		if (value.second == type) {
+			// Nothing to do.
+			return value;
+		}
+		
 		assert(type.isInteger() || type.isFloatingPoint());
 		if (type.isInteger()) {
 			if (type.hasSignedIntegerRepresentation(typeInfo_)) {
-				const auto extValue = builder_.getBuilder().CreateSExt(value,
-				                                                       typeInfo_.getLLVMType(type));
+				const auto extValue = builder.getBuilder().CreateSExt(value.first,
+				                                                      typeInfo_.getLLVMType(type));
 				return TypedValue(extValue, type);
 			} else {
-				const auto extValue = builder_.getBuilder().CreateZExt(value,
-				                                                       typeInfo_.getLLVMType(type));
+				const auto extValue = builder.getBuilder().CreateZExt(value.first,
+				                                                      typeInfo_.getLLVMType(type));
 				return TypedValue(extValue, type);
 			}
 		} else {
-			const auto extValue = builder_.getBuilder().CreateFPExt(value,
-			                                                        typeInfo_.getLLVMType(type));
+			const auto extValue = builder.getBuilder().CreateFPExt(value.first,
+			                                                       typeInfo_.getLLVMType(type));
 			return TypedValue(extValue, type);
 		}
 	}
 	
-	TypedValue TypePromoter::promoteVarArgsArgument(const TypedValue typedValue) {
-		const auto value = typedValue.first;
-		const auto type = typedValue.second;
-		
+	Type TypePromoter::promoteVarArgsArgumentType(const Type type) const {
 		if (type.isUnspecifiedWidthInteger()) {
 			switch (type.integerKind()) {
 				case Char:
 					return typeInfo_.isCharSigned() ?
-						promoteValue(value, IntTy) :
-						promoteValue(value, UIntTy);
+						IntTy : UIntTy;
 				case Bool:
 				case SChar:
 				case Short:
-					return promoteValue(value, IntTy);
+					return IntTy;
 				case UChar:
 				case UShort:
-					return promoteValue(value, UIntTy);
+					return UIntTy;
 				case Int:
 				case Long:
 				case LongLong:
@@ -60,32 +60,61 @@ namespace llvm_abi {
 				case SizeT:
 				case PtrDiffT:
 				case UIntPtrT:
-					return typedValue;
+					return type;
 			}
 		} else if (type.isFloatingPoint()) {
 			switch (type.floatingPointKind()) {
 				case Float:
-					return promoteValue(value, DoubleTy);
+					return DoubleTy;
 				case Double:
 				case LongDouble:
 				case Float128:
-					return typedValue;
+					return type;
 			}
 		} else {
-			return typedValue;
+			return type;
 		}
 	}
 	
+	TypedValue TypePromoter::promoteVarArgsArgument(Builder& builder,
+	                                                const TypedValue typedValue) const {
+		const auto type = typedValue.second;
+		return promoteValue(builder,
+		                    typedValue,
+		                    promoteVarArgsArgumentType(type));
+	}
+	
+	llvm::SmallVector<Type, 8>
+	TypePromoter::promoteArgumentTypes(const FunctionType& functionType,
+	                                   llvm::ArrayRef<Type> argumentTypes) const {
+		llvm::SmallVector<Type, 8> promotedArgumentTypes;
+		promotedArgumentTypes.reserve(argumentTypes.size());
+		
+		for (size_t i = 0; i < argumentTypes.size(); i++) {
+			const bool isVarArgArgument = (i >= functionType.argumentTypes().size());
+			if (isVarArgArgument) {
+				promotedArgumentTypes.push_back(promoteVarArgsArgumentType(argumentTypes[i]));
+			} else {
+				// Nothing to do.
+				promotedArgumentTypes.push_back(argumentTypes[i]);
+			}
+		}
+		
+		return promotedArgumentTypes;
+	}
+	
 	llvm::SmallVector<TypedValue, 8>
-	TypePromoter::promoteArguments(const FunctionType& functionType,
-	                               llvm::ArrayRef<TypedValue> arguments) {
+	TypePromoter::promoteArguments(Builder& builder,
+	                               const FunctionType& functionType,
+	                               llvm::ArrayRef<TypedValue> arguments) const {
 		llvm::SmallVector<TypedValue, 8> promotedArguments;
 		promotedArguments.reserve(arguments.size());
 		
 		for (size_t i = 0; i < arguments.size(); i++) {
 			const bool isVarArgArgument = (i >= functionType.argumentTypes().size());
 			if (isVarArgArgument) {
-				promotedArguments.push_back(promoteVarArgsArgument(arguments[i]));
+				promotedArguments.push_back(promoteVarArgsArgument(builder,
+				                                                   arguments[i]));
 			} else {
 				// Nothing to do.
 				promotedArguments.push_back(arguments[i]);

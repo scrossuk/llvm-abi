@@ -17,20 +17,28 @@ namespace llvm_abi {
 	 */
 	class TypePromoter {
 	public:
-		TypePromoter(const ABITypeInfo& typeInfo,
-		             Builder& builder);
+		TypePromoter(const ABITypeInfo& typeInfo);
 		
-		TypedValue promoteValue(llvm::Value* value, Type type);
+		TypedValue promoteValue(Builder& builder,
+		                        TypedValue value,
+		                        Type type) const;
 		
-		TypedValue promoteVarArgsArgument(TypedValue value);
+		Type promoteVarArgsArgumentType(Type value) const;
+		
+		TypedValue promoteVarArgsArgument(Builder& builder,
+		                                  TypedValue value) const;
+		
+		llvm::SmallVector<Type, 8>
+		promoteArgumentTypes(const FunctionType& functionType,
+		                     llvm::ArrayRef<Type> argumentTypes) const;
 		
 		llvm::SmallVector<TypedValue, 8>
-		promoteArguments(const FunctionType& functionType,
-		                 llvm::ArrayRef<TypedValue> arguments);
+		promoteArguments(Builder& builder,
+		                 const FunctionType& functionType,
+		                 llvm::ArrayRef<TypedValue> arguments) const;
 		
 	private:
 		const ABITypeInfo& typeInfo_;
-		Builder& builder_;
 		
 	};
 	
