@@ -6,7 +6,7 @@ declare void @callee({ i32, i32, i32, i32, i32 }* byval align 8)
 define void @caller({ i32, i32, i32, i32, i32 }* byval align 8) {
   %indirect.arg.mem = alloca { i32, i32, i32, i32, i32 }, align 8
   %2 = load { i32, i32, i32, i32, i32 }* %0
-  store { i32, i32, i32, i32, i32 } %2, { i32, i32, i32, i32, i32 }* %indirect.arg.mem
+  store { i32, i32, i32, i32, i32 } %2, { i32, i32, i32, i32, i32 }* %indirect.arg.mem, align 8
   call void @callee({ i32, i32, i32, i32, i32 }* byval align 8 %indirect.arg.mem)
   ret void
 }

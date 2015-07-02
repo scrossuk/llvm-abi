@@ -7,7 +7,7 @@ define void @caller({ <8 x float> }* noalias sret %agg.result, { <8 x float> }* 
   %indirect.arg.mem = alloca { <8 x float> }, align 32
   %2 = alloca { <8 x float> }
   %3 = load { <8 x float> }* %0
-  store { <8 x float> } %3, { <8 x float> }* %indirect.arg.mem
+  store { <8 x float> } %3, { <8 x float> }* %indirect.arg.mem, align 32
   call void @callee({ <8 x float> }* noalias sret %2, { <8 x float> }* byval align 32 %indirect.arg.mem)
   %4 = load { <8 x float> }* %2
   store { <8 x float> } %4, { <8 x float> }* %agg.result
