@@ -85,6 +85,7 @@ namespace llvm_abi {
 		 * \return The set of attributes for the ABI.
 		 */
 		virtual llvm::AttributeSet getAttributes(const FunctionType& functionType,
+		                                         llvm::ArrayRef<Type> argumentTypes,
 		                                         llvm::AttributeSet existingAttributes = llvm::AttributeSet()) const = 0;
 		
 		/**
