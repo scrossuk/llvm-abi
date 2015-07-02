@@ -122,7 +122,9 @@ public:
 			calleeFunctionType,
 			[&](llvm::ArrayRef<llvm::Value*> values) -> llvm::Value* {
 				const auto callInst = builder.getBuilder().CreateCall(calleeFunction, values);
-				callInst->setAttributes(calleeAttributes);
+				const auto callAttributes = abi_->getAttributes(calleeFunctionType,
+				                                                callerFunctionType.argumentTypes());
+				callInst->setAttributes(callAttributes);
 				return callInst;
 			},
 			arguments
