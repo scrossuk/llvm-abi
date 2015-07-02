@@ -610,6 +610,13 @@ namespace llvm_abi {
 			                            /*offset=*/0,
 			                            isNamedArg);
 			
+			// If X87UP is not preceded by X87, the whole argument
+			// is passed in memory.
+			if (classification.high() == X87Up &&
+			    classification.low() != X87) {
+				classification.addField(0, Memory);
+			}
+			
 			// If the size of the aggregate exceeds two eightbytes
 			// and the first eight-byte isn’t SSE or any other
 			// eightbyte isn’t SSEUP, the whole argument is passed
