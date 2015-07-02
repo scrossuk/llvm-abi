@@ -430,7 +430,8 @@ namespace llvm_abi {
 						}
 						irCallArgs[firstIRArg] = allocaInst;
 						
-						builder_.getBuilder().CreateStore(argumentValue, allocaInst);
+						const auto storeInst = builder_.getBuilder().CreateStore(argumentValue, allocaInst);
+						storeInst->setAlignment(allocaInst->getAlignment());
 					} else {
 						// We want to avoid creating an unnecessary temporary+copy here;
 						// however, we need one in three cases:
