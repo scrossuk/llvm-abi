@@ -24,7 +24,7 @@ namespace llvm_abi {
 			void classifyType(const ABITypeInfo& typeInfo,
 			                  Type type,
 			                  size_t offset,
-			                  bool isNamedArg=true);
+			                  bool isNamedArg);
 			
 		private:
 			// One class for each eightbyte.
