@@ -30,6 +30,7 @@ namespace llvm_abi {
 		: arrayId_(0),
 		functionId_(0),
 		structId_(0),
+		unionId_(0),
 		vectorId_(0) {
 			// For std::array<>.
 			sourceCodeStream_ << "#include <array>" << std::endl << std::endl;
@@ -145,6 +146,29 @@ namespace llvm_abi {
 					std::ostringstream stream;
 					stream << "Struct" << structId_;
 					structId_++;
+					return stream.str();
+				}
+				case UnionType: {
+					std::vector<std::string> unionMemberTypes;
+					for (const auto& memberType: type.unionMembers()) {
+						unionMemberTypes.push_back(emitType(memberType));
+					}
+					
+					sourceCodeStream_ << "typedef union { ";
+					
+					size_t memberId = 0;
+					for (const auto& memberType: unionMemberTypes) {
+						sourceCodeStream_ << memberType << " member" << memberId << "; ";
+						memberId++;
+					}
+					
+					sourceCodeStream_ << "}";
+					
+					sourceCodeStream_ << " Union" << unionId_ << ";" << std::endl;
+					
+					std::ostringstream stream;
+					stream << "Union" << unionId_;
+					unionId_++;
 					return stream.str();
 				}
 				case ArrayType: {
@@ -285,6 +309,7 @@ namespace llvm_abi {
 		size_t arrayId_;
 		size_t functionId_;
 		size_t structId_;
+		size_t unionId_;
 		size_t vectorId_;
 		
 	};

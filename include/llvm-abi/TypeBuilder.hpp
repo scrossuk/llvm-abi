@@ -40,6 +40,9 @@ namespace llvm_abi {
 			Type getStructTy(std::initializer_list<Type> memberTypes) const;
 			Type getStructTy(llvm::ArrayRef<Type> memberTypes) const;
 			
+			Type getUnionTy(std::initializer_list<Type> memberTypes) const;
+			Type getUnionTy(llvm::ArrayRef<Type> memberTypes) const;
+			
 			Type getArrayTy(size_t elementCount, Type elementType) const;
 			
 			Type getVectorTy(size_t elementCount, Type elementType) const;

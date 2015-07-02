@@ -66,6 +66,16 @@ namespace llvm_abi {
 					                     memberTypes.end()));
 	}
 	
+	Type TypeBuilder::getUnionTy(llvm::ArrayRef<Type> memberTypes) const {
+		return Type::Union(*this, memberTypes);
+	}
+	
+	Type TypeBuilder::getUnionTy(std::initializer_list<Type> memberTypes) const {
+		return Type::Union(*this,
+		                   llvm::ArrayRef<Type>(memberTypes.begin(),
+				                        memberTypes.end()));
+	}
+	
 	Type TypeBuilder::getStructTy(llvm::ArrayRef<Type> memberTypes) const {
 		return Type::AutoStruct(*this, memberTypes);
 	}

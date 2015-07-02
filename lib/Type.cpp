@@ -70,6 +70,17 @@ namespace llvm_abi {
 		return type;
 	}
 	
+	Type Type::Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
+		TypeData typeData;
+		typeData.unionType.members = llvm::SmallVector<Type, 8>(memberTypes.begin(), memberTypes.end());
+		
+		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
+		
+		Type type(UnionType);
+		type.subKind_.uniquedPointer = typeDataPtr;
+		return type;
+	}
+	
 	Type Type::Array(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType) {
 		TypeData typeData;
 		typeData.arrayType.elementCount = elementCount;
@@ -116,6 +127,7 @@ namespace llvm_abi {
 			case ComplexType:
 				return complexKind() == type.complexKind();
 			case StructType:
+			case UnionType:
 			case ArrayType:
 			case VectorType: {
 				return subKind_.uniquedPointer == type.subKind_.uniquedPointer;
@@ -152,6 +164,7 @@ namespace llvm_abi {
 			case ComplexType:
 				return complexKind() < type.complexKind();
 			case StructType:
+			case UnionType:
 			case ArrayType:
 			case VectorType: {
 				return subKind_.uniquedPointer < type.subKind_.uniquedPointer;
@@ -240,6 +253,15 @@ namespace llvm_abi {
 		return subKind_.uniquedPointer->structType.members;
 	}
 	
+	bool Type::isUnion() const {
+		return kind() == UnionType;
+	}
+	
+	llvm::ArrayRef<Type> Type::unionMembers() const {
+		assert(isUnion());
+		return subKind_.uniquedPointer->unionType.members;
+	}
+	
 	bool Type::isArray() const {
 		return kind() == ArrayType;
 	}
@@ -300,6 +322,7 @@ namespace llvm_abi {
 			case FloatingPointType:
 			case ComplexType:
 			case StructType:
+			case UnionType:
 			case ArrayType:
 				return false;
 			case UnspecifiedWidthIntegerType:
@@ -343,6 +366,7 @@ namespace llvm_abi {
 			case FloatingPointType:
 			case ComplexType:
 			case StructType:
+			case UnionType:
 			case ArrayType:
 				return false;
 			case UnspecifiedWidthIntegerType:
@@ -397,6 +421,7 @@ namespace llvm_abi {
 			case ComplexType:
 				return value ^ std::hash<unsigned long long>()(complexKind());
 			case StructType:
+			case UnionType:
 			case ArrayType:
 			case VectorType: {
 				return value ^ std::hash<const TypeData*>()(subKind_.uniquedPointer);
@@ -488,6 +513,17 @@ namespace llvm_abi {
 						s += ", ";
 					}
 					s += std::string("StructMember(") + members[i].type().toString() + ")";
+				}
+				return s + ")";
+			}
+			case UnionType: {
+				std::string s = "Union(";
+				const auto& members = unionMembers();
+				for (size_t i = 0; i < members.size(); i++) {
+					if (i > 0) {
+						s += ", ";
+					}
+					s += members[i].toString();
 				}
 				return s + ")";
 			}

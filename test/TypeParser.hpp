@@ -39,6 +39,10 @@ namespace llvm_abi {
 			const auto text = parseString();
 			assert(!text.empty());
 			
+			if (text == "union") {
+				return parseUnionType();
+			}
+			
 			if (text == "void") {
 				return VoidTy;
 			} else if (text == "ptr") {
@@ -96,6 +100,26 @@ namespace llvm_abi {
 			stream_.consume();
 			
 			return typeBuilder_.getStructTy(types);
+		}
+		
+		Type parseUnionType() {
+			assert(stream_.peek() == '{');
+			stream_.consume();
+			
+			llvm::SmallVector<Type, 8> types;
+			
+			while (stream_.peek() != '}') {
+				types.push_back(parseType());
+				assert(stream_.peek() == ',' || stream_.peek() == '}');
+				if (stream_.peek() == ',') {
+					stream_.consume();
+				}
+			}
+			
+			assert(stream_.peek() == '}');
+			stream_.consume();
+			
+			return typeBuilder_.getUnionTy(types);
 		}
 		
 		std::string parseIntString() {

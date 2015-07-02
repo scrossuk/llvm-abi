@@ -84,6 +84,9 @@ namespace llvm_abi {
 			case StructType: {
 				llvm_unreachable("TODO");
 			}
+			case UnionType: {
+				llvm_unreachable("TODO");
+			}
 			case ArrayType: {
 				llvm_unreachable("TODO");
 			}
@@ -172,6 +175,9 @@ namespace llvm_abi {
 			case StructType: {
 				llvm_unreachable("TODO");
 			}
+			case UnionType: {
+				llvm_unreachable("TODO");
+			}
 			case ArrayType: {
 				llvm_unreachable("TODO");
 			}
@@ -214,6 +220,9 @@ namespace llvm_abi {
 				llvm_unreachable("TODO");
 			}
 			case StructType: {
+				llvm_unreachable("TODO");
+			}
+			case UnionType: {
 				llvm_unreachable("TODO");
 			}
 			case ArrayType: {

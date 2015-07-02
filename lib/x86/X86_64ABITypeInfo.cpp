@@ -106,6 +106,17 @@ namespace llvm_abi {
 					// Add any final padding.
 					return size.roundUpToAlign(getTypeRequiredAlign(type));
 				}
+				case UnionType: {
+					auto size = DataSize::Bytes(0);
+					
+					for (const auto& member: type.unionMembers()) {
+						const auto memberSize = getTypeAllocSize(member);
+						size = std::max<DataSize>(size, memberSize);
+					}
+					
+					// Add any final padding.
+					return size.roundUpToAlign(getTypeRequiredAlign(type));
+				}
 				case ArrayType:
 					// TODO: this is probably wrong...
 					return getTypeRawSize(type.arrayElementType()) * type.arrayElementCount();
@@ -134,6 +145,15 @@ namespace llvm_abi {
 					auto mostStrictAlign = DataSize::Bytes(1);
 					for (const auto& member: type.structMembers()) {
 						const auto align = getTypeRequiredAlign(member.type());
+						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
+					}
+					
+					return mostStrictAlign;
+				}
+				case UnionType: {
+					auto mostStrictAlign = DataSize::Bytes(1);
+					for (const auto& member: type.unionMembers()) {
+						const auto align = getTypeRequiredAlign(member);
 						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
 					}
 					
@@ -202,6 +222,18 @@ namespace llvm_abi {
 						members.push_back(getLLVMType(structMember.type()));
 					}
 					return llvm::StructType::get(llvmContext_, members);
+				}
+				case UnionType: {
+					auto maxSize = DataSize::Bytes(0);
+					llvm::Type* maxSizeLLVMType = llvm::Type::getInt8Ty(llvmContext_);
+					for (const auto& member: type.unionMembers()) {
+						const auto size = getTypeAllocSize(member);
+						if (size > maxSize) {
+							maxSize = size;
+							maxSizeLLVMType = getLLVMType(member);
+						}
+					}
+					return maxSizeLLVMType;
 				}
 				case ArrayType: {
 					return llvm::ArrayType::get(getLLVMType(type.arrayElementType()),

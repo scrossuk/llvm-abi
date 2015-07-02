@@ -60,6 +60,7 @@ namespace llvm_abi {
 		FloatingPointType,
 		ComplexType,
 		StructType,
+		UnionType,
 		ArrayType,
 		VectorType
 	};
@@ -118,6 +119,11 @@ namespace llvm_abi {
 			static Type AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes);
 			
 			/**
+			 * \brief Union Type
+			 */
+			static Type Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> members);
+			
+			/**
 			 * \brief Array Type
 			 */
 			static Type Array(const TypeBuilder& typeBuilder, size_t elementCount, Type elementType);
@@ -164,6 +170,10 @@ namespace llvm_abi {
 			bool isStruct() const;
 			
 			llvm::ArrayRef<StructMember> structMembers() const;
+			
+			bool isUnion() const;
+			
+			llvm::ArrayRef<Type> unionMembers() const;
 			
 			bool isArray() const;
 			
@@ -264,6 +274,10 @@ namespace llvm_abi {
 			llvm::SmallVector<StructMember, 8> members;
 		} structType;
 		
+		struct {
+			llvm::SmallVector<Type, 8> members;
+		} unionType;
+		
 		struct ArrayTypeData {
 			size_t elementCount;
 			Type elementType;
@@ -283,6 +297,10 @@ namespace llvm_abi {
 		bool operator<(const TypeData& other) const {
 			if (structType.members != other.structType.members) {
 				return structType.members < other.structType.members;
+			}
+			
+			if (unionType.members != other.unionType.members) {
+				return unionType.members < other.unionType.members;
 			}
 			
 			if (arrayType.elementCount != other.arrayType.elementCount) {
