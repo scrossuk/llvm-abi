@@ -244,9 +244,46 @@ namespace llvm_abi {
 				return offset_;
 			}
 			
+			bool isBitField() const {
+				return isBitField_;
+			}
+			
+			DataSize bitFieldWidth() const {
+				return bitFieldWidth_;
+			}
+			
+			bool isNamed() const {
+				return isNamed_;
+			}
+			
+			bool isUnnamedBitField() const {
+				return isBitField() && !isNamed();
+			}
+			
+			StructMember asNamedBitField(const DataSize width) const {
+				assert(!isBitField() && !isNamed());
+				auto copy = *this;
+				copy.isBitField_ = true;
+				copy.isNamed_ = true;
+				copy.bitFieldWidth_ = width;
+				return copy;
+			}
+			
+			StructMember asUnnamedBitField(const DataSize width) const {
+				assert(!isBitField() && !isNamed());
+				auto copy = *this;
+				copy.isBitField_ = true;
+				copy.isNamed_ = false;
+				copy.bitFieldWidth_ = width;
+				return copy;
+			}
+			
 			bool operator==(const StructMember& other) const {
 				return type() == other.type() &&
-				       offset() == other.offset();
+				       offset() == other.offset() &&
+				       isBitField() == other.isBitField() &&
+				       bitFieldWidth() == other.bitFieldWidth() &&
+				       isNamed() == other.isNamed();
 			}
 			
 			bool operator<(const StructMember& other) const {
@@ -258,16 +295,34 @@ namespace llvm_abi {
 					return offset() < other.offset();
 				}
 				
+				if (isBitField() != other.isBitField()) {
+					return isBitField() < other.isBitField();
+				}
+				
+				if (bitFieldWidth() != other.bitFieldWidth()) {
+					return bitFieldWidth() < other.bitFieldWidth();
+				}
+				
+				if (isNamed() != other.isNamed()) {
+					return isNamed() < other.isNamed();
+				}
+				
 				return false;
 			}
 			
 		private:
 			StructMember(const Type pType,
 			             const DataSize pOffset)
-			: type_(pType), offset_(pOffset) { }
+			: type_(pType), offset_(pOffset),
+			isBitField_(false),
+			bitFieldWidth_(DataSize::Bits(0)),
+			isNamed_(false) { }
 			
 			Type type_;
 			DataSize offset_;
+			bool isBitField_;
+			DataSize bitFieldWidth_;
+			bool isNamed_;
 			
 	};
 	
