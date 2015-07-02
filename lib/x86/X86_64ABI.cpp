@@ -84,15 +84,20 @@ namespace llvm_abi {
 		}
 		
 		llvm::AttributeSet X86_64ABI::getAttributes(const FunctionType& functionType,
-		                                            llvm::ArrayRef<Type> argumentTypes,
+		                                            llvm::ArrayRef<Type> rawArgumentTypes,
 		                                            const llvm::AttributeSet existingAttributes) const {
-			assert(argumentTypes.size() >= functionType.argumentTypes().size());
+			assert(rawArgumentTypes.size() >= functionType.argumentTypes().size());
+			
+			// Promote argument types (e.g. for varargs).
+			TypePromoter typePromoter(typeInfo());
+			const auto argumentTypes = typePromoter.promoteArgumentTypes(functionType,
+			                                                             rawArgumentTypes);
 			
 			llvm::SmallVector<llvm::AttributeSet, 8> attributes;
 			
 			const auto functionIRMapping = computeIRMapping(typeInfo_,
 			                                                functionType,
-			                                                functionType.argumentTypes());
+			                                                argumentTypes);
 			
 			llvm::AttrBuilder functionAttrs(existingAttributes, llvm::AttributeSet::FunctionIndex);
 			llvm::AttrBuilder returnAttrs(existingAttributes, llvm::AttributeSet::ReturnIndex);
@@ -151,8 +156,11 @@ namespace llvm_abi {
 				attributes.push_back(llvm::AttributeSet::get(context(), functionIRMapping.inallocaArgIndex() + 1, attrs));
 			}
 			
-			for (size_t argIndex = 0; argIndex < functionType.argumentTypes().size(); argIndex++) {
-				const auto argumentType = functionType.argumentTypes()[argIndex];
+			for (size_t argIndex = 0; argIndex < argumentTypes.size(); argIndex++) {
+				const auto argumentType = argumentTypes[argIndex];
+				assert(argIndex >= functionType.argumentTypes().size() ||
+				       argumentType == functionType.argumentTypes()[argIndex]);
+				
 				const auto& argInfo = functionIRMapping.arguments()[argIndex].argInfo;
 				
 				llvm::AttrBuilder attrs(existingAttributes, argIndex + 1);
