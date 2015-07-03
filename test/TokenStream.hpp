@@ -7,28 +7,11 @@ namespace llvm_abi {
 	
 	class TokenStream {
 	public:
-		TokenStream(const std::string& text)
-		: text_(text), offset_(0) { }
+		TokenStream(const std::string& text);
 		
-		char peek() {
-			while (true) {
-				if (offset_ >= text_.length()) {
-					return '\0';
-				}
-				
-				if (text_[offset_] == ' ') {
-					// Ignore spaces.
-					offset_++;
-					continue;
-				}
-				
-				return text_[offset_];
-			}
-		}
+		char peek();
 		
-		void consume() {
-			offset_++;
-		}
+		void consume();
 		
 	private:
 		const std::string& text_;
