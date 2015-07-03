@@ -23,8 +23,8 @@ namespace llvm_abi {
 		structRetArgIndex_(InvalidIndex),
 		totalIRArgs_(0) { }
 		
-		void setReturnArgInfo(const ArgInfo& returnArgInfo) {
-			returnArgInfo_ = returnArgInfo;
+		void setReturnArgInfo(const ArgInfo& newReturnArgInfo) {
+			returnArgInfo_ = newReturnArgInfo;
 		}
 		
 		const ArgInfo& returnArgInfo() const {
@@ -110,8 +110,8 @@ namespace llvm_abi {
 		/**
 		 * \brief Set total number of IR arguments.
 		 */
-		void setTotalIRArgs(const size_t totalIRArgs) {
-			totalIRArgs_ = totalIRArgs;
+		void setTotalIRArgs(const size_t newTotalIRArgs) {
+			totalIRArgs_ = newTotalIRArgs;
 		}
 		
 		/**
