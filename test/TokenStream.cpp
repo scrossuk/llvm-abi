@@ -1,3 +1,5 @@
+#include <initializer_list>
+#include <stdexcept>
 #include <string>
 
 #include "TokenStream.hpp"
@@ -15,6 +17,21 @@ namespace llvm_abi {
 		} else {
 			return text_[offset_];
 		}
+	}
+	
+	void TokenStream::expect(const char expectedToken) const {
+		if (peek() != expectedToken) {
+			throw std::runtime_error(std::string("Didn't find expected token '") + std::string(1, expectedToken) + "'.");
+		}
+	}
+	
+	void TokenStream::expectAny(std::initializer_list<char> expectedTokens) const {
+		for (const auto& expectedToken: expectedTokens) {
+			if (peek() == expectedToken) {
+				return;
+			}
+		}
+		throw std::runtime_error("Couldn't find expected token in list.");
 	}
 	
 	void TokenStream::consume() {

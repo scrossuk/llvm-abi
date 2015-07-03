@@ -1,6 +1,7 @@
 #ifndef TOKENSTREAM_HPP
 #define TOKENSTREAM_HPP
 
+#include <initializer_list>
 #include <string>
 
 namespace llvm_abi {
@@ -10,6 +11,10 @@ namespace llvm_abi {
 		TokenStream(const std::string& text);
 		
 		char peek() const;
+		
+		void expect(char expectedToken) const;
+		
+		void expectAny(std::initializer_list<char> expectedTokens) const;
 		
 		void consume();
 		
