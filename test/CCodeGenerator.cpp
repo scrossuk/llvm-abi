@@ -203,7 +203,7 @@ namespace llvm_abi {
 	void CCodeGenerator::emitCalleeFunction(const TestFunctionType& testFunctionType,
 	                                        const size_t functionId) {
 		const auto& functionType = testFunctionType.functionType;
-		sourceCodeStream_ << "extern \"C\" Fn" << functionId << "ReturnType callee(";
+		sourceCodeStream_ << "Fn" << functionId << "ReturnType callee(";
 		bool first = true;
 		int argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
@@ -231,7 +231,7 @@ namespace llvm_abi {
 	void CCodeGenerator::emitCallerFunction(const TestFunctionType& testFunctionType,
 	                                        const size_t functionId) {
 		const auto& functionType = testFunctionType.functionType;
-		sourceCodeStream_ << "extern \"C\" Fn" << functionId << "ReturnType caller(";
+		sourceCodeStream_ << "Fn" << functionId << "ReturnType caller(";
 		bool first = true;
 		int argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {

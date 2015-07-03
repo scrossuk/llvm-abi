@@ -49,7 +49,7 @@ std::string runClangOnFunction(const std::string& abiString,
 	CCodeGenerator cCodeGenerator;
 	cCodeGenerator.emitCalleeAndCallerFunctions(testFunctionType);
 	
-	std::ofstream tempFile("tempfile.cpp");
+	std::ofstream tempFile("tempfile.c");
 	tempFile << cCodeGenerator.generatedSourceCode();
 	tempFile.close();
 	
@@ -57,7 +57,7 @@ std::string runClangOnFunction(const std::string& abiString,
 	if (!cpuString.empty()) {
 		cmd += "-march=" + cpuString + " ";
 	}
-	cmd += "-std=c++11 -S -emit-llvm tempfile.cpp -o tempfile.ll";
+	cmd += "-S -emit-llvm tempfile.c -o tempfile.ll";
 	
 	const int result = system(cmd.c_str());
 	if (result != EXIT_SUCCESS) {
