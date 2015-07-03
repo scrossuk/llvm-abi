@@ -152,7 +152,10 @@ namespace llvm_abi {
 			// Attach attributes to inalloca argument.
 			if (functionIRMapping.hasInallocaArg()) {
 				llvm::AttrBuilder attrs;
+#if LLVMABI_LLVM_VERSION >= 305
+				// InAlloca support was added in LLVM 3.5.
 				attrs.addAttribute(llvm::Attribute::InAlloca);
+#endif
 				attributes.push_back(llvm::AttributeSet::get(context(), functionIRMapping.inallocaArgIndex() + 1, attrs));
 			}
 			
