@@ -4,6 +4,7 @@
 find_package(Threads REQUIRED)
 
 add_executable(ParseTest
+	CCodeGenerator.cpp
 	ParseTest.cpp
 )
 
