@@ -9,9 +9,11 @@ namespace llvm_abi {
 	public:
 		TokenStream(const std::string& text);
 		
-		char peek();
+		char peek() const;
 		
 		void consume();
+		
+		void consumeWhitespace();
 		
 	private:
 		const std::string& text_;

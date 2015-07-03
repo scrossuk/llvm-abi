@@ -5,12 +5,27 @@
 namespace llvm_abi {
 	
 	TokenStream::TokenStream(const std::string& text)
-	: text_(text), offset_(0) { }
+	: text_(text), offset_(0) {
+		consumeWhitespace();
+	}
 	
-	char TokenStream::peek() {
+	char TokenStream::peek() const {
+		if (offset_ >= text_.length()) {
+			return '\0';
+		} else {
+			return text_[offset_];
+		}
+	}
+	
+	void TokenStream::consume() {
+		offset_++;
+		consumeWhitespace();
+	}
+	
+	void TokenStream::consumeWhitespace() {
 		while (true) {
 			if (offset_ >= text_.length()) {
-				return '\0';
+				break;
 			}
 			
 			if (text_[offset_] == ' ') {
@@ -19,12 +34,8 @@ namespace llvm_abi {
 				continue;
 			}
 			
-			return text_[offset_];
+			break;
 		}
-	}
-	
-	void TokenStream::consume() {
-		offset_++;
 	}
 	
 }
