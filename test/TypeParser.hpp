@@ -83,40 +83,40 @@ namespace llvm_abi {
 		}
 		
 		Type parseStructType() {
-			assert(stream_.peek() == '{');
+			stream_.expect('{');
 			stream_.consume();
 			
 			llvm::SmallVector<Type, 8> types;
 			
 			while (stream_.peek() != '}') {
 				types.push_back(parseType());
-				assert(stream_.peek() == ',' || stream_.peek() == '}');
+				stream_.expectAny({',', '}'});
 				if (stream_.peek() == ',') {
 					stream_.consume();
 				}
 			}
 			
-			assert(stream_.peek() == '}');
+			stream_.expect('}');
 			stream_.consume();
 			
 			return typeBuilder_.getStructTy(types);
 		}
 		
 		Type parseUnionType() {
-			assert(stream_.peek() == '{');
+			stream_.expect('{');
 			stream_.consume();
 			
 			llvm::SmallVector<Type, 8> types;
 			
 			while (stream_.peek() != '}') {
 				types.push_back(parseType());
-				assert(stream_.peek() == ',' || stream_.peek() == '}');
+				stream_.expectAny({',', '}'});
 				if (stream_.peek() == ',') {
 					stream_.consume();
 				}
 			}
 			
-			assert(stream_.peek() == '}');
+			stream_.expect('}');
 			stream_.consume();
 			
 			return typeBuilder_.getUnionTy(types);
@@ -144,34 +144,34 @@ namespace llvm_abi {
 		}
 		
 		Type parseVectorType() {
-			assert(stream_.peek() == '<');
+			stream_.expect('<');
 			stream_.consume();
 			
 			const auto numElements = parseInt();
 			
-			assert(stream_.peek() == 'x');
+			stream_.expect('x');
 			stream_.consume();
 			
 			const auto elementType = parseType();
 			
-			assert(stream_.peek() == '>');
+			stream_.expect('>');
 			stream_.consume();
 			
 			return typeBuilder_.getVectorTy(numElements, elementType);
 		}
 		
 		Type parseArrayType() {
-			assert(stream_.peek() == '[');
+			stream_.expect('[');
 			stream_.consume();
 			
 			const auto numElements = parseInt();
 			
-			assert(stream_.peek() == 'x');
+			stream_.expect('x');
 			stream_.consume();
 			
 			const auto elementType = parseType();
 			
-			assert(stream_.peek() == ']');
+			stream_.expect(']');
 			stream_.consume();
 			
 			return typeBuilder_.getArrayTy(numElements, elementType);
@@ -198,27 +198,27 @@ namespace llvm_abi {
 		}
 		
 		llvm::SmallVector<Type, 8> parseVarArgsTypes() {
-			assert(stream_.peek() == '.');
+			stream_.expect('.');
 			stream_.consume();
-			assert(stream_.peek() == '.');
+			stream_.expect('.');
 			stream_.consume();
-			assert(stream_.peek() == '.');
+			stream_.expect('.');
 			stream_.consume();
 			
-			assert(stream_.peek() == '(');
+			stream_.expect('(');
 			stream_.consume();
 			
 			llvm::SmallVector<Type, 8> varArgsTypes;
 			
 			while (stream_.peek() != ')') {
 				varArgsTypes.push_back(parseType());
-				assert(stream_.peek() == ',' || stream_.peek() == ')');
+				stream_.expectAny({',', ')'});
 				if (stream_.peek() == ',') {
 					stream_.consume();
 				}
 			}
 			
-			assert(stream_.peek() == ')');
+			stream_.expect(')');
 			stream_.consume();
 			
 			return varArgsTypes;
@@ -227,14 +227,14 @@ namespace llvm_abi {
 		TestFunctionType parseFunctionType() {
 			const auto returnType = parseType();
 			
-			assert(stream_.peek() == '(');
+			stream_.expect('(');
 			stream_.consume();
 			
 			llvm::SmallVector<Type, 8> argumentTypes;
 			
 			while (stream_.peek() != ')' && stream_.peek() != '.') {
 				argumentTypes.push_back(parseType());
-				assert(stream_.peek() == ',' || stream_.peek() == ')');
+				stream_.expectAny({',', ')'});
 				if (stream_.peek() == ',') {
 					stream_.consume();
 				}
@@ -246,7 +246,7 @@ namespace llvm_abi {
 				varArgsTypes = parseVarArgsTypes();
 			}
 			
-			assert(stream_.peek() == ')');
+			stream_.expect(')');
 			stream_.consume();
 			
 			return TestFunctionType(FunctionType(returnType,
