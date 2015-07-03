@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include <llvm/ADT/StringSwitch.h>
 #include <llvm/ADT/Triple.h>
 
