@@ -17,8 +17,6 @@ namespace llvm_abi {
 	structId_(0),
 	unionId_(0),
 	vectorId_(0) {
-		// For std::array<>.
-		sourceCodeStream_ << "#include <array>" << std::endl << std::endl;
 	}
 
 	std::string CCodeGenerator::generatedSourceCode() const {
@@ -159,7 +157,7 @@ namespace llvm_abi {
 			case ArrayType: {
 				const auto elementTypeString = emitType(type.arrayElementType());
 				sourceCodeStream_ << "typedef ";
-				sourceCodeStream_ << " std::array<" << elementTypeString << ", " << type.arrayElementCount() << "> Array" << arrayId_ << ";" << std::endl;
+				sourceCodeStream_ << " struct { " << elementTypeString << " data[" << type.arrayElementCount() << "]; } Array" << arrayId_ << ";" << std::endl;
 				std::ostringstream stream;
 				stream << "Array" << arrayId_;
 				arrayId_++;

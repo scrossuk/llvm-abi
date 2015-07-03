@@ -16,9 +16,6 @@ namespace llvm_abi {
 	 * for ABI function types. This allows function types to be passed to
 	 * a C compiler (Clang) and the output to be compared against the output
 	 * of the LLVM-ABI library.
-	 * 
-	 * NOTE: this actually outputs C++11 code for std::array<>; it'd be good
-	 * to remove this dependency.
 	 */
 	class CCodeGenerator {
 	public:
