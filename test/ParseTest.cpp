@@ -70,6 +70,11 @@ std::string runClangOnFunction(const std::string& abiString,
 	                   std::istreambuf_iterator<char>());
 }
 
+bool startsWith(const std::string& string, const std::string& substring,
+                size_t position = 0) {
+	return string.substr(position, substring.size()) == substring;
+}
+
 int main(int argc, char** argv) {
 	assert(argc >= 2 && argc <= 3);
 	
@@ -86,6 +91,8 @@ int main(int argc, char** argv) {
 	const std::string ABI_COMMAND = "ABI";
 	const std::string CPU_COMMAND = "CPU";
 	const std::string FUNCTION_TYPE_COMMAND = "FUNCTION-TYPE";
+	
+	const std::string MEMCPY_START = "declare void @llvm.memcpy.p0i8.p0i8.i64(";
 	
 	std::vector<std::string> compareLines;
 	
@@ -146,6 +153,16 @@ int main(int argc, char** argv) {
 		
 		while (std::getline(outputFile, line)) {
 			if (line.empty() || line[0] == ';') {
+				continue;
+			}
+			
+			if (nextLine < compareLines.size() &&
+			    startsWith(line, MEMCPY_START) &&
+			    startsWith(compareLines[nextLine], MEMCPY_START)) {
+				// The memcpy intrinsic has different attributes
+				// for different versions of LLVM, but we don't
+				// care about these differences.
+				nextLine++;
 				continue;
 			}
 			
