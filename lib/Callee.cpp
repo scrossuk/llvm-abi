@@ -634,6 +634,8 @@ namespace llvm_abi {
 			case ArgInfo::Expand:
 				llvm_unreachable("Invalid ABI kind for return argument");
 		}
+		
+		llvm_unreachable("Unhandled ArgInfo::Kind");
 	}
 	
 }

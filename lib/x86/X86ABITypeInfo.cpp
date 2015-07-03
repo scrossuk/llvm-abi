@@ -232,6 +232,7 @@ namespace llvm_abi {
 				llvm_unreachable("TODO");
 			}
 		}
+		llvm_unreachable("Unknown type kind.");
 	}
 	
 	llvm::SmallVector<DataSize, 8> X86ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> /*structMembers*/) const {

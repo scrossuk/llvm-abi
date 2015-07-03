@@ -177,6 +177,8 @@ namespace llvm_abi {
 				llvm_unreachable("TODO");
 			}
 		}
+		
+		llvm_unreachable("Unknown type kind.");
 	}
 	
 	size_t CCodeGenerator::emitFunctionTypes(const TestFunctionType& testFunctionType) {

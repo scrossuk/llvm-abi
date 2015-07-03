@@ -62,6 +62,7 @@ namespace llvm_abi {
 				case UIntPtrT:
 					return type;
 			}
+			llvm_unreachable("Unknown integer type kind.");
 		} else if (type.isFloatingPoint()) {
 			switch (type.floatingPointKind()) {
 				case Float:
@@ -71,6 +72,7 @@ namespace llvm_abi {
 				case Float128:
 					return type;
 			}
+			llvm_unreachable("Unknown floating point type kind.");
 		} else {
 			return type;
 		}
