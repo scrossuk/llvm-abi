@@ -7,6 +7,10 @@ namespace llvm_abi {
 	
 	class DataSize {
 	public:
+		static DataSize Zero() {
+			return DataSize(0);
+		}
+		
 		static DataSize Bits(const uint64_t value) {
 			return DataSize(value);
 		}
