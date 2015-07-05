@@ -3,6 +3,9 @@
 
 #include <llvm/IR/Type.h>
 
+// FIXME: Remove!
+#include <llvm-abi/Type.hpp>
+
 namespace llvm_abi {
 	
 	class DataSize;
@@ -99,6 +102,10 @@ namespace llvm_abi {
 		 * \return Whether 'char' is signed.
 		 */
 		virtual bool isCharSigned() const = 0;
+		
+		// FIXME!
+		virtual bool isHomogeneousAggregateBaseType(Type) const { return false; }
+		virtual bool isHomogeneousAggregateSmallEnough(Type, uint64_t) const { return false; }
 		
 	protected:
 		// Prevent destructor call via this class.
