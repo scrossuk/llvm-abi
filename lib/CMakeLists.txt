@@ -12,6 +12,7 @@ add_library(llvm-abi
 	x86/CPUFeatures.cpp
 	x86/CPUKind.cpp
 	x86/Win64ABI.cpp
+	x86/X86_32Classifier.cpp
 	x86/X86_64ABI.cpp
 	x86/X86_64ABITypeInfo.cpp
 	x86/X86ABI.cpp
