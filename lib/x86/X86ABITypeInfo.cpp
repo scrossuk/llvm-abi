@@ -82,17 +82,44 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Complex type kind.");
 			}
 			case StructType: {
-				llvm_unreachable("TODO");
+				if (type.structMembers().empty()) {
+					return DataSize::Bytes(0);
+				}
+				
+				auto size = DataSize::Bytes(0);
+				
+				for (const auto& member: type.structMembers()) {
+					if (member.offset() < size) {
+						// Add necessary padding before this member.
+						size = size.roundUpToAlign(getTypeRequiredAlign(member.type()));
+					} else {
+						size = member.offset();
+					}
+					
+					// Add the member's size.
+					size += getTypeAllocSize(member.type());
+				}
+				
+				// Add any final padding.
+				return size.roundUpToAlign(getTypeRequiredAlign(type));
 			}
 			case UnionType: {
-				llvm_unreachable("TODO");
+				auto size = DataSize::Bytes(0);
+				
+				for (const auto& member: type.unionMembers()) {
+					const auto memberSize = getTypeAllocSize(member);
+					size = std::max<DataSize>(size, memberSize);
+				}
+				
+				// Add any final padding.
+				return size.roundUpToAlign(getTypeRequiredAlign(type));
 			}
-			case ArrayType: {
-				llvm_unreachable("TODO");
-			}
-			case VectorType: {
-				llvm_unreachable("TODO");
-			}
+			case ArrayType:
+				// TODO: this is probably wrong...
+				return getTypeRawSize(type.arrayElementType()) * type.arrayElementCount();
+			case VectorType:
+				// TODO: this is probably wrong...
+				return getTypeRawSize(type.vectorElementType()) * type.vectorElementCount();
 		}
 		llvm_unreachable("Unknown type kind.");
 	}
@@ -173,16 +200,28 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown Complex type kind.");
 			}
 			case StructType: {
-				llvm_unreachable("TODO");
+				auto mostStrictAlign = DataSize::Bytes(1);
+				for (const auto& member: type.structMembers()) {
+					const auto align = getTypeRequiredAlign(member.type());
+					mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
+				}
+				
+				return mostStrictAlign;
 			}
 			case UnionType: {
-				llvm_unreachable("TODO");
+				auto mostStrictAlign = DataSize::Bytes(1);
+				for (const auto& member: type.unionMembers()) {
+					const auto align = getTypeRequiredAlign(member);
+					mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
+				}
+				
+				return mostStrictAlign;
 			}
 			case ArrayType: {
-				llvm_unreachable("TODO");
+				return getTypeRequiredAlign(type.arrayElementType());
 			}
 			case VectorType: {
-				llvm_unreachable("TODO");
+				return getTypeRequiredAlign(type.vectorElementType());
 			}
 		}
 		llvm_unreachable("Unknown type kind.");
