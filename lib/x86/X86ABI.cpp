@@ -1,8 +1,10 @@
 #include <vector>
 
 #include <llvm-abi/ABI.hpp>
+#include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/Type.hpp>
 
+#include <llvm-abi/x86/X86_32Classifier.hpp>
 #include <llvm-abi/x86/X86ABI.hpp>
 #include <llvm-abi/x86/X86ABITypeInfo.hpp>
 
@@ -43,8 +45,20 @@ namespace llvm_abi {
 			}
 		}
 		
-		llvm::FunctionType* X86ABI::getFunctionType(const FunctionType& /*functionType*/) const {
-			llvm_unreachable("TODO");
+		llvm::FunctionType* X86ABI::getFunctionType(const FunctionType& functionType) const {
+			X86_32Classifier classifier(typeInfo_);
+			const auto argInfoArray =
+				classifier.classifyFunctionType(functionType,
+				                                functionType.argumentTypes(),
+				                                llvm::CallingConv::C);
+			assert(argInfoArray.size() >= 1);
+			
+			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			
+			return llvm_abi::getFunctionType(llvmContext_,
+			                                 typeInfo_,
+			                                 functionType,
+			                                 functionIRMapping);
 		}
 		
 		llvm::AttributeSet X86ABI::getAttributes(const FunctionType& /*functionType*/,
