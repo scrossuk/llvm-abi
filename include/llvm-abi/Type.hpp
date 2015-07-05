@@ -167,6 +167,8 @@ namespace llvm_abi {
 			
 			FloatingPointKind complexKind() const;
 			
+			Type complexFloatingPointType() const;
+			
 			bool isStruct() const;
 			
 			llvm::ArrayRef<StructMember> structMembers() const;

@@ -244,6 +244,10 @@ namespace llvm_abi {
 		return subKind_.complexKind;
 	}
 	
+	Type Type::complexFloatingPointType() const {
+		return Type::FloatingPoint(complexKind());
+	}
+	
 	bool Type::isStruct() const {
 		return kind() == StructType;
 	}
