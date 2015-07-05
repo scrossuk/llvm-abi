@@ -20,26 +20,6 @@ namespace llvm_abi {
 	
 	namespace x86 {
 		
-		bool isIntegralType(const Type type) {
-			return type.isPointer() ||
-			       type.isInteger() ||
-			       type.isFloatingPoint() ||
-			       type.isVector();
-		}
-		
-		bool isAggregateTypeForABI(const Type type) {
-			return !isIntegralType(type);
-		}
-		
-		bool isPromotableIntegerType(const Type type) {
-			return type == BoolTy ||
-			       type == CharTy ||
-			       type == SCharTy ||
-			       type == UCharTy ||
-			       type == ShortTy ||
-			       type == UShortTy;
-		}
-		
 		/**
 		 * \brief Get field containing the offset given.
 		 */
@@ -59,135 +39,11 @@ namespace llvm_abi {
 			return fieldIndex;
 		}
 		
-		static bool isEmptyRecord(Type type, bool allowArrays);
-		
-		/**
-		 * \brief Check if a field is "empty".
-		 * 
-		 * Checks if the field is an unnamed bit-field or an array
-		 * of empty record(s).
-		 */
-		static bool isEmptyField(const StructMember& structMember,
-		                         const bool allowArrays) {
-// 			if (structMember.isUnnamedBitfield()) {
-// 				return true;
-// 			}
-			
-			Type fieldType = structMember.type();
-			
-			// Constant arrays of empty records count as empty, strip them off.
-			// Constant arrays of zero length always count as empty.
-			if (allowArrays) {
-				while (fieldType.isArray()) {
-					if (fieldType.arrayElementCount() != 1) {
-						break;
-					}
-					fieldType = fieldType.arrayElementType();
-				}
-			}
-			
-			if (!fieldType.isStruct()) {
-				return false;
-			}
-			
-			return isEmptyRecord(fieldType, allowArrays);
-		}
-
-		/**
-		 * \brief Check if a struct contains only empty fields.
-		 * 
-		 * Note that a struct with a flexible array member is not
-		 * considered empty.
-		 */
-		static bool isEmptyRecord(const Type type,
-		                          const bool allowArrays) {
-			if (!type.isStruct()) {
-				return false;
-			}
-			
-// 			if (type.isStructVariableSized()) {
-// 				return false;
-// 			}
-			
-			for (const auto& field: type.structMembers()) {
-				if (!isEmptyField(field, allowArrays)) {
-					return false;
-				}
-			}
-			
-			return true;
-		}
-		
-		/// isSingleElementStruct - Determine if a structure is a "single
-		/// element struct", i.e. it has exactly one non-empty field or
-		/// exactly one field which is itself a single element
-		/// struct. Structures with flexible array members are never
-		/// considered single element structs.
-		///
-		/// \return The field declaration for the single non-empty field, if
-		/// it exists.
-		static Type getStructSingleElement(const ABITypeInfo& typeInfo,
-		                                   const Type type) {
-			if (!type.isStruct()) {
-				return VoidTy;
-			}
-			
-// 			if (type.isStructVariableSized()) {
-// 				return VoidTy;
-// 			}
-			
-			Type foundType = VoidTy;
-			
-			// Check for single element.
-			for (const auto& field: type.structMembers()) {
-				// Ignore empty fields.
-				const bool allowArrays = true;
-				if (isEmptyField(field, allowArrays)) {
-					continue;
-				}
-				
-				// If we already found an element then this
-				// isn't a single-element struct.
-				if (!foundType.isVoid()) {
-					return VoidTy;
-				}
-				
-				Type fieldType = field.type();
-				
-				// Treat single element arrays as the element.
-				while (fieldType.isArray()) {
-					if (fieldType.arrayElementCount() != 1) {
-						break;
-					}
-					fieldType = fieldType.arrayElementType();
-				}
-				
-				if (!isAggregateTypeForABI(fieldType)) {
-					foundType = fieldType;
-				} else {
-					foundType = getStructSingleElement(typeInfo,
-					                                   fieldType);
-					if (foundType.isVoid()) {
-						return VoidTy;
-					}
-				}
-			}
-			
-			// We don't consider a struct a single-element struct
-			// if it has padding beyond the element type.
-			if (!foundType.isVoid() &&
-			    typeInfo.getTypeAllocSize(foundType) != typeInfo.getTypeAllocSize(type)) {
-				return VoidTy;
-			}
-			
-			return foundType;
-		}
-		
 		ArgInfo getIndirectReturnResult(const Type type) {
 			// If this is a scalar LLVM value then assume LLVM will
 			// pass it in the right place naturally.
-			if (!isAggregateTypeForABI(type)) {
-				return isPromotableIntegerType(type) ?
+			if (!type.isAggregateType()) {
+				return type.isPromotableIntegerType() ?
 				       ArgInfo::getExtend(type) : ArgInfo::getDirect(type);
 			}
 			
@@ -205,9 +61,9 @@ namespace llvm_abi {
 			// the argument in the free register. This does not seem to happen currently,
 			// but this code would be much safer if we could mark the argument with
 			// 'onstack'. See PR12193.
-			if (!isAggregateTypeForABI(type) &&
+			if (!type.isAggregateType() &&
 			    (!type.isVector() || typeInfo.isLegalVectorType(type))) {
-				return isPromotableIntegerType(type) ?
+				return type.isPromotableIntegerType() ?
 					ArgInfo::getExtend(type) : ArgInfo::getDirect(type);
 			}
 			
@@ -255,7 +111,7 @@ namespace llvm_abi {
 		Type getByteVectorType(const ABITypeInfo& typeInfo, Type type) {
 			// Wrapper structs/arrays that only contain vectors are passed just like
 			// vectors; strip them off if present.
-			const auto singleElementType = getStructSingleElement(typeInfo, type);
+			const auto singleElementType = type.getStructSingleElement(typeInfo);
 			if (!singleElementType.isVoid()) {
 				type = singleElementType;
 			}
@@ -279,85 +135,6 @@ namespace llvm_abi {
 			}
 			
 			return typeInfo.typeBuilder().getVectorTy(2, DoubleTy);
-		}
-		
-		/// BitsContainNoUserData - Return true if the specified [start,end) bit range
-		/// is known to either be off the end of the specified type or being in
-		/// alignment padding.	The user type specified is known to be at most 128 bits
-		/// in size, and have passed through X86_64ABIInfo::classify with a successful
-		/// classification that put one of the two halves in the INTEGER class.
-		///
-		/// It is conservatively correct to return false.
-		static bool bitsContainNoUserData(const ABITypeInfo& typeInfo,
-		                                  const Type type,
-		                                  const size_t startBit,
-		                                  const size_t endBit) {
-			assert(startBit <= endBit);
-			
-			// If the bytes being queried are off the end of the type, there is no user
-			// data hiding here. This handles analysis of builtins, vectors and other
-			// types that don't contain interesting padding.
-			if (typeInfo.getTypeAllocSize(type).asBits() <= startBit) {
-				return true;
-			}
-			
-			if (type.isArray()) {
-				const auto elementSize = typeInfo.getTypeAllocSize(type.arrayElementType());
-				const auto elementCount = type.arrayElementCount();
-				
-				for (size_t i = 0; i < elementCount; i++) {
-					const auto elementOffset = elementSize * i;
-					if (elementOffset.asBits() >= endBit) {
-						// If the element is after the span we care about, then we're done.
-						break;
-					}
-					
-					const size_t elementStart = (elementOffset.asBits() < startBit) ? (startBit - elementOffset.asBits()) : 0;
-					
-					if (!bitsContainNoUserData(typeInfo,
-					                           type.arrayElementType(),
-					                           elementStart,
-					                           endBit - elementOffset.asBits())) {
-						return false;
-					}
-				}
-				
-				// If it overlaps no elements, then it is safe to
-				// process as padding.
-				return true;
-			}
-			
-			if (type.isStruct()) {
-				const auto structOffsets = typeInfo.calculateStructOffsets(type.structMembers());
-				
-				// Verify that no field has data that overlaps the region of interest. Yes
-				// this could be sped up a lot by being smarter about queried fields,
-				// however we're only looking at structs up to 16 bytes, so we don't care
-				// much.
-				for (size_t i = 0; i < type.structMembers().size(); i++) {
-					const auto& structMember = type.structMembers()[i];
-					const auto fieldOffset = structOffsets[i];
-					
-					if (fieldOffset.asBits() >= endBit) {
-						// If we found a field after the region we care about, then we're done.
-						break;
-					}
-					
-					const auto fieldStart = (fieldOffset.asBits() < startBit) ? (startBit - fieldOffset.asBits()) : 0;
-					if (!bitsContainNoUserData(typeInfo,
-					                           structMember.type(),
-					                           fieldStart,
-					                           endBit - fieldOffset.asBits())) {
-						return false;
-					}
-				}
-				
-				// If nothing in this record overlapped the area
-				// of interest, then we're clean.
-				return true;
-			}
-			
-			return false;
 		}
 		
 		/**
@@ -418,10 +195,9 @@ namespace llvm_abi {
 			// The only three choices we have are either double,
 			// <2 x float>, or float.
 			
-			if (bitsContainNoUserData(typeInfo,
-			                          sourceType,
-			                          sourceOffset.asBits() + 32,
-			                          sourceOffset.asBits() + 64)) {
+			if (sourceType.bitsContainNoUserData(typeInfo,
+			                                     sourceOffset.asBits() + 32,
+			                                     sourceOffset.asBits() + 64)) {
 				// We pass as float if the last 4 bytes is just
 				// padding.  This happens for structs that
 				// contain 3 floats.
@@ -490,10 +266,9 @@ namespace llvm_abi {
 				    (typeSize.asBytes() == 1 ||
 				     typeSize.asBytes() == 2 || 
 				     typeSize.asBytes() == 4)) {
-					if (bitsContainNoUserData(typeInfo,
-					                          sourceType,
-					                          sourceOffset.asBits() + typeSize.asBits(),
-					                          sourceOffset.asBits() + 64)) {
+					if (sourceType.bitsContainNoUserData(typeInfo,
+					                                     sourceOffset.asBits() + typeSize.asBits(),
+					                                     sourceOffset.asBits() + 64)) {
 						return type;
 					}
 				}
@@ -704,8 +479,8 @@ namespace llvm_abi {
 					// parameter gets the right LLVM IR attributes.
 					if (classification.high() == NoClass &&
 					    resultType.isInteger()) {
-						if (isIntegralType(type) &&
-						    isPromotableIntegerType(type)) {
+						if (type.isIntegralType() &&
+						    type.isPromotableIntegerType()) {
 							return ArgInfo::getExtend(resultType);
 						}
 					}
