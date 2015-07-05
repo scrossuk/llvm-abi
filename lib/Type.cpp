@@ -315,6 +315,263 @@ namespace llvm_abi {
 		}
 	}
 	
+	bool Type::isIntegralType() const {
+		return isPointer() ||
+		       isInteger() ||
+		       isFloatingPoint() ||
+		       isVector();
+	}
+	
+	bool Type::isAggregateType() const {
+		return !isIntegralType();
+	}
+	
+	bool Type::isPromotableIntegerType() const {
+		return *this == BoolTy ||
+		       *this == CharTy ||
+		       *this == SCharTy ||
+		       *this == UCharTy ||
+		       *this == ShortTy ||
+		       *this == UShortTy;
+	}
+	
+	Type Type::getStructSingleElement(const ABITypeInfo& typeInfo) const {
+		if (!isStruct()) {
+			return VoidTy;
+		}
+		
+		if (hasFlexibleArrayMember()) {
+			return VoidTy;
+		}
+		
+		Type foundType = VoidTy;
+		
+		// Check for single element.
+		for (const auto& field: structMembers()) {
+			// Ignore empty fields.
+			const bool allowArrays = true;
+			if (field.isEmptyField(allowArrays)) {
+				continue;
+			}
+			
+			// If we already found an element then this
+			// isn't a single-element struct.
+			if (!foundType.isVoid()) {
+				return VoidTy;
+			}
+			
+			Type fieldType = field.type();
+			
+			// Treat single element arrays as the element.
+			while (fieldType.isArray()) {
+				if (fieldType.arrayElementCount() != 1) {
+					break;
+				}
+				fieldType = fieldType.arrayElementType();
+			}
+			
+			if (!fieldType.isAggregateType()) {
+				foundType = fieldType;
+			} else {
+				foundType = fieldType.getStructSingleElement(typeInfo);
+				if (foundType.isVoid()) {
+					return VoidTy;
+				}
+			}
+		}
+		
+		// We don't consider a struct a single-element struct
+		// if it has padding beyond the element type.
+		if (!foundType.isVoid() &&
+		    typeInfo.getTypeAllocSize(foundType) != typeInfo.getTypeAllocSize(*this)) {
+			return VoidTy;
+		}
+		
+		return foundType;
+	}
+	
+	bool Type::isEmptyRecord(const bool allowArrays) const {
+		if (!isStruct()) {
+			return false;
+		}
+		
+		if (hasFlexibleArrayMember()) {
+			return false;
+		}
+		
+		for (const auto& field: structMembers()) {
+			if (!field.isEmptyField(allowArrays)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	bool Type::bitsContainNoUserData(const ABITypeInfo& typeInfo,
+	                                 const size_t startBit,
+	                                 const size_t endBit) const {
+		assert(startBit <= endBit);
+		
+		// If the bytes being queried are off the end of the type, there is no user
+		// data hiding here. This handles analysis of builtins, vectors and other
+		// types that don't contain interesting padding.
+		if (typeInfo.getTypeAllocSize(*this).asBits() <= startBit) {
+			return true;
+		}
+		
+		if (isArray()) {
+			const auto elementSize = typeInfo.getTypeAllocSize(arrayElementType());
+			const auto elementCount = arrayElementCount();
+			
+			for (size_t i = 0; i < elementCount; i++) {
+				const auto elementOffset = elementSize * i;
+				if (elementOffset.asBits() >= endBit) {
+					// If the element is after the span we care about, then we're done.
+					break;
+				}
+				
+				const size_t elementStart = (elementOffset.asBits() < startBit) ? (startBit - elementOffset.asBits()) : 0;
+				
+				if (!arrayElementType().bitsContainNoUserData(typeInfo,
+				                                              elementStart,
+				                                              endBit - elementOffset.asBits())) {
+					return false;
+				}
+			}
+			
+			// If it overlaps no elements, then it is safe to
+			// process as padding.
+			return true;
+		}
+		
+		if (isStruct()) {
+			const auto structOffsets = typeInfo.calculateStructOffsets(structMembers());
+			
+			// Verify that no field has data that overlaps the region of interest. Yes
+			// this could be sped up a lot by being smarter about queried fields,
+			// however we're only looking at structs up to 16 bytes, so we don't care
+			// much.
+			for (size_t i = 0; i < structMembers().size(); i++) {
+				const auto& structMember = structMembers()[i];
+				const auto fieldOffset = structOffsets[i];
+				
+				if (fieldOffset.asBits() >= endBit) {
+					// If we found a field after the region we care about, then we're done.
+					break;
+				}
+				
+				const auto fieldStart = (fieldOffset.asBits() < startBit) ? (startBit - fieldOffset.asBits()) : 0;
+				if (!structMember.type().bitsContainNoUserData(typeInfo,
+				                                               fieldStart,
+				                                               endBit - fieldOffset.asBits())) {
+					return false;
+				}
+			}
+			
+			// If nothing in this record overlapped the area
+			// of interest, then we're clean.
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/// isHomogeneousAggregate - Return true if a type is an ELFv2 homogeneous
+	/// aggregate. Base is set to the base element type, and Members is set
+	/// to the number of base elements.
+	bool Type::isHomogeneousAggregate(const ABITypeInfo& typeInfo,
+	                                  Type& base,
+	                                  uint64_t& members) const {
+		if (isArray()) {
+			if (arrayElementCount() == 0) {
+				return false;
+			}
+			if (!arrayElementType().isHomogeneousAggregate(typeInfo,
+			                                               base,
+			                                               members)) {
+				return false;
+			}
+			members *= arrayElementCount();
+		} else if (isStruct() || isUnion()) {
+			if (hasFlexibleArrayMember()) {
+				return false;
+			}
+			
+			members = 0;
+			
+			// FIXME: should also iterate through union members.
+			for (const auto& field: structMembers()) {
+				auto fieldType = field.type();
+				// Ignore (non-zero arrays of) empty records.
+				while (fieldType.isArray()) {
+					if (fieldType.arrayElementCount() == 0) {
+						return false;
+					}
+					fieldType = fieldType.arrayElementType();
+				}
+				
+				if (fieldType.isEmptyRecord(/*allowArrays=*/true)) {
+					continue;
+				}
+				
+				// For compatibility with GCC, ignore empty bitfields in C++ mode.
+// 				if (getContext().getLangOpts().CPlusPlus &&
+// 						FD->isBitField() && FD->getBitWidthValue(getContext()) == 0)
+// 					continue;
+				
+				uint64_t fieldMembers;
+				if (!field.type().isHomogeneousAggregate(typeInfo,
+				                                         base,
+				                                         fieldMembers)) {
+					return false;
+				}
+				
+				members = isUnion() ?
+					std::max<size_t>(members, fieldMembers) :
+					members + fieldMembers;
+			}
+			
+			if (base == VoidTy) {
+				return false;
+			}
+			
+			// Ensure there is no padding.
+			if ((typeInfo.getTypeAllocSize(base) * members) !=
+			    typeInfo.getTypeAllocSize(*this)) {
+				return false;
+			}
+		} else {
+			members = 1;
+			
+			auto useType = *this;
+			
+			if (isComplex()) {
+				members = 2;
+				useType = complexFloatingPointType();
+			}
+			
+			// Most ABIs only support float, double, and some vector type widths.
+			if (!typeInfo.isHomogeneousAggregateBaseType(useType)) {
+				return false;
+			}
+			
+			// The base type must be the same for all members. Types that
+			// agree in both total size and mode (float vs. vector) are
+			// treated as being equivalent here.
+			if (base == VoidTy) {
+				base = useType;
+			}
+			
+			if (base.isVector() != useType.isVector() ||
+			    typeInfo.getTypeAllocSize(base) != typeInfo.getTypeAllocSize(useType)) {
+				return false;
+			}
+		}
+		
+		return members > 0 && typeInfo.isHomogeneousAggregateSmallEnough(base, members);
+	}
+	
 	bool Type::hasUnalignedFields(const ABITypeInfo& typeInfo) const {
 		if (!isStruct()) {
 			return false;

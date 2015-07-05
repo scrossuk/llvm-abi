@@ -191,6 +191,86 @@ namespace llvm_abi {
 			
 			Type vectorElementType() const;
 			
+			/**
+			 * \brief Query whether type is 'integral'.
+			 * 
+			 * Integral types are pointers, integers, floating point
+			 * values or vectors.
+			 * 
+			 * \return Whether type is 'integral'.
+			 */
+			bool isIntegralType() const;
+			
+			/**
+			 * \brief Query whether type is 'aggregate.
+			 * 
+			 * Aggregate types are arrays, structs or unions.
+			 * 
+			 * \return Whether type is 'aggregate'.
+			 */
+			bool isAggregateType() const;
+			
+			/**
+			 * \brief Query whether type is a promotable integer.
+			 * 
+			 * Some integer types (e.g. char) are 'promoted' (either
+			 * sign extended or zero extended depending on the type's
+			 * signedness) in a few cases.
+			 * 
+			 * For example, passing a 'short' as a varargs argument
+			 * means it is automatically promoted to 'int'.
+			 * 
+			 * \return Whether type is a promotable integer.
+			 */
+			bool isPromotableIntegerType() const;
+			
+			/**
+			 * \brief Get structure's single element (or any).
+			 * 
+			 * A struct is single-element if it has exactly one
+			 * non-empty field or exactly one field which is itself
+			 * a single element struct. Structures with flexible
+			 * array members are never considered single element
+			 * structs.
+			 * 
+			 * \param typeInfo ABI Type Information.
+			 * \return The type for the single non-empty field, if
+			 * it exists, or VoidTy otherwise.
+			 */
+			Type getStructSingleElement(const ABITypeInfo& typeInfo) const;
+			
+			/**
+			 * \brief Query if a structure contains only empty fields.
+			 * 
+			 * Note that a structure with a flexible array member is
+			 * not considered empty.
+			 * 
+			 * \param allowArrays Whether to consider arrays.
+			 * \return Whether the struct is empty.
+			 */
+			bool isEmptyRecord(bool allowArrays) const;
+			
+			/**
+			 * \brief Query if the specified [start,end) bit range
+			 *        is known to either be off the end of the type
+			 *        or being in alignment padding.
+			 * 
+			 * It is conservatively correct to return false.
+			 * 
+			 * \param typeInfo ABI Type Information.
+			 * \param startBit Start of bit range.
+			 * \param endBit End of bit range.
+			 * \return Whether the specified bit range is known to
+			 *         not contain user data.
+			 */
+			bool bitsContainNoUserData(const ABITypeInfo& typeInfo,
+			                           size_t startBit,
+			                           size_t endBit) const;
+			
+			bool isHomogeneousAggregate(const ABITypeInfo& typeInfo,
+			                            Type& base,
+			                            uint64_t& members) const;
+			
 			bool hasUnalignedFields(const ABITypeInfo& typeInfo) const;
 			
 			bool hasSignedIntegerRepresentation(const ABITypeInfo& typeInfo) const;
@@ -278,6 +358,37 @@ namespace llvm_abi {
 				copy.isNamed_ = false;
 				copy.bitFieldWidth_ = width;
 				return copy;
+			}
+			
+			/**
+			 * \brief Check if a field is "empty".
+			 * 
+			 * Checks if the field is an unnamed bit-field or an array
+			 * of empty record(s).
+			 */
+			bool isEmptyField(const bool allowArrays) const {
+				if (isUnnamedBitField()) {
+					return true;
+				}
+				
+				Type fieldType = type();
+				
+				// Constant arrays of empty records count as empty, strip them off.
+				// Constant arrays of zero length always count as empty.
+				if (allowArrays) {
+					while (fieldType.isArray()) {
+						if (fieldType.arrayElementCount() != 1) {
+							break;
+						}
+						fieldType = fieldType.arrayElementType();
+					}
+				}
+				
+				if (!fieldType.isStruct()) {
+					return false;
+				}
+				
+				return fieldType.isEmptyRecord(allowArrays);
 			}
 			
 			bool operator==(const StructMember& other) const {
