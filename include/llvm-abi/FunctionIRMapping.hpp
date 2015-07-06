@@ -152,6 +152,7 @@ namespace llvm_abi {
 	 * \param context The LLVM context.
 	 * \param typeInfo The ABI type information.
 	 * \param functionType The ABI function type.
+	 * \param functionIRMapping The ABI function IR mapping.
 	 * \return The ABI-encoded LLVM function type.
 	 */
 	llvm::FunctionType *
