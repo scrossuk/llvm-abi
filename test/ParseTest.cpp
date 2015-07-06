@@ -148,6 +148,10 @@ int main(int argc, char** argv) {
 		filename += ".output.ll";
 		
 		std::ifstream outputFile(filename);
+		if (!outputFile.is_open()) {
+			printf("Failed to open output file!\n");
+			return EXIT_FAILURE;
+		}
 		
 		size_t nextLine = 0;
 		
