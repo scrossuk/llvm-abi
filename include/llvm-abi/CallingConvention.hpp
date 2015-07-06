@@ -42,7 +42,13 @@ namespace llvm_abi {
 		/**
 		 * \brief 'pascal' calling convention
 		 */
-		CC_Pascal
+		CC_Pascal,
+		
+		/**
+		 * \brief MSVC calling convention that passes vectors and
+		 *        vector aggregates in SSE registers.
+		 */
+		CC_VectorCall
 	};
 	
 }
