@@ -129,11 +129,73 @@ namespace llvm_abi {
 			return caller.decodeReturnValue(encodedArguments, returnValue);
 		}
 		
+		static
+		FunctionIRMapping computeIRMapping(const ABITypeInfo& typeInfo,
+		                                   const FunctionType& functionType,
+		                                   llvm::ArrayRef<Type> argumentTypes) {
+			X86_32Classifier classifier(typeInfo);
+			const auto argInfoArray =
+				classifier.classifyFunctionType(functionType,
+				                                argumentTypes,
+				                                llvm::CallingConv::C);
+			assert(argInfoArray.size() >= 1);
+			
+			return getFunctionIRMapping(argInfoArray);
+		}
+		
+		class FunctionEncoder_x86: public FunctionEncoder {
+		public:
+			FunctionEncoder_x86(const ABITypeInfo& typeInfo,
+			                    Builder& builder,
+			                    const FunctionType& functionType,
+			                    llvm::ArrayRef<llvm::Value*> pArguments)
+			: builder_(builder),
+			functionIRMapping_(computeIRMapping(typeInfo,
+			                                    functionType,
+			                                    functionType.argumentTypes())),
+			callee_(typeInfo,
+			        functionType,
+			        functionIRMapping_,
+			        builder),
+			encodedArguments_(pArguments),
+			arguments_(callee_.decodeArguments(pArguments)) { }
+			
+			llvm::ArrayRef<llvm::Value*> arguments() const {
+				return arguments_;
+			}
+			
+			llvm::ReturnInst* returnValue(llvm::Value* const value) {
+				const auto encodedReturnValue = callee_.encodeReturnValue(value,
+				                                                          encodedArguments_);
+				if (encodedReturnValue->getType()->isVoidTy()) {
+					return builder_.getBuilder().CreateRetVoid();
+				} else {
+					return builder_.getBuilder().CreateRet(encodedReturnValue);
+				}
+			}
+			
+			llvm::Value* returnValuePointer() const {
+				// TODO!
+				return nullptr;
+			}
+			
+		private:
+			Builder& builder_;
+			FunctionIRMapping functionIRMapping_;
+			Callee callee_;
+			llvm::ArrayRef<llvm::Value*> encodedArguments_;
+			llvm::SmallVector<llvm::Value*, 8> arguments_;
+			
+		};
+		
 		std::unique_ptr<FunctionEncoder>
-		X86ABI::createFunctionEncoder(Builder& /*builder*/,
-		                               const FunctionType& /*functionType*/,
-		                               llvm::ArrayRef<llvm::Value*> /*arguments*/) const {
-			llvm_unreachable("TODO");
+		X86ABI::createFunctionEncoder(Builder& builder,
+		                               const FunctionType& functionType,
+		                               llvm::ArrayRef<llvm::Value*> arguments) const {
+			return std::unique_ptr<FunctionEncoder>(new FunctionEncoder_x86(typeInfo_,
+			                                                                builder,
+			                                                                functionType,
+			                                                                arguments));
 		}
 		
 	}
