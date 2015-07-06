@@ -91,11 +91,42 @@ namespace llvm_abi {
 			                                       existingAttributes);
 		}
 		
-		llvm::Value* X86ABI::createCall(Builder& /*builder*/,
-		                                 const FunctionType& /*functionType*/,
-		                                 std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> /*callBuilder*/,
-		                                 llvm::ArrayRef<TypedValue> /*arguments*/) const {
-			llvm_unreachable("TODO");
+		llvm::Value* X86ABI::createCall(Builder& builder,
+		                                 const FunctionType& functionType,
+		                                 std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
+		                                 llvm::ArrayRef<TypedValue> rawArguments) const {
+			TypePromoter typePromoter(typeInfo());
+			
+			// Promote any varargs arguments (that haven't already been
+			// promoted). This changes char => int, float => double etc.
+			const auto arguments = typePromoter.promoteArguments(builder,
+			                                                     functionType,
+			                                                     rawArguments);
+			
+			llvm::SmallVector<Type, 8> argumentTypes;
+			for (const auto& value: arguments) {
+				argumentTypes.push_back(value.second);
+			}
+			
+			X86_32Classifier classifier(typeInfo_);
+			const auto argInfoArray =
+				classifier.classifyFunctionType(functionType,
+				                                argumentTypes,
+				                                llvm::CallingConv::C);
+			assert(argInfoArray.size() >= 1);
+			
+			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			
+			Caller caller(typeInfo_,
+			              functionType,
+			              functionIRMapping,
+			              builder);
+			
+			const auto encodedArguments = caller.encodeArguments(arguments);
+			
+			const auto returnValue = callBuilder(encodedArguments);
+			
+			return caller.decodeReturnValue(encodedArguments, returnValue);
 		}
 		
 		std::unique_ptr<FunctionEncoder>
