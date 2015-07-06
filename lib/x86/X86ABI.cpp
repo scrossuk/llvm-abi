@@ -55,7 +55,7 @@ namespace llvm_abi {
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                functionType.argumentTypes(),
-				                                llvm::CallingConv::C);
+				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
@@ -80,7 +80,7 @@ namespace llvm_abi {
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes,
-				                                llvm::CallingConv::C);
+				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
@@ -112,7 +112,7 @@ namespace llvm_abi {
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes,
-				                                llvm::CallingConv::C);
+				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
@@ -137,7 +137,7 @@ namespace llvm_abi {
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes,
-				                                llvm::CallingConv::C);
+				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
 			return getFunctionIRMapping(argInfoArray);

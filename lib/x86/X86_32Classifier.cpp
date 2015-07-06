@@ -96,7 +96,7 @@ namespace llvm_abi {
 			
 			Type base = VoidTy;
 			uint64_t numElements = 0;
-			if (state.callingConvention == llvm::CallingConv::X86_VectorCall &&
+			if (state.callingConvention == CC_VectorCall &&
 			    returnType.isHomogeneousAggregate(typeInfo_, base, numElements)) {
 				// The LLVM struct type for such an aggregate should lower properly.
 				return ArgInfo::getDirect(returnType);
@@ -290,8 +290,8 @@ namespace llvm_abi {
 			
 			state.freeRegs -= sizeInRegs;
 			
-			if (state.callingConvention == llvm::CallingConv::X86_FastCall ||
-			    state.callingConvention == llvm::CallingConv::X86_VectorCall) {
+			if (state.callingConvention == CC_FastCall ||
+			    state.callingConvention == CC_VectorCall) {
 				if (size.asBits() > 32) {
 					return false;
 				}
@@ -390,7 +390,7 @@ namespace llvm_abi {
 			// to other targets.
 			Type base = VoidTy;
 			uint64_t numElements = 0;
-			if (state.callingConvention == llvm::CallingConv::X86_VectorCall &&
+			if (state.callingConvention == CC_VectorCall &&
 			    type.isHomogeneousAggregate(typeInfo_, base, numElements)) {
 				if (state.freeSSERegs >= numElements) {
 					state.freeSSERegs -= numElements;
@@ -447,8 +447,8 @@ namespace llvm_abi {
 				if (typeInfo_.getTypeAllocSize(type).asBits() <= (4 * 32) &&
 				    canExpandIndirectArgument(typeInfo_, type)) {
 					return ArgInfo::getExpandWithPadding(
-						state.callingConvention == llvm::CallingConv::X86_FastCall ||
-						state.callingConvention == llvm::CallingConv::X86_VectorCall,
+						state.callingConvention == CC_FastCall ||
+						state.callingConvention == CC_VectorCall,
 						paddingType);
 				}
 				
@@ -491,16 +491,16 @@ namespace llvm_abi {
 		llvm::SmallVector<ArgInfo, 8>
 		X86_32Classifier::classifyFunctionType(const FunctionType& functionType,
 		                                       llvm::ArrayRef<Type> argumentTypes,
-		                                       const llvm::CallingConv::ID callingConvention) const {
+		                                       const CallingConvention callingConvention) const {
 			// FIXME: This needs to be user-configurable; by default
 			// we don't pass arguments in registers but users can
 			// enable this.
 			const auto DefaultNumRegisterParameters = 0;
 			
 			CCState state(callingConvention);
-			if (state.callingConvention == llvm::CallingConv::X86_FastCall) {
+			if (state.callingConvention == CC_FastCall) {
 				state.freeRegs = 2;
-			} else if (state.callingConvention == llvm::CallingConv::X86_VectorCall) {
+			} else if (state.callingConvention == CC_VectorCall) {
 				state.freeRegs = 2;
 				state.freeSSERegs = 6;
 // 			} else if (FI.getHasRegParm()) {

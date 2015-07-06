@@ -3,6 +3,7 @@
 
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/ArgInfo.hpp>
+#include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/FunctionType.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -11,11 +12,11 @@ namespace llvm_abi {
 	namespace x86 {
 		
 		struct CCState {
-			CCState(const unsigned argCallingConvention) :
+			CCState(const CallingConvention argCallingConvention) :
 			callingConvention(argCallingConvention),
 			freeRegs(0), freeSSERegs(0) {}
 			
-			unsigned callingConvention;
+			CallingConvention callingConvention;
 			unsigned freeRegs;
 			unsigned freeSSERegs;
 		};
@@ -44,7 +45,7 @@ namespace llvm_abi {
 			llvm::SmallVector<ArgInfo, 8>
 			classifyFunctionType(const FunctionType& functionType,
 			                     llvm::ArrayRef<Type> argumentTypes,
-			                     llvm::CallingConv::ID callingConvention) const;
+			                     CallingConvention callingConvention) const;
 			
 		private:
 			const ABITypeInfo& typeInfo_;
