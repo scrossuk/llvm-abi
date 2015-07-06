@@ -51,7 +51,6 @@ library:
                       have the same processor features) and this needs to be
                       brought into the library.
 * **Encoding user-specified alignment for types**
-* **Promoting varargs parameters**
 * **Receiving varargs parameters**
 * **Marking arguments as already in-memory** - There are excessive loads/stores
                                                being generated due to not
