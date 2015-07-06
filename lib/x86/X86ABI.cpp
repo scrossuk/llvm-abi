@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <vector>
 
 #include <llvm-abi/ABI.hpp>
@@ -45,6 +46,12 @@ namespace llvm_abi {
 					return llvm::CallingConv::X86_ThisCall;
 				case CC_Pascal:
 					return llvm::CallingConv::X86_StdCall;
+				case CC_VectorCall:
+#if LLVMABI_LLVM_VERSION >= 306
+					return llvm::CallingConv::X86_VectorCall;
+#else
+					throw std::runtime_error("VectorCall not supported by version of LLVM built against (need LLVM 3.6+.)");
+#endif
 				default:
 					llvm_unreachable("Invalid calling convention for ABI.");
 			}
