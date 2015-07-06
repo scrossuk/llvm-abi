@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
 	{
 		std::string filename;
 		filename += "test-";
-		filename += "x86_64";
+		filename += testSystem.abi().name();
 		filename += "-" + fileName;
 		filename += ".output.ll";
 		
