@@ -1,8 +1,13 @@
 #include <vector>
 
 #include <llvm-abi/ABI.hpp>
+#include <llvm-abi/Builder.hpp>
+#include <llvm-abi/Callee.hpp>
+#include <llvm-abi/Caller.hpp>
+#include <llvm-abi/FunctionEncoder.hpp>
 #include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/Type.hpp>
+#include <llvm-abi/TypePromoter.hpp>
 
 #include <llvm-abi/x86/X86_32Classifier.hpp>
 #include <llvm-abi/x86/X86ABI.hpp>
@@ -61,10 +66,29 @@ namespace llvm_abi {
 			                                 functionIRMapping);
 		}
 		
-		llvm::AttributeSet X86ABI::getAttributes(const FunctionType& /*functionType*/,
-		                                         llvm::ArrayRef<Type> /*argumentTypes*/,
-		                                         const llvm::AttributeSet /*existingAttributes*/) const {
-			llvm_unreachable("TODO");
+		llvm::AttributeSet X86ABI::getAttributes(const FunctionType& functionType,
+		                                         llvm::ArrayRef<Type> rawArgumentTypes,
+		                                         const llvm::AttributeSet existingAttributes) const {
+			assert(rawArgumentTypes.size() >= functionType.argumentTypes().size());
+			
+			// Promote argument types (e.g. for varargs).
+			TypePromoter typePromoter(typeInfo());
+			const auto argumentTypes = typePromoter.promoteArgumentTypes(functionType,
+			                                                             rawArgumentTypes);
+			
+			X86_32Classifier classifier(typeInfo_);
+			const auto argInfoArray =
+				classifier.classifyFunctionType(functionType,
+				                                argumentTypes,
+				                                llvm::CallingConv::C);
+			assert(argInfoArray.size() >= 1);
+			
+			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			
+			return llvm_abi::getFunctionAttributes(llvmContext_,
+			                                       typeInfo_,
+			                                       functionIRMapping,
+			                                       existingAttributes);
 		}
 		
 		llvm::Value* X86ABI::createCall(Builder& /*builder*/,
