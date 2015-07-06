@@ -160,6 +160,22 @@ namespace llvm_abi {
 	                const FunctionType& functionType,
 	                const FunctionIRMapping& functionIRMapping);
 	
+	/**
+	 * \brief Get LLVM function attributes.
+	 * 
+	 * \param context The LLVM context.
+	 * \param typeInfo The ABI type information.
+	 * \param functionIRMapping The ABI function IR mapping.
+	 * \param existingAttributes Any existing attributes (that may need to
+	 *                           be removed).
+	 * \return The ABI-encoded LLVM function type.
+	 */
+	llvm::AttributeSet
+	getFunctionAttributes(llvm::LLVMContext& llvmContext,
+	                      const ABITypeInfo& typeInfo,
+	                      const FunctionIRMapping& functionIRMapping,
+	                      const llvm::AttributeSet existingAttributes);
+	
 }
 
 #endif

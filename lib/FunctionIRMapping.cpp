@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 
+#include <llvm/IR/Attributes.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/Support/ErrorHandling.h>
@@ -208,6 +209,144 @@ namespace llvm_abi {
 		}
 		
 		return llvm::FunctionType::get(resultType, argumentTypes, functionType.isVarArg());
+	}
+	
+	llvm::AttributeSet
+	getFunctionAttributes(llvm::LLVMContext& llvmContext,
+	                      const ABITypeInfo& typeInfo,
+	                      const FunctionIRMapping& functionIRMapping,
+	                      const llvm::AttributeSet existingAttributes) {
+		llvm::SmallVector<llvm::AttributeSet, 8> attributes;
+		llvm::AttrBuilder functionAttrs(existingAttributes, llvm::AttributeSet::FunctionIndex);
+		llvm::AttrBuilder returnAttrs(existingAttributes, llvm::AttributeSet::ReturnIndex);
+		
+		const auto& returnArgInfo = functionIRMapping.returnArgInfo();
+		
+		switch (returnArgInfo.getKind()) {
+			case ArgInfo::ExtendInteger: {
+				const auto coerceType = returnArgInfo.getCoerceToType();
+				if (coerceType.hasSignedIntegerRepresentation(typeInfo)) {
+					returnAttrs.addAttribute(llvm::Attribute::SExt);
+				} else if (coerceType.hasUnsignedIntegerRepresentation(typeInfo)) {
+					returnAttrs.addAttribute(llvm::Attribute::ZExt);
+				}
+				// FALL THROUGH
+			}
+			case ArgInfo::Direct:
+				if (returnArgInfo.getInReg()) {
+					returnAttrs.addAttribute(llvm::Attribute::InReg);
+				}
+				break;
+			case ArgInfo::Ignore:
+				break;
+			case ArgInfo::InAlloca:
+			case ArgInfo::Indirect: {
+				// inalloca and sret disable readnone and readonly
+				functionAttrs.removeAttribute(llvm::Attribute::ReadOnly);
+				functionAttrs.removeAttribute(llvm::Attribute::ReadNone);
+				break;
+			}
+			case ArgInfo::Expand:
+				llvm_unreachable("Invalid ABI kind for return argument");
+		}
+		
+		// Attach return attributes.
+		if (returnAttrs.hasAttributes()) {
+			attributes.push_back(llvm::AttributeSet::get(llvmContext, llvm::AttributeSet::ReturnIndex, returnAttrs));
+		}
+		
+		// Attach attributes to sret.
+		if (functionIRMapping.hasStructRetArg()) {
+			llvm::AttrBuilder structRetAttrs;
+			structRetAttrs.addAttribute(llvm::Attribute::StructRet);
+			structRetAttrs.addAttribute(llvm::Attribute::NoAlias);
+			if (returnArgInfo.getInReg()) {
+				structRetAttrs.addAttribute(llvm::Attribute::InReg);
+			}
+			attributes.push_back(llvm::AttributeSet::get(
+					llvmContext, functionIRMapping.structRetArgIndex() + 1, structRetAttrs));
+		}
+		
+		// Attach attributes to inalloca argument.
+		if (functionIRMapping.hasInallocaArg()) {
+			llvm::AttrBuilder attrs;
+#if LLVMABI_LLVM_VERSION >= 305
+			// InAlloca support was added in LLVM 3.5.
+			attrs.addAttribute(llvm::Attribute::InAlloca);
+#endif
+			attributes.push_back(llvm::AttributeSet::get(llvmContext, functionIRMapping.inallocaArgIndex() + 1, attrs));
+		}
+		
+		for (size_t argIndex = 0; argIndex < functionIRMapping.arguments().size(); argIndex++) {
+			const auto& argInfo = functionIRMapping.arguments()[argIndex].argInfo;
+			
+			llvm::AttrBuilder attrs(existingAttributes, argIndex + 1);
+			
+			// Add attribute for padding argument, if necessary.
+			if (functionIRMapping.hasPaddingArg(argIndex) &&
+			    argInfo.getPaddingInReg()) {
+				attributes.push_back(llvm::AttributeSet::get(
+						llvmContext, functionIRMapping.paddingArgIndex(argIndex) + 1,
+						llvm::Attribute::InReg));
+			}
+			
+			switch (argInfo.getKind()) {
+				case ArgInfo::ExtendInteger: {
+					const auto coerceType = argInfo.getCoerceToType();
+					if (coerceType.hasSignedIntegerRepresentation(typeInfo)) {
+						attrs.addAttribute(llvm::Attribute::SExt);
+					} else if (coerceType.hasUnsignedIntegerRepresentation(typeInfo)) {
+						attrs.addAttribute(llvm::Attribute::ZExt);
+					}
+					// FALL THROUGH
+				}
+				case ArgInfo::Direct:
+					/*if (argIndex == 0 && FI.isChainCall())
+						attrs.addAttribute(llvm::Attribute::Nest);
+					else */
+					if (argInfo.getInReg()) {
+						attrs.addAttribute(llvm::Attribute::InReg);
+					}
+					break;
+				case ArgInfo::Indirect:
+					if (argInfo.getInReg()) {
+						attrs.addAttribute(llvm::Attribute::InReg);
+					}
+					
+					if (argInfo.getIndirectByVal()) {
+						attrs.addAttribute(llvm::Attribute::ByVal);
+					}
+					
+					attrs.addAlignmentAttr(argInfo.getIndirectAlign());
+					
+					// byval disables readnone and readonly.
+					functionAttrs.removeAttribute(llvm::Attribute::ReadOnly);
+					functionAttrs.removeAttribute(llvm::Attribute::ReadNone);
+					break;
+				case ArgInfo::Ignore:
+				case ArgInfo::Expand:
+					continue;
+				case ArgInfo::InAlloca:
+					// inalloca disables readnone and readonly.
+					functionAttrs.removeAttribute(llvm::Attribute::ReadOnly);
+					functionAttrs.removeAttribute(llvm::Attribute::ReadNone);
+					continue;
+			}
+			
+			if (attrs.hasAttributes()) {
+				unsigned firstIRArg, numIRArgs;
+				std::tie(firstIRArg, numIRArgs) = functionIRMapping.getIRArgRange(argIndex);
+				for (unsigned i = 0; i < numIRArgs; i++) {
+					attributes.push_back(llvm::AttributeSet::get(llvmContext, firstIRArg + i + 1, attrs));
+				}
+			}
+		}
+		
+		if (functionAttrs.hasAttributes()) {
+			attributes.push_back(llvm::AttributeSet::get(llvmContext, llvm::AttributeSet::FunctionIndex, functionAttrs));
+		}
+		
+		return llvm::AttributeSet::get(llvmContext, attributes);
 	}
 	
 }
