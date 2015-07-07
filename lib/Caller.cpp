@@ -338,6 +338,78 @@ namespace llvm_abi {
 		}
 	}
 	
+	void expandTypeToArgs(const ABITypeInfo& typeInfo,
+	                      Builder& builder,
+	                      const Type type,
+	                      llvm::Value* const alloca,
+	                      llvm::SmallVectorImpl<llvm::Value*>::iterator& iterator) {
+		assert(type != VoidTy);
+		
+		if (type.isArray()) {
+			for (size_t i = 0; i < type.arrayElementCount(); i++) {
+				const auto elementAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto elementIRType = typeInfo.getLLVMType(type.arrayElementType());
+				const auto castAddress = builder.getBuilder().CreateBitCast(elementAddress, elementIRType->getPointerTo());
+				expandTypeToArgs(typeInfo, builder, type,
+				                 castAddress, iterator);
+			}
+		} else if (type.isStruct()) {
+			assert(!type.hasFlexibleArrayMember() &&
+			       "Cannot expand structure with flexible array.");
+			
+			for (size_t i = 0; i < type.structMembers().size(); i++) {
+				const auto& field = type.structMembers()[i];
+				// Skip zero length bitfields.
+				if (field.isBitField() &&
+				    field.bitFieldWidth().asBits() == 0) {
+					continue;
+				}
+				assert(!field.isBitField() &&
+ 				       "Cannot expand structure with bit-field members.");
+				const auto fieldAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				expandTypeToArgs(typeInfo, builder,
+				                 field.type(), fieldAddress,
+				                 iterator);
+			}
+		} else if (type.isUnion()) {
+			// Unions can be here only in degenerative cases - all the fields are same
+			// after flattening. Thus we have to use the "largest" field.
+			auto largestSize = DataSize::Zero();
+			Type largestType = VoidTy;
+			
+			for (const auto field: type.unionMembers()) {
+				// Skip zero length bitfields.
+// 				if (field.isBitField() &&
+// 				    field.bitFieldWidth().asBits() == 0) {
+// 					continue;
+// 				}
+// 				assert(!field.isBitField() &&
+// 				       "Cannot expand structure with bit-field members.");
+				const auto fieldSize = typeInfo.getTypeAllocSize(field);
+				if (largestSize < fieldSize) {
+					largestSize = fieldSize;
+					largestType = field;
+				}
+			}
+			
+			if (largestType == VoidTy) {
+				return;
+			}
+			
+			const auto irType = typeInfo.getLLVMType(largestType);
+			const auto castAddress = builder.getBuilder().CreateBitCast(alloca,
+			                                                            irType->getPointerTo());
+			expandTypeToArgs(typeInfo, builder, largestType,
+			                 castAddress, iterator);
+		} else if (type.isComplex()) {
+			llvm_unreachable("TODO");
+		} else {
+			const auto loadInst = builder.getBuilder().CreateLoad(alloca);
+			loadInst->setAlignment(typeInfo.getTypeRequiredAlign(type).asBytes());
+			*iterator++ = loadInst;
+		}
+	}
+	
 	llvm::SmallVector<llvm::Value*, 8>
 	Caller::encodeArguments(llvm::ArrayRef<TypedValue> arguments,
 	                        llvm::Value* const returnValuePtr) {
@@ -547,10 +619,21 @@ namespace llvm_abi {
 				}
 
 				case ArgInfo::Expand: {
-// 					unsigned IRArgPos = FirstIRArg;
-// 					ExpandTypeToArgs(I->Ty, RV, IRFuncTy, IRCallArgs, IRArgPos);
-// 					assert(IRArgPos == FirstIRArg + NumIRArgs);
-					llvm_unreachable("TODO");
+ 					const auto alloca = createMemTemp(typeInfo_,
+					                                  builder_,
+					                                  argumentType,
+					                                  "expand.source.arg");
+					
+ 					const auto storeInst = builder_.getBuilder().CreateStore(argumentValue, alloca);
+					storeInst->setAlignment(typeInfo_.getTypeRequiredAlign(argumentType).asBytes());
+					
+					auto iterator = irCallArgs.begin() + firstIRArg;
+					expandTypeToArgs(typeInfo_,
+					                 builder_,
+					                 argumentType,
+					                 alloca,
+					                 iterator);
+					assert(iterator == irCallArgs.begin() + firstIRArg + numIRArgs);
 					break;
 				}
 			}
