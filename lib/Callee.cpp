@@ -329,6 +329,78 @@ namespace llvm_abi {
 		}
 	}
 	
+	void expandTypeFromArgs(const ABITypeInfo& typeInfo,
+	                        Builder& builder,
+	                        const Type type,
+	                        llvm::Value* const alloca,
+	                        llvm::SmallVectorImpl<llvm::Value* const>::iterator& iterator) {
+		assert(type != VoidTy);
+		
+		if (type.isArray()) {
+			for (size_t i = 0; i < type.arrayElementCount(); i++) {
+				const auto elementAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto elementIRType = typeInfo.getLLVMType(type.arrayElementType());
+				const auto castAddress = builder.getBuilder().CreateBitCast(elementAddress, elementIRType->getPointerTo());
+				expandTypeFromArgs(typeInfo, builder, type,
+				                   castAddress, iterator);
+			}
+		} else if (type.isStruct()) {
+			assert(!type.hasFlexibleArrayMember() &&
+			       "Cannot expand structure with flexible array.");
+			
+			for (size_t i = 0; i < type.structMembers().size(); i++) {
+				const auto& field = type.structMembers()[i];
+				// Skip zero length bitfields.
+				if (field.isBitField() &&
+				    field.bitFieldWidth().asBits() == 0) {
+					continue;
+				}
+				assert(!field.isBitField() &&
+ 				       "Cannot expand structure with bit-field members.");
+				const auto fieldAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				expandTypeFromArgs(typeInfo, builder,
+				                   field.type(), fieldAddress,
+				                   iterator);
+			}
+		} else if (type.isUnion()) {
+			// Unions can be here only in degenerative cases - all the fields are same
+			// after flattening. Thus we have to use the "largest" field.
+			auto largestSize = DataSize::Zero();
+			Type largestType = VoidTy;
+			
+			for (const auto field: type.unionMembers()) {
+				// Skip zero length bitfields.
+// 				if (field.isBitField() &&
+// 				    field.bitFieldWidth().asBits() == 0) {
+// 					continue;
+// 				}
+// 				assert(!field.isBitField() &&
+// 				       "Cannot expand structure with bit-field members.");
+				const auto fieldSize = typeInfo.getTypeAllocSize(field);
+				if (largestSize < fieldSize) {
+					largestSize = fieldSize;
+					largestType = field;
+				}
+			}
+			
+			if (largestType == VoidTy) {
+				return;
+			}
+			
+			const auto irType = typeInfo.getLLVMType(largestType);
+			const auto castAddress = builder.getBuilder().CreateBitCast(alloca,
+			                                                            irType->getPointerTo());
+			expandTypeFromArgs(typeInfo, builder, largestType,
+			                   castAddress, iterator);
+		} else if (type.isComplex()) {
+			llvm_unreachable("TODO");
+		} else {
+			const auto value = *iterator++;
+			const auto storeInst = builder.getBuilder().CreateStore(value, alloca);
+			storeInst->setAlignment(typeInfo.getTypeRequiredAlign(type).asBytes());
+		}
+	}
+	
 	Callee::Callee(const ABITypeInfo& typeInfo,
 	               const FunctionType& functionType,
 	               const FunctionIRMapping& functionIRMapping,
@@ -531,7 +603,6 @@ namespace llvm_abi {
 					arguments.push_back(builder_.getBuilder().CreateLoad(alloca));
 					break;
 				}
-
 				case ArgInfo::Expand: {
 					// If this structure was expanded into multiple arguments then
 					// we need to create a temporary and reconstruct it from the
@@ -539,15 +610,20 @@ namespace llvm_abi {
 					const auto alloca = createMemTemp(typeInfo_,
 					                                  builder_,
 					                                  argumentType,
-					                                  "expand.arg");
+					                                  "expand.dest.arg");
 					
-					//ExpandTypeFromArgs(argumentType, LV, FnArgIter);
-					llvm_unreachable("TODO");
+					auto iterator = encodedArguments.begin() + firstIRArg;
+					expandTypeFromArgs(typeInfo_, builder_,
+					                   argumentType,
+					                   alloca,
+					                   iterator);
+					assert(iterator == encodedArguments.begin() + firstIRArg + numIRArgs);
 					
-					arguments.push_back(builder_.getBuilder().CreateLoad(alloca));
+					const auto loadInst = builder_.getBuilder().CreateLoad(alloca);
+					loadInst->setAlignment(typeInfo_.getTypeRequiredAlign(argumentType).asBytes());
+					arguments.push_back(loadInst);
 					break;
 				}
-
 				case ArgInfo::Ignore: {
 					assert(numIRArgs == 0);
 					arguments.push_back(llvm::UndefValue::get(typeInfo_.getLLVMType(argumentType)));
