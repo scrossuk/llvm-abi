@@ -65,7 +65,8 @@ namespace llvm_abi {
 				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
-			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
+			                                                    argInfoArray);
 			
 			return llvm_abi::getFunctionType(llvmContext_,
 			                                 typeInfo_,
@@ -90,7 +91,8 @@ namespace llvm_abi {
 				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
-			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
+			                                                    argInfoArray);
 			
 			return llvm_abi::getFunctionAttributes(llvmContext_,
 			                                       typeInfo_,
@@ -122,7 +124,8 @@ namespace llvm_abi {
 				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
-			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
+			                                                    argInfoArray);
 			
 			Caller caller(typeInfo_,
 			              functionType,
@@ -147,7 +150,8 @@ namespace llvm_abi {
 				                                CC_CDecl);
 			assert(argInfoArray.size() >= 1);
 			
-			return getFunctionIRMapping(argInfoArray);
+			return getFunctionIRMapping(typeInfo,
+			                            argInfoArray);
 		}
 		
 		class FunctionEncoder_x86: public FunctionEncoder {

@@ -62,7 +62,8 @@ namespace llvm_abi {
 				                                functionType.argumentTypes());
 			assert(argInfoArray.size() >= 1);
 			
-			const auto functionIRMapping = getFunctionIRMapping(argInfoArray);
+			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
+			                                                    argInfoArray);
 			
 			return llvm_abi::getFunctionType(llvmContext_,
 			                                 typeInfo_,
@@ -80,7 +81,7 @@ namespace llvm_abi {
 				                                argumentTypes);
 			assert(argInfoArray.size() >= 1);
 			
-			return getFunctionIRMapping(argInfoArray);
+			return getFunctionIRMapping(typeInfo, argInfoArray);
 		}
 		
 		llvm::AttributeSet X86_64ABI::getAttributes(const FunctionType& functionType,

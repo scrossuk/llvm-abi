@@ -16,7 +16,8 @@
 namespace llvm_abi {
 	
 	FunctionIRMapping
-	getFunctionIRMapping(llvm::ArrayRef<ArgInfo> argInfoArray) {
+	getFunctionIRMapping(const ABITypeInfo& /*typeInfo*/,
+	                     llvm::ArrayRef<ArgInfo> argInfoArray) {
 		FunctionIRMapping functionIRMapping;
 		
 		size_t irArgumentNumber = 0;

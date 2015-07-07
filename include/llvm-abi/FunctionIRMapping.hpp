@@ -144,7 +144,8 @@ namespace llvm_abi {
 	 * \return The mapping from ABI arguments to IR arguments.
 	 */
 	FunctionIRMapping
-	getFunctionIRMapping(llvm::ArrayRef<ArgInfo> argInfoArray);
+	getFunctionIRMapping(const ABITypeInfo& typeInfo,
+	                     llvm::ArrayRef<ArgInfo> argInfoArray);
 	
 	/**
 	 * \brief Get LLVM function type.
