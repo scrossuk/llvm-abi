@@ -15,8 +15,131 @@
 
 namespace llvm_abi {
 	
+	static size_t getExpansionSize(const ABITypeInfo& typeInfo, const Type type) {
+		assert(type != VoidTy);
+		
+		if (type.isArray()) {
+			return type.arrayElementCount() *
+			       getExpansionSize(typeInfo, type.arrayElementType());
+		}
+		
+		if (type.isStruct()) {
+			assert(!type.hasFlexibleArrayMember() &&
+			       "Cannot expand structure with flexible array.");
+			
+			size_t result = 0;
+			for (const auto& field: type.structMembers()) {
+				// Skip zero length bitfields.
+				if (field.isBitField() &&
+				    field.bitFieldWidth().asBits() == 0) {
+					continue;
+				}
+				assert(!field.isBitField() &&
+ 				       "Cannot expand structure with bit-field members.");
+				result += getExpansionSize(typeInfo, field.type());
+			}
+			return result;
+		}
+		
+		if (type.isUnion()) {
+			// Unions can be here only in degenerative cases - all the fields are same
+			// after flattening. Thus we have to use the "largest" field.
+			auto largestSize = DataSize::Zero();
+			Type largestType = VoidTy;
+			
+			for (const auto field: type.unionMembers()) {
+				// Skip zero length bitfields.
+// 				if (field.isBitField() &&
+// 				    field.bitFieldWidth().asBits() == 0) {
+// 					continue;
+// 				}
+// 				assert(!field.isBitField() &&
+// 				       "Cannot expand structure with bit-field members.");
+				const auto fieldSize = typeInfo.getTypeAllocSize(field);
+				if (largestSize < fieldSize) {
+					largestSize = fieldSize;
+					largestType = field;
+				}
+			}
+			
+			if (largestType == VoidTy) {
+				return 0;
+			}
+			
+			return getExpansionSize(typeInfo, largestType);
+		}
+		
+		if (type.isComplex()) {
+			return 2;
+		}
+		
+		return 1;
+	}
+	
+	void
+	getExpandedTypes(const ABITypeInfo& typeInfo,
+	                 const Type type,
+	                 llvm::SmallVectorImpl<llvm::Type *>::iterator& iterator) {
+		if (type.isArray()) {
+			for (size_t i = 0; i < type.arrayElementCount(); i++) {
+				getExpandedTypes(typeInfo,
+				                 type.arrayElementType(),
+				                 iterator);
+			}
+		} else if (type.isStruct()) {
+			assert(!type.hasFlexibleArrayMember() &&
+			       "Cannot expand structure with flexible array.");
+			
+			for (const auto& field: type.structMembers()) {
+				// Skip zero length bitfields.
+				if (field.isBitField() &&
+				    field.bitFieldWidth().asBits() == 0) {
+					continue;
+				}
+				assert(!field.isBitField() &&
+ 				       "Cannot expand structure with bit-field members.");
+				getExpandedTypes(typeInfo, field.type(),
+				                 iterator);
+			}
+		} else if (type.isUnion()) {
+			// Unions can be here only in degenerative cases - all the fields are same
+			// after flattening. Thus we have to use the "largest" field.
+			auto largestSize = DataSize::Zero();
+			Type largestType = VoidTy;
+			
+			for (const auto field: type.unionMembers()) {
+				// Skip zero length bitfields.
+// 				if (field.isBitField() &&
+// 				    field.bitFieldWidth().asBits() == 0) {
+// 					continue;
+// 				}
+// 				assert(!field.isBitField() &&
+// 				       "Cannot expand structure with bit-field members.");
+				const auto fieldSize = typeInfo.getTypeAllocSize(field);
+				if (largestSize < fieldSize) {
+					largestSize = fieldSize;
+					largestType = field;
+				}
+			}
+			
+			if (largestType == VoidTy) {
+				return;
+			}
+			
+			getExpandedTypes(typeInfo, largestType, iterator);
+		} else if (type.isComplex()) {
+			const auto floatType = type.complexFloatingPointType();
+			const auto irType = typeInfo.getLLVMType(floatType);
+			*iterator++ = irType;
+			*iterator++ = irType;
+		} else {
+			const auto irType = typeInfo.getLLVMType(type);
+			*iterator++ = irType;
+		}
+	}
+	
 	FunctionIRMapping
-	getFunctionIRMapping(const ABITypeInfo& /*typeInfo*/,
+	getFunctionIRMapping(const ABITypeInfo& typeInfo,
 	                     llvm::ArrayRef<ArgInfo> argInfoArray) {
 		FunctionIRMapping functionIRMapping;
 		
@@ -64,8 +187,8 @@ namespace llvm_abi {
 					argumentIRMapping.numberOfIRArgs = 0;
 					break;
 				case ArgInfo::Expand: {
-					llvm_unreachable("TODO");
-					//argumentIRMapping.numberOfIRArgs = getExpansionSize(ArgType, Context);
+					argumentIRMapping.numberOfIRArgs =
+						getExpansionSize(typeInfo, argInfo.getExpandType());
 					break;
 				}
 			}
@@ -201,10 +324,11 @@ namespace llvm_abi {
 				}
 
 				case ArgInfo::Expand:
-					llvm_unreachable("TODO");
-// 						auto argumentTypesIter = argumentTypes.begin() + FirstIRArg;
-// 						getExpandedTypes(it->type, argumentTypesIter);
-// 						assert(argumentTypesIter == argumentTypes.begin() + FirstIRArg + numIRArgs);
+					auto argumentTypesIter = argumentTypes.begin() + firstIRArg;
+					getExpandedTypes(typeInfo,
+					                 argInfo.getExpandType(),
+					                 argumentTypesIter);
+					assert(argumentTypesIter == argumentTypes.begin() + firstIRArg + numIRArgs);
 					break;
 			}
 		}
