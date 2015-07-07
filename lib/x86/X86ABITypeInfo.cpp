@@ -259,16 +259,31 @@ namespace llvm_abi {
 				llvm_unreachable("TODO");
 			}
 			case StructType: {
-				llvm_unreachable("TODO");
+				llvm::SmallVector<llvm::Type*, 8> members;
+				for (const auto& structMember: type.structMembers()) {
+					members.push_back(getLLVMType(structMember.type()));
+				}
+				return llvm::StructType::get(llvmContext_, members);
 			}
 			case UnionType: {
-				llvm_unreachable("TODO");
+				auto maxSize = DataSize::Bytes(0);
+				llvm::Type* maxSizeLLVMType = llvm::Type::getInt8Ty(llvmContext_);
+				for (const auto& member: type.unionMembers()) {
+					const auto size = getTypeAllocSize(member);
+					if (size > maxSize) {
+						maxSize = size;
+						maxSizeLLVMType = getLLVMType(member);
+					}
+				}
+				return maxSizeLLVMType;
 			}
 			case ArrayType: {
-				llvm_unreachable("TODO");
+				return llvm::ArrayType::get(getLLVMType(type.arrayElementType()),
+				                            type.arrayElementCount());
 			}
 			case VectorType: {
-				llvm_unreachable("TODO");
+				return llvm::VectorType::get(getLLVMType(type.vectorElementType()),
+				                             type.vectorElementCount());
 			}
 		}
 		llvm_unreachable("Unknown type kind.");
