@@ -398,7 +398,7 @@ namespace llvm_abi {
 					    type.isVector()) {
 						return ArgInfo::getDirect(type);
 					}
-					return ArgInfo::getExpand();
+					return ArgInfo::getExpand(type);
 				}
 				return getIndirectResult(typeInfo_, type,
 				                         /*isByVal=*/false,
@@ -447,6 +447,7 @@ namespace llvm_abi {
 				if (typeInfo_.getTypeAllocSize(type).asBits() <= (4 * 32) &&
 				    canExpandIndirectArgument(typeInfo_, type)) {
 					return ArgInfo::getExpandWithPadding(
+						type,
 						state.callingConvention == CC_FastCall ||
 						state.callingConvention == CC_VectorCall,
 						paddingType);

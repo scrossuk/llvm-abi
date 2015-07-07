@@ -54,7 +54,7 @@ namespace llvm_abi {
 		};
 		
 	private:
-		Type typeData; // isDirect() || isExtend()
+		Type typeData; // isDirect() || isExtend() || isExpand()
 		Type paddingType;
 		union {
 			unsigned directOffset; // isDirect() || isExtend()
@@ -150,13 +150,16 @@ namespace llvm_abi {
 			return argInfo;
 		}
 		
-		static ArgInfo getExpand() {
-			return ArgInfo(Expand);
+		static ArgInfo getExpand(const Type expandType) {
+			auto argInfo = ArgInfo(Expand);
+			argInfo.setExpandType(expandType);
+			return argInfo;
 		}
 		
-		static ArgInfo getExpandWithPadding(bool paddingInReg,
+		static ArgInfo getExpandWithPadding(const Type expandType,
+		                                    bool paddingInReg,
 		                                    Type padding) {
-			auto argInfo = getExpand();
+			auto argInfo = getExpand(expandType);
 			argInfo.setPaddingInReg(paddingInReg);
 			argInfo.setPaddingType(padding);
 			return argInfo;
@@ -202,6 +205,16 @@ namespace llvm_abi {
 
 		void setCoerceToType(Type type) {
 			assert(canHaveCoerceToType() && "Invalid kind!");
+			typeData = type;
+		}
+		
+		Type getExpandType() const {
+			assert(isExpand() && "Invalid kind!");
+			return typeData;
+		}
+
+		void setExpandType(const Type type) {
+			assert(isExpand() && "Invalid kind!");
 			typeData = type;
 		}
 		
