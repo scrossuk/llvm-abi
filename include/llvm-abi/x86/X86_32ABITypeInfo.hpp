@@ -9,37 +9,41 @@
 
 namespace llvm_abi {
 	
-	class X86_32ABITypeInfo: public ABITypeInfo {
-	public:
-		X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
-		: llvmContext_(llvmContext) { }
+	namespace x86 {
 		
-		const TypeBuilder& typeBuilder() const;
+		class X86_32ABITypeInfo: public ABITypeInfo {
+		public:
+			X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
+			: llvmContext_(llvmContext) { }
+			
+			const TypeBuilder& typeBuilder() const;
+			
+			DataSize getTypeRawSize(Type type) const;
+			
+			DataSize getTypeAllocSize(Type type) const;
+			
+			DataSize getTypeStoreSize(Type type) const;
+			
+			DataSize getTypeRequiredAlign(Type type) const;
+			
+			DataSize getTypePreferredAlign(Type type) const;
+			
+			llvm::Type* getLLVMType(Type type) const;
+			
+			llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
+			
+			bool isLegalVectorType(Type type) const;
+			
+			bool isBigEndian() const;
+			
+			bool isCharSigned() const;
+			
+		private:
+			llvm::LLVMContext& llvmContext_;
+			
+		};
 		
-		DataSize getTypeRawSize(Type type) const;
-		
-		DataSize getTypeAllocSize(Type type) const;
-		
-		DataSize getTypeStoreSize(Type type) const;
-		
-		DataSize getTypeRequiredAlign(Type type) const;
-		
-		DataSize getTypePreferredAlign(Type type) const;
-		
-		llvm::Type* getLLVMType(Type type) const;
-		
-		llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
-		
-		bool isLegalVectorType(Type type) const;
-		
-		bool isBigEndian() const;
-		
-		bool isCharSigned() const;
-		
-	private:
-		llvm::LLVMContext& llvmContext_;
-		
-	};
+	}
 	
 }
 
