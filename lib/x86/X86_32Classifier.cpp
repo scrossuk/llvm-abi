@@ -485,8 +485,9 @@ namespace llvm_abi {
 				if (isDarwinVectorABI_) {
 					const auto size = typeInfo_.getTypeAllocSize(type);
 					if ((size.asBits() == 8 || size.asBits() == 16 || size.asBits() == 32) ||
-					    (size.asBits() == 64 && type.vectorElementCount() == 1))
+					    (size.asBits() == 64 && type.vectorElementCount() == 1)) {
 						return ArgInfo::getDirect(Type::FixedWidthInteger(size, /*isSigned=*/false));
+					}
 				}
 				
 				if (isX86_MMXType(typeInfo_.getLLVMType(type))) {
