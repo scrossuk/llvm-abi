@@ -37,10 +37,13 @@ Furthermore, it'd be great to add support for languages beyond C.
 
 ## Current status
 
-Currently only the 'x86_64' ABI (or AMD64 ABI) is supported, but it should be
-relatively straightforward to add support for the other x86 targets. Clearly the
-aim is to also add support for the other LLVM targets by extracting the
-necessary parts from Clang.
+Currently the following ABIs are supported:
+
+* x86 (note: a few small gaps for non-Linux platforms)
+* x86-64 (note: no Win64 support yet)
+
+Clearly the aim is to also add support for the other LLVM targets by extracting
+the necessary parts from Clang.
 
 In terms of features, there are at least the following gaping holes in the
 library:
