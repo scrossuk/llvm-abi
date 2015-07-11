@@ -1,5 +1,5 @@
-#ifndef LLVMABI_X86_X86ABI_HPP
-#define LLVMABI_X86_X86ABI_HPP
+#ifndef LLVMABI_X86_X86_32ABI_HPP
+#define LLVMABI_X86_X86_32ABI_HPP
 
 #include <vector>
 
@@ -11,17 +11,17 @@
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
-#include <llvm-abi/x86/X86ABITypeInfo.hpp>
+#include <llvm-abi/x86/X86_32ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	
 	namespace x86 {
 		
-		class X86ABI: public ABI {
+		class X86_32ABI: public ABI {
 		public:
-			X86ABI(llvm::Module* module,
+			X86_32ABI(llvm::Module* module,
 			       llvm::Triple targetTriple);
-			~X86ABI();
+			~X86_32ABI();
 			
 			std::string name() const;
 			
@@ -49,7 +49,7 @@ namespace llvm_abi {
 			llvm::LLVMContext& llvmContext_;
 			llvm::Triple targetTriple_;
 			TypeBuilder typeBuilder_;
-			X86ABITypeInfo typeInfo_;
+			X86_32ABITypeInfo typeInfo_;
 			
 		};
 		

@@ -1,5 +1,5 @@
-#ifndef LLVMABI_X86_X86ABITYPEINFO_HPP
-#define LLVMABI_X86_X86ABITYPEINFO_HPP
+#ifndef LLVMABI_X86_X86_32ABITYPEINFO_HPP
+#define LLVMABI_X86_X86_32ABITYPEINFO_HPP
 
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
@@ -9,9 +9,9 @@
 
 namespace llvm_abi {
 	
-	class X86ABITypeInfo: public ABITypeInfo {
+	class X86_32ABITypeInfo: public ABITypeInfo {
 	public:
-		X86ABITypeInfo(llvm::LLVMContext& llvmContext)
+		X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
 		: llvmContext_(llvmContext) { }
 		
 		const TypeBuilder& typeBuilder() const;

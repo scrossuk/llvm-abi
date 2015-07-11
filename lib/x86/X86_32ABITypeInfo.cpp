@@ -6,15 +6,15 @@
 #include <llvm-abi/DataSize.hpp>
 #include <llvm-abi/Type.hpp>
 
-#include <llvm-abi/x86/X86ABITypeInfo.hpp>
+#include <llvm-abi/x86/X86_32ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	
-	const TypeBuilder& X86ABITypeInfo::typeBuilder() const {
+	const TypeBuilder& X86_32ABITypeInfo::typeBuilder() const {
 		llvm_unreachable("TODO");
 	}
 	
-	DataSize X86ABITypeInfo::getTypeRawSize(const Type type) const {
+	DataSize X86_32ABITypeInfo::getTypeRawSize(const Type type) const {
 		switch (type.kind()) {
 			case VoidType:
 				return DataSize::Bytes(0);
@@ -124,12 +124,12 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	DataSize X86ABITypeInfo::getTypeAllocSize(const Type type) const {
+	DataSize X86_32ABITypeInfo::getTypeAllocSize(const Type type) const {
 		// TODO!
 		return getTypeRawSize(type);
 	}
 	
-	DataSize X86ABITypeInfo::getTypeStoreSize(const Type type) const {
+	DataSize X86_32ABITypeInfo::getTypeStoreSize(const Type type) const {
 		// TODO!
 		return getTypeAllocSize(type);
 	}
@@ -148,7 +148,7 @@ namespace llvm_abi {
 		}
 	}
 	
-	DataSize X86ABITypeInfo::getTypeRequiredAlign(const Type type) const {
+	DataSize X86_32ABITypeInfo::getTypeRequiredAlign(const Type type) const {
 		switch (type.kind()) {
 			case VoidType:
 				return DataSize::Bytes(0);
@@ -243,12 +243,12 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	DataSize X86ABITypeInfo::getTypePreferredAlign(const Type type) const {
+	DataSize X86_32ABITypeInfo::getTypePreferredAlign(const Type type) const {
 		// TODO!
 		return getTypeRequiredAlign(type);
 	}
 	
-	llvm::Type* X86ABITypeInfo::getLLVMType(const Type type) const {
+	llvm::Type* X86_32ABITypeInfo::getLLVMType(const Type type) const {
 		switch (type.kind()) {
 			case VoidType:
 				return llvm::Type::getVoidTy(llvmContext_);
@@ -305,19 +305,19 @@ namespace llvm_abi {
 		llvm_unreachable("Unknown type kind.");
 	}
 	
-	llvm::SmallVector<DataSize, 8> X86ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> /*structMembers*/) const {
+	llvm::SmallVector<DataSize, 8> X86_32ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> /*structMembers*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	bool X86ABITypeInfo::isLegalVectorType(const Type /*type*/) const {
+	bool X86_32ABITypeInfo::isLegalVectorType(const Type /*type*/) const {
 		llvm_unreachable("TODO");
 	}
 	
-	bool X86ABITypeInfo::isBigEndian() const {
+	bool X86_32ABITypeInfo::isBigEndian() const {
 		return false;
 	}
 	
-	bool X86ABITypeInfo::isCharSigned() const {
+	bool X86_32ABITypeInfo::isCharSigned() const {
 		return true;
 	}
 	

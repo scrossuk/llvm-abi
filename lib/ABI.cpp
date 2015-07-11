@@ -5,7 +5,7 @@
 #include <llvm-abi/ABI.hpp>
 
 #include <llvm-abi/x86/Win64ABI.hpp>
-#include <llvm-abi/x86/X86ABI.hpp>
+#include <llvm-abi/x86/X86_32ABI.hpp>
 #include <llvm-abi/x86/X86_64ABI.hpp>
 
 namespace llvm_abi {
@@ -15,8 +15,8 @@ namespace llvm_abi {
 	                               const std::string& cpuName) {
 		switch (targetTriple.getArch()) {
 			case llvm::Triple::x86:
-				return std::unique_ptr<ABI>(new x86::X86ABI(&module,
-				                                            targetTriple));
+				return std::unique_ptr<ABI>(new x86::X86_32ABI(&module,
+				                                               targetTriple));
 			case llvm::Triple::x86_64: {
 				if (targetTriple.isOSWindows()) {
 					return std::unique_ptr<ABI>(new x86::Win64ABI(&module));

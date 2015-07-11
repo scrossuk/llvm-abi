@@ -11,30 +11,30 @@
 #include <llvm-abi/TypePromoter.hpp>
 
 #include <llvm-abi/x86/X86_32Classifier.hpp>
-#include <llvm-abi/x86/X86ABI.hpp>
-#include <llvm-abi/x86/X86ABITypeInfo.hpp>
+#include <llvm-abi/x86/X86_32ABI.hpp>
+#include <llvm-abi/x86/X86_32ABITypeInfo.hpp>
 
 namespace llvm_abi {
 	
 	namespace x86 {
 		
-		X86ABI::X86ABI(llvm::Module* const module,
+		X86_32ABI::X86_32ABI(llvm::Module* const module,
 		               const llvm::Triple targetTriple)
 		: llvmContext_(module->getContext()),
 		targetTriple_(targetTriple),
 		typeInfo_(llvmContext_) { }
 		
-		X86ABI::~X86ABI() { }
+		X86_32ABI::~X86_32ABI() { }
 		
-		std::string X86ABI::name() const {
+		std::string X86_32ABI::name() const {
 			return "x86";
 		}
 		
-		const ABITypeInfo& X86ABI::typeInfo() const {
+		const ABITypeInfo& X86_32ABI::typeInfo() const {
 			return typeInfo_;
 		}
 		
-		llvm::CallingConv::ID X86ABI::getCallingConvention(const CallingConvention callingConvention) const {
+		llvm::CallingConv::ID X86_32ABI::getCallingConvention(const CallingConvention callingConvention) const {
 			switch (callingConvention) {
 				case CC_CDefault:
 				case CC_CDecl:
@@ -59,7 +59,7 @@ namespace llvm_abi {
 			}
 		}
 		
-		llvm::FunctionType* X86ABI::getFunctionType(const FunctionType& functionType) const {
+		llvm::FunctionType* X86_32ABI::getFunctionType(const FunctionType& functionType) const {
 			X86_32Classifier classifier(typeInfo_,
 			                            typeBuilder_,
 			                            targetTriple_);
@@ -77,7 +77,7 @@ namespace llvm_abi {
 			                                 functionIRMapping);
 		}
 		
-		llvm::AttributeSet X86ABI::getAttributes(const FunctionType& functionType,
+		llvm::AttributeSet X86_32ABI::getAttributes(const FunctionType& functionType,
 		                                         llvm::ArrayRef<Type> rawArgumentTypes,
 		                                         const llvm::AttributeSet existingAttributes) const {
 			assert(rawArgumentTypes.size() >= functionType.argumentTypes().size());
@@ -104,7 +104,7 @@ namespace llvm_abi {
 			                                       existingAttributes);
 		}
 		
-		llvm::Value* X86ABI::createCall(Builder& builder,
+		llvm::Value* X86_32ABI::createCall(Builder& builder,
 		                                 const FunctionType& functionType,
 		                                 std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
 		                                 llvm::ArrayRef<TypedValue> rawArguments) const {
@@ -212,7 +212,7 @@ namespace llvm_abi {
 		};
 		
 		std::unique_ptr<FunctionEncoder>
-		X86ABI::createFunctionEncoder(Builder& builder,
+		X86_32ABI::createFunctionEncoder(Builder& builder,
 		                               const FunctionType& functionType,
 		                               llvm::ArrayRef<llvm::Value*> arguments) const {
 			return std::unique_ptr<FunctionEncoder>(new FunctionEncoder_x86(typeInfo_,
