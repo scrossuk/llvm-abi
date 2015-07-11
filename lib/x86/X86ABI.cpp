@@ -18,8 +18,10 @@ namespace llvm_abi {
 	
 	namespace x86 {
 		
-		X86ABI::X86ABI(llvm::Module* module)
+		X86ABI::X86ABI(llvm::Module* const module,
+		               const llvm::Triple targetTriple)
 		: llvmContext_(module->getContext()),
+		targetTriple_(targetTriple),
 		typeInfo_(llvmContext_) { }
 		
 		X86ABI::~X86ABI() { }
@@ -59,7 +61,8 @@ namespace llvm_abi {
 		
 		llvm::FunctionType* X86ABI::getFunctionType(const FunctionType& functionType) const {
 			X86_32Classifier classifier(typeInfo_,
-			                            typeBuilder_);
+			                            typeBuilder_,
+			                            targetTriple_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                functionType.argumentTypes());
@@ -85,7 +88,8 @@ namespace llvm_abi {
 			                                                             rawArgumentTypes);
 			
 			X86_32Classifier classifier(typeInfo_,
-			                            typeBuilder_);
+			                            typeBuilder_,
+			                            targetTriple_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -118,7 +122,8 @@ namespace llvm_abi {
 			}
 			
 			X86_32Classifier classifier(typeInfo_,
-			                            typeBuilder_);
+			                            typeBuilder_,
+			                            targetTriple_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -142,10 +147,12 @@ namespace llvm_abi {
 		static
 		FunctionIRMapping computeIRMapping(const ABITypeInfo& typeInfo,
 		                                   const TypeBuilder& typeBuilder,
+		                                   const llvm::Triple targetTriple,
 		                                   const FunctionType& functionType,
 		                                   llvm::ArrayRef<Type> argumentTypes) {
 			X86_32Classifier classifier(typeInfo,
-			                            typeBuilder);
+			                            typeBuilder,
+			                            targetTriple);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -159,12 +166,14 @@ namespace llvm_abi {
 		public:
 			FunctionEncoder_x86(const ABITypeInfo& typeInfo,
 			                    const TypeBuilder& typeBuilder,
+			                    const llvm::Triple targetTriple,
 			                    Builder& builder,
 			                    const FunctionType& functionType,
 			                    llvm::ArrayRef<llvm::Value*> pArguments)
 			: builder_(builder),
 			functionIRMapping_(computeIRMapping(typeInfo,
 			                                    typeBuilder,
+			                                    targetTriple,
 			                                    functionType,
 			                                    functionType.argumentTypes())),
 			callee_(typeInfo,
@@ -208,6 +217,7 @@ namespace llvm_abi {
 		                               llvm::ArrayRef<llvm::Value*> arguments) const {
 			return std::unique_ptr<FunctionEncoder>(new FunctionEncoder_x86(typeInfo_,
 			                                                                typeBuilder_,
+			                                                                targetTriple_,
 			                                                                builder,
 			                                                                functionType,
 			                                                                arguments));

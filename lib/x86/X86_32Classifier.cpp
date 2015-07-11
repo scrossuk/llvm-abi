@@ -81,20 +81,49 @@ namespace llvm_abi {
 			return ArgInfo::getIndirect(/*Align=*/0, /*ByVal=*/false);
 		}
 		
+		bool isStructReturnInRegABI(const llvm::Triple& triple) {
+			assert(triple.getArch() == llvm::Triple::x86);
+			
+			// FIXME: have a way to pass in these options!
+// 			switch (Opts.getStructReturnConvention()) {
+// 			case CodeGenOptions::SRCK_Default:
+// 				break;
+// 			case CodeGenOptions::SRCK_OnStack:	// -fpcc-struct-return
+// 				return false;
+// 			case CodeGenOptions::SRCK_InRegs:	// -freg-struct-return
+// 				return true;
+// 			}
+			
+			if (triple.isOSDarwin()) {
+				return true;
+			}
+			
+			switch (triple.getOS()) {
+				case llvm::Triple::DragonFly:
+				case llvm::Triple::FreeBSD:
+				case llvm::Triple::OpenBSD:
+				case llvm::Triple::Bitrig:
+				case llvm::Triple::Win32:
+					return true;
+				default:
+					return false;
+			}
+		}
+		
 		X86_32Classifier::X86_32Classifier(const ABITypeInfo& typeInfo,
-		                                   const TypeBuilder& typeBuilder)
+		                                   const TypeBuilder& typeBuilder,
+		                                   const llvm::Triple targetTriple)
 		: typeInfo_(typeInfo),
-		typeBuilder_(typeBuilder) { }
+		typeBuilder_(typeBuilder),
+		isDarwinVectorABI_(targetTriple.isOSDarwin()),
+		isSmallStructInRegABI_(isStructReturnInRegABI(targetTriple)),
+		isWin32StructABI_(targetTriple.isOSWindows() &&
+		                  !targetTriple.isOSCygMing()) { }
 		
 		ArgInfo X86_32Classifier::classifyReturnType(const Type returnType, CCState& state) const {
 			if (returnType.isVoid()) {
 				return ArgInfo::getIgnore();
 			}
-			
-			// FIXME
-			const bool isDarwinVectorABI = false;
-			const bool isSmallStructInRegABI = false;
-			const bool isWin32StructABI = false;
 			
 			Type base = VoidTy;
 			uint64_t numElements = 0;
@@ -106,7 +135,7 @@ namespace llvm_abi {
 			
 			if (returnType.isVector()) {
 				// On Darwin, some vectors are returned in registers.
-				if (isDarwinVectorABI) {
+				if (isDarwinVectorABI_) {
 					const auto size = typeInfo_.getTypeAllocSize(returnType);
 
 					// 128-bit vectors are a special case; they are returned in
@@ -136,7 +165,7 @@ namespace llvm_abi {
 				}
 				
 				// If specified, structs and unions are always indirect.
-				if (!isSmallStructInRegABI && !returnType.isComplex()) {
+				if (!isSmallStructInRegABI_ && !returnType.isComplex()) {
 					return getIndirectReturnResult(state);
 				}
 				
@@ -152,7 +181,7 @@ namespace llvm_abi {
 					// quality of the generated IR.
 					const auto elementType = returnType.getStructSingleElement(typeInfo_);
 					if (elementType != VoidTy) {
-						if ((!isWin32StructABI && elementType.isFloatingPoint())
+						if ((!isWin32StructABI_ && elementType.isFloatingPoint())
 						    || elementType.isPointer()) {
 							return ArgInfo::getDirect(elementType);
 						}
@@ -199,12 +228,9 @@ namespace llvm_abi {
 		
 		static const DataSize MinABIStackAlign = DataSize::Bytes(4);
 		
-		DataSize getTypeStackAlignInBytes(const ABITypeInfo& typeInfo,
-		                                  const Type type,
-		                                  const DataSize align) {
-			// FIXME
-			const bool isDarwinVectorABI = false;
-			
+		DataSize
+		X86_32Classifier::getTypeStackAlignInBytes(const Type type,
+		                                           const DataSize align) const {
 			// Otherwise, if the alignment is less than or equal to the minimum ABI
 			// alignment, just use the default; the backend will handle this.
 			if (align <= MinABIStackAlign) {
@@ -212,24 +238,24 @@ namespace llvm_abi {
 			}
 			
 			// On non-Darwin, the stack type alignment is always 4.
-			if (!isDarwinVectorABI) {
+			if (!isDarwinVectorABI_) {
 				// Set explicit alignment, since we may need to realign the top.
 				return MinABIStackAlign;
 			}
 			
 			// Otherwise, if the type contains an SSE vector type, the alignment is 16.
-			if (align.asBytes() >= 16 && (isSSEVectorType(typeInfo, type) ||
-			    isRecordWithSSEVectorType(typeInfo, type))) {
+			if (align.asBytes() >= 16 && (isSSEVectorType(typeInfo_, type) ||
+			    isRecordWithSSEVectorType(typeInfo_, type))) {
 				return DataSize::Bytes(16);
 			}
 			
 			return MinABIStackAlign;
 		}
 		
-		ArgInfo getIndirectResult(const ABITypeInfo& typeInfo,
-		                          const Type type,
-		                          const bool isByVal,
-		                          CCState& state) {
+		ArgInfo
+		X86_32Classifier::getIndirectResult(const Type type,
+		                                    const bool isByVal,
+		                                    CCState& state) const {
 			if (!isByVal) {
 				if (state.freeRegs > 0) {
 					state.freeRegs--; // Non-byval indirects just use one pointer.
@@ -239,9 +265,8 @@ namespace llvm_abi {
 			}
 			
 			// Compute the byval alignment.
-			const auto typeAlign = typeInfo.getTypeRequiredAlign(type);
-			const auto stackAlign = getTypeStackAlignInBytes(typeInfo,
-			                                                 type,
+			const auto typeAlign = typeInfo_.getTypeRequiredAlign(type);
+			const auto stackAlign = getTypeStackAlignInBytes(type,
 			                                                 typeAlign);
 			if (stackAlign.asBytes() == 0) {
 				return ArgInfo::getIndirect(4, /*ByVal=*/true);
@@ -382,10 +407,6 @@ namespace llvm_abi {
 		
 		ArgInfo X86_32Classifier::classifyArgumentType(const Type type,
 		                                               CCState& state) const {
-			// FIXME
-			const bool isWin32StructABI = false;
-			const bool isDarwinVectorABI = false;
-			
 			// FIXME: Set alignment on indirect arguments.
 			
 			// vectorcall adds the concept of a homogenous vector aggregate, similar
@@ -402,7 +423,7 @@ namespace llvm_abi {
 					}
 					return ArgInfo::getExpand(type);
 				}
-				return getIndirectResult(typeInfo_, type,
+				return getIndirectResult(type,
 				                         /*isByVal=*/false,
 				                         state);
 			}
@@ -410,17 +431,15 @@ namespace llvm_abi {
 			if (type.isAggregateType()) {
 				if (type.isStruct()) {
 					// Structs are always byval on win32, regardless of what they contain.
-					if (isWin32StructABI) {
-						return getIndirectResult(typeInfo_,
-						                         type,
+					if (isWin32StructABI_) {
+						return getIndirectResult(type,
 						                         /*isByVal=*/true,
 						                         state);
 					}
 					
 					// Structures with flexible arrays are always indirect.
 					if (type.hasFlexibleArrayMember()) {
-						return getIndirectResult(typeInfo_,
-						                         type,
+						return getIndirectResult(type,
 						                         /*isByVal=*/true,
 						                         state);
 					}
@@ -455,7 +474,7 @@ namespace llvm_abi {
 						paddingType);
 				}
 				
-				return getIndirectResult(typeInfo_, type,
+				return getIndirectResult(type,
 				                         /*isByVal=*/true,
 				                         state);
 			}
@@ -463,7 +482,7 @@ namespace llvm_abi {
 			if (type.isVector()) {
 				// On Darwin, some vectors are passed in memory, we handle this by passing
 				// it as an i8/i16/i32/i64.
-				if (isDarwinVectorABI) {
+				if (isDarwinVectorABI_) {
 					const auto size = typeInfo_.getTypeAllocSize(type);
 					if ((size.asBits() == 8 || size.asBits() == 16 || size.asBits() == 32) ||
 					    (size.asBits() == 64 && type.vectorElementCount() == 1))

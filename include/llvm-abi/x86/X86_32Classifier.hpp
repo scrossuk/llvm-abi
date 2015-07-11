@@ -1,6 +1,8 @@
 #ifndef LLVMABI_X86_X86_32CLASSIFIER_HPP
 #define LLVMABI_X86_X86_32CLASSIFIER_HPP
 
+#include <llvm/ADT/Triple.h>
+
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/ArgInfo.hpp>
 #include <llvm-abi/CallingConvention.hpp>
@@ -29,7 +31,15 @@ namespace llvm_abi {
 			};
 			
 			X86_32Classifier(const ABITypeInfo& typeInfo,
-			                 const TypeBuilder& typeBuilder);
+			                 const TypeBuilder& typeBuilder,
+			                 llvm::Triple targetTriple);
+			
+			DataSize getTypeStackAlignInBytes(Type type,
+			                                  DataSize align) const;
+			
+			ArgInfo getIndirectResult(Type type,
+			                          bool isByVal,
+			                          CCState& state) const;
 			
 			Class classify(Type type) const;
 			
@@ -50,6 +60,9 @@ namespace llvm_abi {
 		private:
 			const ABITypeInfo& typeInfo_;
 			const TypeBuilder& typeBuilder_;
+			bool isDarwinVectorABI_;
+			bool isSmallStructInRegABI_;
+			bool isWin32StructABI_;
 			
 		};
 		

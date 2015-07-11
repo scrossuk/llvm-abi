@@ -19,7 +19,8 @@ namespace llvm_abi {
 		
 		class X86ABI: public ABI {
 		public:
-			X86ABI(llvm::Module* module);
+			X86ABI(llvm::Module* module,
+			       llvm::Triple targetTriple);
 			~X86ABI();
 			
 			std::string name() const;
@@ -46,6 +47,7 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			llvm::Triple targetTriple_;
 			TypeBuilder typeBuilder_;
 			X86ABITypeInfo typeInfo_;
 			
