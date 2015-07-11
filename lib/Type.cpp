@@ -323,7 +323,9 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isAggregateType() const {
-		return !isIntegralType();
+		return isArray() ||
+		       isStruct() ||
+		       isUnion();
 	}
 	
 	bool Type::isPromotableIntegerType() const {
