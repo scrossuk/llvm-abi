@@ -39,8 +39,8 @@ Furthermore, it'd be great to add support for languages beyond C.
 
 Currently the following ABIs are supported:
 
-* x86 (note: a few small gaps for non-Linux platforms)
-* x86-64 (note: no Win64 support yet)
+* x86_32
+* x86_64 (note: no Win64 support yet)
 
 Clearly the aim is to also add support for the other LLVM targets by extracting
 the necessary parts from Clang.
