@@ -25,7 +25,7 @@ namespace llvm_abi {
 		return sourceCodeStream_.str();
 	}
 	
-	std::string CCodeGenerator::CCodeGenerator::emitType(const Type& type) {
+	std::string CCodeGenerator::emitType(const Type& type) {
 		switch (type.kind()) {
 			case VoidType:
 				return "void";
