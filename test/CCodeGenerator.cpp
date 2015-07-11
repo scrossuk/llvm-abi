@@ -257,7 +257,13 @@ namespace llvm_abi {
 		
 		sourceCodeStream_ << ") {" << std::endl;
 		
-		sourceCodeStream_ << "     return callee(";
+		if (functionType.returnType() != VoidTy) {
+			sourceCodeStream_ << "     Fn" << functionId << "ReturnType ";
+			sourceCodeStream_ << "returnValue = callee(";
+		} else {
+			sourceCodeStream_ << "callee(";
+		}
+		
 		first = true;
 		argId = 0;
 		for (const auto& argType: functionType.argumentTypes()) {
@@ -280,6 +286,9 @@ namespace llvm_abi {
 		}
 		
 		sourceCodeStream_ << ");" << std::endl;
+		if (functionType.returnType() != VoidTy) {
+			sourceCodeStream_ << "    return returnValue;" << std::endl;
+		}
 		sourceCodeStream_ << "}" << std::endl;
 	}
 	
