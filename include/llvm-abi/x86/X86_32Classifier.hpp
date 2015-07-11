@@ -34,6 +34,18 @@ namespace llvm_abi {
 			                 const TypeBuilder& typeBuilder,
 			                 llvm::Triple targetTriple);
 			
+			bool isDarwinVectorABI() const;
+			bool isSmallStructInRegABI() const;
+			bool isWin32StructABI() const;
+			
+			bool shouldReturnTypeInRegister(Type type) const;
+			
+			ArgInfo getIndirectReturnResult(CCState& state) const;
+			
+			bool isSSEVectorType(Type type) const;
+			
+			bool isRecordWithSSEVectorType(Type type) const;
+			
 			DataSize getTypeStackAlignInBytes(Type type,
 			                                  DataSize align) const;
 			
@@ -46,6 +58,17 @@ namespace llvm_abi {
 			bool shouldUseInReg(Type type,
 			                    CCState& state,
 			                    bool& needsPadding) const;
+			
+			/// IsX86_MMXType - Return true if this is an MMX type.
+			bool isX86_MMXType(Type type) const;
+			
+			bool is32Or64BitBasicType(Type type) const;
+			
+			/// canExpandIndirectArgument - Test whether an argument type which is to be
+			/// passed indirectly (on the stack) would have the equivalent layout if it was
+			/// expanded into separate arguments. If so, we prefer to do the latter to avoid
+			/// inhibiting optimizations.
+			bool canExpandIndirectArgument(Type type) const;
 			
 			ArgInfo classifyReturnType(Type returnType,
 			                           CCState& state) const;
@@ -60,9 +83,7 @@ namespace llvm_abi {
 		private:
 			const ABITypeInfo& typeInfo_;
 			const TypeBuilder& typeBuilder_;
-			bool isDarwinVectorABI_;
-			bool isSmallStructInRegABI_;
-			bool isWin32StructABI_;
+			llvm::Triple targetTriple_;
 			
 		};
 		
