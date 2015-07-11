@@ -438,8 +438,8 @@ namespace llvm_abi {
 		if (returnArgInfo.isIndirect() || returnArgInfo.isInAlloca()) {
 			structRetPtr = returnValuePtr;
 			if (structRetPtr == nullptr) {
-				const auto returnType = typeInfo_.getLLVMType(functionType_.returnType());
-				structRetPtr = builder_.getEntryBuilder().CreateAlloca(returnType);
+				structRetPtr = createMemTemp(typeInfo_, builder_,
+				                             functionType_.returnType());
 			}
 			if (functionIRMapping_.hasStructRetArg()) {
 				irCallArgs[functionIRMapping_.structRetArgIndex()] = structRetPtr;
