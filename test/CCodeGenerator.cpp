@@ -3,6 +3,7 @@
 
 #include <llvm/Support/ErrorHandling.h>
 
+#include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/FunctionType.hpp>
 #include <llvm-abi/Type.hpp>
 
@@ -11,8 +12,9 @@
 
 namespace llvm_abi {
 	
-	CCodeGenerator::CCodeGenerator()
-	: arrayId_(0),
+	CCodeGenerator::CCodeGenerator(const ABITypeInfo& typeInfo)
+	: typeInfo_(typeInfo),
+	arrayId_(0),
 	functionId_(0),
 	structId_(0),
 	unionId_(0),
@@ -164,17 +166,17 @@ namespace llvm_abi {
 				return stream.str();
 			}
 			case VectorType: {
-				if (type.vectorElementType() == FloatTy) {
-					const auto vectorSize = type.vectorElementCount() * 4;
-					sourceCodeStream_ << "typedef float Vector" << vectorId_ << " ";
-					sourceCodeStream_ << "__attribute__((__vector_size__(" << vectorSize << ")));" << std::endl;
-					std::ostringstream stream;
-					stream << "Vector" << vectorId_;
-					vectorId_++;
-					return stream.str();
-				}
+				sourceCodeStream_ << "typedef " << emitType(type.vectorElementType());
+				sourceCodeStream_ << " Vector" << vectorId_ << " ";
 				
-				llvm_unreachable("TODO");
+				const auto elementSize = typeInfo_.getTypeAllocSize(type.vectorElementType()).asBytes();
+				const auto vectorSize = type.vectorElementCount() * elementSize;
+				sourceCodeStream_ << "__attribute__((__vector_size__(" << vectorSize << ")));" << std::endl;
+				
+				std::ostringstream stream;
+				stream << "Vector" << vectorId_;
+				vectorId_++;
+				return stream.str();
 			}
 		}
 		

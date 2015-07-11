@@ -37,7 +37,8 @@ std::string getBaseName(const std::string& fileName) {
 	return fileName.substr(0, offset);
 }
 
-std::string runClangOnFunction(const std::string& abiString,
+std::string runClangOnFunction(const ABITypeInfo& typeInfo,
+                               const std::string& abiString,
                                const std::string& cpuString,
                                const std::string& clangPath,
                                const TestFunctionType& testFunctionType) {
@@ -46,7 +47,7 @@ std::string runClangOnFunction(const std::string& abiString,
 		return "";
 	}
 	
-	CCodeGenerator cCodeGenerator;
+	CCodeGenerator cCodeGenerator(typeInfo);
 	cCodeGenerator.emitCalleeAndCallerFunctions(testFunctionType);
 	
 	std::ofstream tempFile("tempfile.c");
@@ -189,7 +190,12 @@ int main(int argc, char** argv) {
 					printf("%s\n", line.c_str());
 				}
 				
-				const auto cCompilerOutput = runClangOnFunction(abiString, cpuString, clangPath, testFunctionType);
+				const auto cCompilerOutput =
+					runClangOnFunction(testSystem.abi().typeInfo(),
+					                   abiString,
+					                   cpuString,
+					                   clangPath,
+					                   testFunctionType);
 				printf("\n---- C compiler output (%s):\n%s\n\n",
 				       clangPath.c_str(),
 				       cCompilerOutput.c_str());

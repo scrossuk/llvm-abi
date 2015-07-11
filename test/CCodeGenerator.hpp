@@ -6,6 +6,7 @@
 
 namespace llvm_abi {
 	
+	class ABITypeInfo;
 	struct TestFunctionType;
 	class Type;
 	
@@ -19,7 +20,7 @@ namespace llvm_abi {
 	 */
 	class CCodeGenerator {
 	public:
-		CCodeGenerator();
+		CCodeGenerator(const ABITypeInfo& typeInfo);
 		
 		std::string generatedSourceCode() const;
 		
@@ -37,6 +38,7 @@ namespace llvm_abi {
 		
 	private:
 		std::ostringstream sourceCodeStream_;
+		const ABITypeInfo& typeInfo_;
 		size_t arrayId_;
 		size_t functionId_;
 		size_t structId_;
