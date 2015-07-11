@@ -479,17 +479,19 @@ namespace llvm_abi {
 							value = alignedTempAlloca;
 						}
 						
-						arguments.push_back(builder_.getBuilder().CreateLoad(value));
+						const auto typeAlign = typeInfo_.getTypeRequiredAlign(argumentType);
+						const auto loadInst = builder_.getBuilder().CreateLoad(value);
+						const auto loadAlign = std::max<size_t>(typeAlign.asBytes(),
+						                                        argInfo.getIndirectAlign());
+						loadInst->setAlignment(loadAlign);
+						arguments.push_back(loadInst);
 					} else {
 						// Load scalar value from indirect argument.
-						const auto typeAlign = typeInfo_.getTypeRequiredAlign(argumentType);
-						
 						// TODO: this needs to handle issues such
 						// as truncation of bool values, efficiently
 						// loading vectors etc.
 						const auto loadInst = builder_.getBuilder().CreateLoad(value);
-						loadInst->setAlignment(typeAlign.asBytes());
-						
+						loadInst->setAlignment(argInfo.getIndirectAlign());
 						arguments.push_back(loadInst);
 					}
 					break;

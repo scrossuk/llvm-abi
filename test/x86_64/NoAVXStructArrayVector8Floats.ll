@@ -6,7 +6,7 @@ declare void @callee({ [1 x <8 x float>] }* noalias sret, { [1 x <8 x float>] }*
 define void @caller({ [1 x <8 x float>] }* noalias sret %agg.result, { [1 x <8 x float>] }* byval align 32) {
   %indirect.arg.mem = alloca { [1 x <8 x float>] }, align 32
   %2 = alloca { [1 x <8 x float>] }, align 32
-  %3 = load { [1 x <8 x float>] }* %0
+  %3 = load { [1 x <8 x float>] }* %0, align 32
   store { [1 x <8 x float>] } %3, { [1 x <8 x float>] }* %indirect.arg.mem, align 32
   call void @callee({ [1 x <8 x float>] }* noalias sret %2, { [1 x <8 x float>] }* byval align 32 %indirect.arg.mem)
   %4 = load { [1 x <8 x float>] }* %2
