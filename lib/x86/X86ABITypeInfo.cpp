@@ -134,6 +134,20 @@ namespace llvm_abi {
 		return getTypeAllocSize(type);
 	}
 	
+	DataSize getVectorMinAlign(const DataSize size) {
+		if (size.asBytes() >= 32) {
+			return DataSize::Bytes(32);
+		} else if (size.asBytes() >= 16) {
+			return DataSize::Bytes(16);
+		} else if (size.asBytes() >= 8) {
+			return DataSize::Bytes(8);
+		} else if (size.asBytes() >= 4) {
+			return DataSize::Bytes(4);
+		} else {
+			return DataSize::Bytes(1);
+		}
+	}
+	
 	DataSize X86ABITypeInfo::getTypeRequiredAlign(const Type type) const {
 		switch (type.kind()) {
 			case VoidType:
@@ -222,14 +236,7 @@ namespace llvm_abi {
 			}
 			case VectorType: {
 				const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
-				const auto minAlign =
-					getTypeAllocSize(type).asBytes() >= 32 ?
-						DataSize::Bytes(32) :
-						getTypeAllocSize(type).asBytes() >= 16 ?
-							DataSize::Bytes(16) :
-							getTypeAllocSize(type).asBytes() >= 8 ?
-								DataSize::Bytes(8) :
-								DataSize::Bytes(1);
+				const auto minAlign = getVectorMinAlign(getTypeAllocSize(type));
 				return std::max<DataSize>(elementAlign, minAlign);
 			}
 		}
