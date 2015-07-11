@@ -677,7 +677,10 @@ namespace llvm_abi {
 			case ArgInfo::Direct: {
 				const auto coerceType = returnArgInfo.getCoerceToType();
 				
-				if (coerceType == returnType &&
+				const auto returnLLVMType = typeInfo_.getLLVMType(returnType);
+				const auto coerceLLVMType = typeInfo_.getLLVMType(coerceType);
+				
+				if (coerceLLVMType == returnLLVMType &&
 				    returnArgInfo.getDirectOffset() == 0) {
 					// Nothing to do.
 					return returnValue;
