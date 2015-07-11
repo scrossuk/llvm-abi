@@ -13,7 +13,7 @@ namespace llvm_abi {
 	TypedValue TypePromoter::promoteValue(Builder& builder,
 	                                      const TypedValue value,
 	                                      const Type type) const {
-		if (value.second == type) {
+		if (value.type() == type) {
 			// Nothing to do.
 			return value;
 		}
@@ -21,16 +21,16 @@ namespace llvm_abi {
 		assert(type.isInteger() || type.isFloatingPoint());
 		if (type.isInteger()) {
 			if (type.hasSignedIntegerRepresentation(typeInfo_)) {
-				const auto extValue = builder.getBuilder().CreateSExt(value.first,
+				const auto extValue = builder.getBuilder().CreateSExt(value.llvmValue(),
 				                                                      typeInfo_.getLLVMType(type));
 				return TypedValue(extValue, type);
 			} else {
-				const auto extValue = builder.getBuilder().CreateZExt(value.first,
+				const auto extValue = builder.getBuilder().CreateZExt(value.llvmValue(),
 				                                                      typeInfo_.getLLVMType(type));
 				return TypedValue(extValue, type);
 			}
 		} else {
-			const auto extValue = builder.getBuilder().CreateFPExt(value.first,
+			const auto extValue = builder.getBuilder().CreateFPExt(value.llvmValue(),
 			                                                       typeInfo_.getLLVMType(type));
 			return TypedValue(extValue, type);
 		}
@@ -80,7 +80,7 @@ namespace llvm_abi {
 	
 	TypedValue TypePromoter::promoteVarArgsArgument(Builder& builder,
 	                                                const TypedValue typedValue) const {
-		const auto type = typedValue.second;
+		const auto type = typedValue.type();
 		return promoteValue(builder,
 		                    typedValue,
 		                    promoteVarArgsArgumentType(type));

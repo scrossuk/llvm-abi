@@ -43,7 +43,7 @@ namespace llvm_abi {
 	/// accessing some number of bytes out of it, try to gep into the struct to get
 	/// at its inner goodness. Dive as deep as possible without entering an element
 	/// with an in-memory size smaller than destSize.
-	static std::pair<llvm::Value*, Type>
+	static TypedValue
 	enterStructPointerForCoercedAccess(const ABITypeInfo& typeInfo,
 	                                   Builder& builder,
 	                                   llvm::Value* const sourcePtr,
@@ -51,7 +51,7 @@ namespace llvm_abi {
 	                                   const DataSize destSize) {
 		if (sourceStructType.structMembers().empty()) {
 			// We can't dive into a zero-element struct.
-			return std::make_pair(sourcePtr, sourceStructType);
+			return TypedValue(sourcePtr, sourceStructType);
 		}
 		
 		const auto firstElementType = sourceStructType.structMembers()[0].type();
@@ -63,7 +63,7 @@ namespace llvm_abi {
 		const auto firstElementSize = typeInfo.getTypeStoreSize(firstElementType);
 		if (firstElementSize < destSize &&
 		    firstElementSize < typeInfo.getTypeStoreSize(sourceStructType)) {
-			return std::make_pair(sourcePtr, sourceStructType);
+			return TypedValue(sourcePtr, sourceStructType);
 		}
 		
 		// GEP into the first element.
@@ -77,7 +77,7 @@ namespace llvm_abi {
 			                                          firstElementType,
 			                                          destSize);
 		} else {
-			return std::make_pair(diveSourcePtr, firstElementType);
+			return TypedValue(diveSourcePtr, firstElementType);
 		}
 	}
 	
@@ -178,8 +178,8 @@ namespace llvm_abi {
 			                                                       sourcePtr,
 			                                                       sourceType,
 			                                                       destSize);
-			sourcePtr = result.first;
-			sourceType = result.second;
+			sourcePtr = result.llvmValue();
+			sourceType = result.type();
 		}
 		
 		const auto sourceSize = typeInfo.getTypeAllocSize(sourceType);
@@ -281,8 +281,8 @@ namespace llvm_abi {
 			                                                       destPtr,
 			                                                       destType,
 			                                                       sourceSize);
-			destPtr = result.first;
-			destType = result.second;
+			destPtr = result.llvmValue();
+			destType = result.type();
 		}
 		
 		// If the source and destination are integer or pointer types, just do an
@@ -454,8 +454,8 @@ namespace llvm_abi {
 		for (size_t argumentNumber = 0;
 		     argumentNumber < arguments.size();
 		     argumentNumber++) {
-			const auto argumentValue = arguments[argumentNumber].first;
-			const auto& argumentType = arguments[argumentNumber].second;
+			const auto argumentValue = arguments[argumentNumber].llvmValue();
+			const auto& argumentType = arguments[argumentNumber].type();
 			const auto& argInfo = functionIRMapping_.arguments()[argumentNumber].argInfo;
 			
 			// TODO: add support for values already being in memory.

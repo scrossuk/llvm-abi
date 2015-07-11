@@ -118,7 +118,7 @@ namespace llvm_abi {
 			
 			llvm::SmallVector<Type, 8> argumentTypes;
 			for (const auto& value: arguments) {
-				argumentTypes.push_back(value.second);
+				argumentTypes.push_back(value.type());
 			}
 			
 			X86_32Classifier classifier(typeInfo_,

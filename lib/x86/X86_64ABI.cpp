@@ -119,7 +119,7 @@ namespace llvm_abi {
 			
 			llvm::SmallVector<Type, 8> argumentTypes;
 			for (const auto& value: arguments) {
-				argumentTypes.push_back(value.second);
+				argumentTypes.push_back(value.type());
 			}
 			
 			const auto functionIRMapping = computeIRMapping(typeInfo_,
