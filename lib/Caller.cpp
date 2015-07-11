@@ -654,7 +654,9 @@ namespace llvm_abi {
 			}
 			case ArgInfo::Indirect: {
 				const auto returnValuePointer = encodedArguments[functionIRMapping_.structRetArgIndex()];
-				return builder_.getBuilder().CreateLoad(returnValuePointer);
+				const auto loadInst = builder_.getBuilder().CreateLoad(returnValuePointer);
+				loadInst->setAlignment(returnArgInfo.getIndirectAlign());
+				return loadInst;
 			}
 			case ArgInfo::Ignore: {
 				assert(encodedReturnValue->getType()->isVoidTy());
