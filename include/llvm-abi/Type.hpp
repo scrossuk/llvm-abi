@@ -268,6 +268,23 @@ namespace llvm_abi {
 			                           size_t startBit,
 			                           size_t endBit) const;
 			
+			/**
+			 * \brief Query if a type is an ELFv2 homogeneous
+			 * aggregate.
+			 * 
+			 * An homogeneous aggregate is a composite type where
+			 * all of the fundamental data types of the members that
+			 * compose the type are the same.
+			 * 
+			 * An homogeneous aggregate has a base type, which is
+			 * the fundamental data type of each member. The overall
+			 * size is the size of the base type multiplied by the
+			 * number of uniquely addressable members; its alignment
+			 * will be the alignment of the base type.
+			 * 
+			 * Argument 'base' is set to the base element type, and
+			 * 'members' is set to the number of base elements.
+			 */
 			bool isHomogeneousAggregate(const ABITypeInfo& typeInfo,
 			                            Type& base,
 			                            uint64_t& members) const;

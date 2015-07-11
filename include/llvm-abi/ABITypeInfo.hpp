@@ -103,9 +103,34 @@ namespace llvm_abi {
 		 */
 		virtual bool isCharSigned() const = 0;
 		
-		// FIXME!
-		virtual bool isHomogeneousAggregateBaseType(Type) const { return false; }
-		virtual bool isHomogeneousAggregateSmallEnough(Type, uint64_t) const { return false; }
+		/**
+		 * \brief Queries if a type can be a homogeneous aggregate base type.
+		 * 
+		 * An homogeneous aggregate is a composite type where all of the
+		 * fundamental data types of the members that compose the type
+		 * are the same.
+		 * 
+		 * Most ABIs only support float, double, and some vector type
+		 * widths.
+		 * 
+		 * \param type The candidate base type.
+		 * \return Whether the specified type can be a base type.
+		 */
+		virtual bool isHomogeneousAggregateBaseType(Type type) const = 0;
+		
+		/**
+		 * \brief Queries if type is small enough to be a homogeneous aggregate.
+		 * 
+		 * An homogeneous aggregate is a composite type where all of the
+		 * fundamental data types of the members that compose the type
+		 * are the same.
+		 * 
+		 * \param type The homogeneous aggregate base type.
+		 * \param members The number of members of the homogeneous aggregate.
+		 * \return Whether the homogeneous aggregate is small enough.
+		 */
+		virtual bool isHomogeneousAggregateSmallEnough(Type base,
+		                                               uint64_t members) const = 0;
 		
 	protected:
 		// Prevent destructor call via this class.

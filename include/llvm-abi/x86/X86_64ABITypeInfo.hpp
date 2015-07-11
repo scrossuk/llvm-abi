@@ -43,6 +43,15 @@ namespace llvm_abi {
 			
 			bool isCharSigned() const;
 			
+			bool isHomogeneousAggregateBaseType(Type /*type*/) const {
+				return false;
+			}
+			
+			bool isHomogeneousAggregateSmallEnough(Type /*base*/,
+			                                       uint64_t /*members*/) const {
+				return false;
+			}
+			
 		private:
 			llvm::LLVMContext& llvmContext_;
 			const CPUFeatures& cpuFeatures_;

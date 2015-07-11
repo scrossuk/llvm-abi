@@ -479,9 +479,6 @@ namespace llvm_abi {
 		return false;
 	}
 	
-	/// isHomogeneousAggregate - Return true if a type is an ELFv2 homogeneous
-	/// aggregate. Base is set to the base element type, and Members is set
-	/// to the number of base elements.
 	bool Type::isHomogeneousAggregate(const ABITypeInfo& typeInfo,
 	                                  Type& base,
 	                                  uint64_t& members) const {

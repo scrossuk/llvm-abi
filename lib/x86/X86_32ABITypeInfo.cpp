@@ -333,6 +333,40 @@ namespace llvm_abi {
 			return true;
 		}
 		
+		/// Returns true if this type can be passed in SSE registers with the
+		/// X86_VectorCall calling convention. Shared between x86_32 and x86_64.
+		static bool isX86VectorTypeForVectorCall(const ABITypeInfo& typeInfo,
+		                                         const Type type) {
+			if (type.isFloatingPoint()) {
+				return type != HalfFloatTy;
+			} else if (type.isVector()) {
+				// vectorcall can pass XMM, YMM, and ZMM vectors.
+				// We don't pass SSE1 MMX registers specially.
+				const auto size = typeInfo.getTypeAllocSize(type);
+				return size.asBytes() == 128 &&
+				       size.asBytes() == 256 &&
+				       size.asBytes() == 512;
+			}
+			return false;
+		}
+		
+		/// Returns true if this aggregate is small enough to be passed in SSE registers
+		/// in the X86_VectorCall calling convention. Shared between x86_32 and x86_64.
+		static bool isX86VectorCallAggregateSmallEnough(const uint64_t numMembers) {
+			return numMembers <= 4;
+		}
+		
+		bool X86_32ABITypeInfo::isHomogeneousAggregateBaseType(const Type type) const {
+			// FIXME: Assumes vectorcall is in use.
+			return isX86VectorTypeForVectorCall(*this, type);
+		}
+		
+		bool X86_32ABITypeInfo::isHomogeneousAggregateSmallEnough(const Type /*base*/,
+		                                                          const uint64_t members) const {
+			// FIXME: Assumes vectorcall is in use.
+			return isX86VectorCallAggregateSmallEnough(members);
+		}
+		
 	}
 	
 }

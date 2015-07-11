@@ -38,6 +38,11 @@ namespace llvm_abi {
 			
 			bool isCharSigned() const;
 			
+			bool isHomogeneousAggregateBaseType(Type type) const;
+			
+			bool isHomogeneousAggregateSmallEnough(Type base,
+			                                       uint64_t members) const;
+			
 		private:
 			llvm::LLVMContext& llvmContext_;
 			
