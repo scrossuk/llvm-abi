@@ -491,14 +491,13 @@ namespace llvm_abi {
 		
 		llvm::SmallVector<ArgInfo, 8>
 		X86_32Classifier::classifyFunctionType(const FunctionType& functionType,
-		                                       llvm::ArrayRef<Type> argumentTypes,
-		                                       const CallingConvention callingConvention) const {
+		                                       llvm::ArrayRef<Type> argumentTypes) const {
 			// FIXME: This needs to be user-configurable; by default
 			// we don't pass arguments in registers but users can
 			// enable this.
 			const auto DefaultNumRegisterParameters = 0;
 			
-			CCState state(callingConvention);
+			CCState state(functionType.callingConvention());
 			if (state.callingConvention == CC_FastCall) {
 				state.freeRegs = 2;
 			} else if (state.callingConvention == CC_VectorCall) {

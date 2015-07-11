@@ -44,8 +44,7 @@ namespace llvm_abi {
 			
 			llvm::SmallVector<ArgInfo, 8>
 			classifyFunctionType(const FunctionType& functionType,
-			                     llvm::ArrayRef<Type> argumentTypes,
-			                     CallingConvention callingConvention) const;
+			                     llvm::ArrayRef<Type> argumentTypes) const;
 			
 		private:
 			const ABITypeInfo& typeInfo_;

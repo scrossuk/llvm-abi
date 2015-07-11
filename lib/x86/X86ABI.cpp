@@ -61,8 +61,7 @@ namespace llvm_abi {
 			X86_32Classifier classifier(typeInfo_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
-				                                functionType.argumentTypes(),
-				                                CC_CDecl);
+				                                functionType.argumentTypes());
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
@@ -87,8 +86,7 @@ namespace llvm_abi {
 			X86_32Classifier classifier(typeInfo_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
-				                                argumentTypes,
-				                                CC_CDecl);
+				                                argumentTypes);
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
@@ -120,8 +118,7 @@ namespace llvm_abi {
 			X86_32Classifier classifier(typeInfo_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
-				                                argumentTypes,
-				                                CC_CDecl);
+				                                argumentTypes);
 			assert(argInfoArray.size() >= 1);
 			
 			const auto functionIRMapping = getFunctionIRMapping(typeInfo(),
@@ -146,8 +143,7 @@ namespace llvm_abi {
 			X86_32Classifier classifier(typeInfo);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
-				                                argumentTypes,
-				                                CC_CDecl);
+				                                argumentTypes);
 			assert(argInfoArray.size() >= 1);
 			
 			return getFunctionIRMapping(typeInfo,

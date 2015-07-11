@@ -1,6 +1,8 @@
 #ifndef LLVMABI_CALLINGCONVENTION_HPP
 #define LLVMABI_CALLINGCONVENTION_HPP
 
+#include <llvm/Support/ErrorHandling.h>
+
 namespace llvm_abi {
 	
 	/**
@@ -50,6 +52,29 @@ namespace llvm_abi {
 		 */
 		CC_VectorCall
 	};
+	
+	inline const char*
+	callingConventionString(const CallingConvention callingConvention) {
+		switch (callingConvention) {
+			case CC_CDefault:
+				return "c-default";
+			case CC_CppDefault:
+				return "c++-default";
+			case CC_CDecl:
+				return "cdecl";
+			case CC_StdCall:
+				return "stdcall";
+			case CC_FastCall:
+				return "fastcall";
+			case CC_ThisCall:
+				return "thiscall";
+			case CC_Pascal:
+				return "pascal";
+			case CC_VectorCall:
+				return "vectorcall";
+		}
+		llvm_unreachable("Unknown calling convention.");
+	}
 	
 }
 

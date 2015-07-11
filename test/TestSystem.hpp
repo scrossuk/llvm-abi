@@ -76,7 +76,8 @@ public:
 			argumentTypes.push_back(argType);
 		}
 		
-		return FunctionType(functionType.returnType(),
+		return FunctionType(CC_CDefault,
+		                    functionType.returnType(),
 		                    argumentTypes,
 		                    /*isVarArg=*/false);
 	}

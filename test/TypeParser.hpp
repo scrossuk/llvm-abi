@@ -249,7 +249,8 @@ namespace llvm_abi {
 			stream_.expect(')');
 			stream_.consume();
 			
-			return TestFunctionType(FunctionType(returnType,
+			return TestFunctionType(FunctionType(CC_CDefault,
+			                                     returnType,
 			                                     argumentTypes,
 			                                     isVarArg),
 			                        varArgsTypes);
