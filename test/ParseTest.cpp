@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 	const std::string CPU_COMMAND = "CPU";
 	const std::string FUNCTION_TYPE_COMMAND = "FUNCTION-TYPE";
 	
-	const std::string MEMCPY_START = "declare void @llvm.memcpy.p0i8.p0i8.i64(";
+	const std::string MEMCPY_START = "declare void @llvm.memcpy(";
 	
 	std::vector<std::string> compareLines;
 	
