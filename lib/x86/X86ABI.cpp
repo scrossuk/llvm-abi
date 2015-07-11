@@ -58,7 +58,8 @@ namespace llvm_abi {
 		}
 		
 		llvm::FunctionType* X86ABI::getFunctionType(const FunctionType& functionType) const {
-			X86_32Classifier classifier(typeInfo_);
+			X86_32Classifier classifier(typeInfo_,
+			                            typeBuilder_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                functionType.argumentTypes());
@@ -83,7 +84,8 @@ namespace llvm_abi {
 			const auto argumentTypes = typePromoter.promoteArgumentTypes(functionType,
 			                                                             rawArgumentTypes);
 			
-			X86_32Classifier classifier(typeInfo_);
+			X86_32Classifier classifier(typeInfo_,
+			                            typeBuilder_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -115,7 +117,8 @@ namespace llvm_abi {
 				argumentTypes.push_back(value.second);
 			}
 			
-			X86_32Classifier classifier(typeInfo_);
+			X86_32Classifier classifier(typeInfo_,
+			                            typeBuilder_);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -138,9 +141,11 @@ namespace llvm_abi {
 		
 		static
 		FunctionIRMapping computeIRMapping(const ABITypeInfo& typeInfo,
+		                                   const TypeBuilder& typeBuilder,
 		                                   const FunctionType& functionType,
 		                                   llvm::ArrayRef<Type> argumentTypes) {
-			X86_32Classifier classifier(typeInfo);
+			X86_32Classifier classifier(typeInfo,
+			                            typeBuilder);
 			const auto argInfoArray =
 				classifier.classifyFunctionType(functionType,
 				                                argumentTypes);
@@ -153,11 +158,13 @@ namespace llvm_abi {
 		class FunctionEncoder_x86: public FunctionEncoder {
 		public:
 			FunctionEncoder_x86(const ABITypeInfo& typeInfo,
+			                    const TypeBuilder& typeBuilder,
 			                    Builder& builder,
 			                    const FunctionType& functionType,
 			                    llvm::ArrayRef<llvm::Value*> pArguments)
 			: builder_(builder),
 			functionIRMapping_(computeIRMapping(typeInfo,
+			                                    typeBuilder,
 			                                    functionType,
 			                                    functionType.argumentTypes())),
 			callee_(typeInfo,
@@ -200,6 +207,7 @@ namespace llvm_abi {
 		                               const FunctionType& functionType,
 		                               llvm::ArrayRef<llvm::Value*> arguments) const {
 			return std::unique_ptr<FunctionEncoder>(new FunctionEncoder_x86(typeInfo_,
+			                                                                typeBuilder_,
 			                                                                builder,
 			                                                                functionType,
 			                                                                arguments));

@@ -81,8 +81,10 @@ namespace llvm_abi {
 			return ArgInfo::getIndirect(/*Align=*/0, /*ByVal=*/false);
 		}
 		
-		X86_32Classifier::X86_32Classifier(const ABITypeInfo& typeInfo)
-		: typeInfo_(typeInfo) { }
+		X86_32Classifier::X86_32Classifier(const ABITypeInfo& typeInfo,
+		                                   const TypeBuilder& typeBuilder)
+		: typeInfo_(typeInfo),
+		typeBuilder_(typeBuilder) { }
 		
 		ArgInfo X86_32Classifier::classifyReturnType(const Type returnType, CCState& state) const {
 			if (returnType.isVoid()) {

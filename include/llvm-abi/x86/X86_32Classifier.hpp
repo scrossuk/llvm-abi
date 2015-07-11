@@ -28,7 +28,8 @@ namespace llvm_abi {
 				Float
 			};
 			
-			X86_32Classifier(const ABITypeInfo& typeInfo);
+			X86_32Classifier(const ABITypeInfo& typeInfo,
+			                 const TypeBuilder& typeBuilder);
 			
 			Class classify(Type type) const;
 			
@@ -48,7 +49,7 @@ namespace llvm_abi {
 			
 		private:
 			const ABITypeInfo& typeInfo_;
-			TypeBuilder typeBuilder_;
+			const TypeBuilder& typeBuilder_;
 			
 		};
 		

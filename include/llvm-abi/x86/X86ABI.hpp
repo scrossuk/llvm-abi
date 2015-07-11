@@ -9,6 +9,7 @@
 #include <llvm-abi/ABI.hpp>
 #include <llvm-abi/CallingConvention.hpp>
 #include <llvm-abi/Type.hpp>
+#include <llvm-abi/TypeBuilder.hpp>
 
 #include <llvm-abi/x86/X86ABITypeInfo.hpp>
 
@@ -45,6 +46,7 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			TypeBuilder typeBuilder_;
 			X86ABITypeInfo typeInfo_;
 			
 		};
