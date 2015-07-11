@@ -14,8 +14,8 @@ define { i64, i64 } @caller() {
   %5 = getelementptr { i64, i64 }* %2, i32 0, i32 1
   %6 = extractvalue { i64, i64 } %1, 1
   store i64 %6, i64* %5, align 1
-  %7 = load { i32, i32, i32, i32 }* %coerce
-  store { i32, i32, i32, i32 } %7, { i32, i32, i32, i32 }* %coerce1
+  %7 = load { i32, i32, i32, i32 }* %coerce, align 4
+  store { i32, i32, i32, i32 } %7, { i32, i32, i32, i32 }* %coerce1, align 4
   %8 = bitcast { i32, i32, i32, i32 }* %coerce1 to { i64, i64 }*
   %9 = load { i64, i64 }* %8, align 1
   ret { i64, i64 } %9

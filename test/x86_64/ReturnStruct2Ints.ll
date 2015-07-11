@@ -9,8 +9,8 @@ define i64 @caller() {
   %1 = call i64 @callee()
   %2 = bitcast { i32, i32 }* %coerce to i64*
   store i64 %1, i64* %2, align 1
-  %3 = load { i32, i32 }* %coerce
-  store { i32, i32 } %3, { i32, i32 }* %coerce1
+  %3 = load { i32, i32 }* %coerce, align 4
+  store { i32, i32 } %3, { i32, i32 }* %coerce1, align 4
   %4 = bitcast { i32, i32 }* %coerce1 to i64*
   %5 = load i64* %4, align 1
   ret i64 %5

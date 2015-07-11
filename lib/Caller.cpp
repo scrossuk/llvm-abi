@@ -686,7 +686,9 @@ namespace llvm_abi {
 						              destPtr,
 						              /*lowAlignment=*/false);
 						
-						return builder_.getBuilder().CreateLoad(destPtr);
+						const auto loadInst = builder_.getBuilder().CreateLoad(destPtr);
+						loadInst->setAlignment(typeInfo_.getTypeRequiredAlign(returnType).asBytes());
+						return loadInst;
 					} else {
 						// If the argument doesn't match, perform a bitcast to coerce it.  This
 						// can happen due to trivial type mismatches.
@@ -722,7 +724,9 @@ namespace llvm_abi {
 				                   coerceType,
 				                   destType);
 				
-				return builder_.getBuilder().CreateLoad(destPtr);
+				const auto loadInst = builder_.getBuilder().CreateLoad(destPtr);
+				loadInst->setAlignment(typeInfo_.getTypeRequiredAlign(returnType).asBytes());
+				return loadInst;
 			}
 
 			case ArgInfo::Expand:

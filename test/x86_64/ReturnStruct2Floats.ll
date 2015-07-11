@@ -9,8 +9,8 @@ define <2 x float> @caller() {
   %1 = call <2 x float> @callee()
   %2 = bitcast { float, float }* %coerce to <2 x float>*
   store <2 x float> %1, <2 x float>* %2, align 1
-  %3 = load { float, float }* %coerce
-  store { float, float } %3, { float, float }* %coerce1
+  %3 = load { float, float }* %coerce, align 4
+  store { float, float } %3, { float, float }* %coerce1, align 4
   %4 = bitcast { float, float }* %coerce1 to <2 x float>*
   %5 = load <2 x float>* %4, align 1
   ret <2 x float> %5

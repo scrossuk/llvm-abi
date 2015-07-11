@@ -12,6 +12,6 @@ define { i8*, i8* } @caller() {
   %4 = getelementptr { i8*, i8* }* %agg.tmp, i32 0, i32 1
   %5 = extractvalue { i8*, i8* } %1, 1
   store i8* %5, i8** %4
-  %6 = load { i8*, i8* }* %agg.tmp
+  %6 = load { i8*, i8* }* %agg.tmp, align 8
   ret { i8*, i8* } %6
 }

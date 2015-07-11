@@ -20,8 +20,8 @@ define <4 x float> @caller(<4 x float> %coerce) {
   %coerce.dive3 = getelementptr { [1 x <4 x float>] }* %coerce2, i32 0, i32 0
   %6 = bitcast [1 x <4 x float>]* %coerce.dive3 to <4 x float>*
   store <4 x float> %5, <4 x float>* %6, align 1
-  %7 = load { [1 x <4 x float>] }* %coerce2
-  store { [1 x <4 x float>] } %7, { [1 x <4 x float>] }* %coerce4
+  %7 = load { [1 x <4 x float>] }* %coerce2, align 16
+  store { [1 x <4 x float>] } %7, { [1 x <4 x float>] }* %coerce4, align 16
   %coerce.dive5 = getelementptr { [1 x <4 x float>] }* %coerce4, i32 0, i32 0
   %8 = bitcast [1 x <4 x float>]* %coerce.dive5 to <4 x float>*
   %9 = load <4 x float>* %8, align 1

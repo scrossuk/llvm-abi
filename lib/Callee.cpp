@@ -692,7 +692,8 @@ namespace llvm_abi {
 					                                       builder_,
 					                                       returnType,
 					                                       "coerce");
-					builder_.getBuilder().CreateStore(returnValue, sourcePtr);
+					const auto storeInst = builder_.getBuilder().CreateStore(returnValue, sourcePtr);
+					storeInst->setAlignment(typeInfo_.getTypeRequiredAlign(returnType).asBytes());
 					
 					auto sourceType = returnType;
 					

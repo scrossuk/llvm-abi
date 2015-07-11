@@ -17,8 +17,8 @@ define <4 x float> @caller(<4 x float> %coerce) {
   %3 = call <4 x float> @callee(<4 x float> %2)
   %coerce.dive3 = getelementptr { <4 x float> }* %coerce2, i32 0, i32 0
   store <4 x float> %3, <4 x float>* %coerce.dive3, align 1
-  %4 = load { <4 x float> }* %coerce2
-  store { <4 x float> } %4, { <4 x float> }* %coerce4
+  %4 = load { <4 x float> }* %coerce2, align 16
+  store { <4 x float> } %4, { <4 x float> }* %coerce4, align 16
   %coerce.dive5 = getelementptr { <4 x float> }* %coerce4, i32 0, i32 0
   %5 = load <4 x float>* %coerce.dive5, align 1
   ret <4 x float> %5
