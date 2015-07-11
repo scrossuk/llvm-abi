@@ -221,7 +221,16 @@ namespace llvm_abi {
 				return getTypeRequiredAlign(type.arrayElementType());
 			}
 			case VectorType: {
-				return getTypeRequiredAlign(type.vectorElementType());
+				const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
+				const auto minAlign =
+					getTypeAllocSize(type).asBytes() >= 32 ?
+						DataSize::Bytes(32) :
+						getTypeAllocSize(type).asBytes() >= 16 ?
+							DataSize::Bytes(16) :
+							getTypeAllocSize(type).asBytes() >= 8 ?
+								DataSize::Bytes(8) :
+								DataSize::Bytes(1);
+				return std::max<DataSize>(elementAlign, minAlign);
 			}
 		}
 		llvm_unreachable("Unknown type kind.");
