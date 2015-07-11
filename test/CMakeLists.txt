@@ -31,5 +31,5 @@ find_program(CLANG_EXECUTABLE
 	DOC "Path to clang executable"
 )
 
-add_subdirectory(x86)
+add_subdirectory(x86_32)
 add_subdirectory(x86_64)
