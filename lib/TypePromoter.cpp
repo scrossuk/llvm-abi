@@ -65,6 +65,8 @@ namespace llvm_abi {
 			llvm_unreachable("Unknown integer type kind.");
 		} else if (type.isFloatingPoint()) {
 			switch (type.floatingPointKind()) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
 				case Float:
 					return DoubleTy;
 				case Double:

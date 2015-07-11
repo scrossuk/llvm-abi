@@ -57,6 +57,8 @@ namespace llvm_abi {
 				}
 				case FloatingPointType: {
 					switch (type.floatingPointKind()) {
+						case HalfFloat:
+							llvm_unreachable("TODO");
 						case Float:
 							return DataSize::Bytes(4);
 						case Double:
@@ -71,6 +73,8 @@ namespace llvm_abi {
 				}
 				case ComplexType: {
 					switch (type.complexKind()) {
+						case HalfFloat:
+							llvm_unreachable("TODO");
 						case Float:
 							return DataSize::Bytes(8);
 						case Double:
@@ -191,6 +195,8 @@ namespace llvm_abi {
 				}
 				case FloatingPointType: {
 					switch (type.floatingPointKind()) {
+						case HalfFloat:
+							llvm_unreachable("TODO");
 						case Float:
 							return DataSize::Bytes(4);
 						case Double:
@@ -204,6 +210,8 @@ namespace llvm_abi {
 				}
 				case ComplexType: {
 					switch (type.complexKind()) {
+						case HalfFloat:
+							llvm_unreachable("TODO");
 						case Float:
 							return DataSize::Bytes(4);
 						case Double:
@@ -262,6 +270,8 @@ namespace llvm_abi {
 				}
 				case FloatingPointType: {
 					switch (type.floatingPointKind()) {
+						case HalfFloat:
+							llvm_unreachable("TODO");
 						case Float:
 							return llvm::Type::getFloatTy(llvmContext_);
 						case Double:

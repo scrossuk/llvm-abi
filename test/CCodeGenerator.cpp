@@ -88,6 +88,8 @@ namespace llvm_abi {
 				}
 			case FloatingPointType:
 				switch (type.floatingPointKind()) {
+					case HalfFloat:
+						llvm_unreachable("TODO");
 					case Float:
 						return "float";
 					case Double:
@@ -100,6 +102,8 @@ namespace llvm_abi {
 				llvm_unreachable("Unknown floating point type.");
 			case ComplexType:
 				switch (type.complexKind()) {
+					case HalfFloat:
+						llvm_unreachable("TODO");
 					case Float:
 						return "float _Complex";
 					case Double:

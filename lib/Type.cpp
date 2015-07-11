@@ -758,6 +758,8 @@ namespace llvm_abi {
 	
 	static std::string floatKindToString(FloatingPointKind kind) {
 		switch (kind) {
+			case HalfFloat:
+				return "HalfFloat";
 			case Float:
 				return "Float";
 			case Double:

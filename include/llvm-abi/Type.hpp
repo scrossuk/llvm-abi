@@ -41,6 +41,7 @@ namespace llvm_abi {
 	 * A set of possible floating point types.
 	 */
 	enum FloatingPointKind {
+		HalfFloat,
 		Float,
 		Double,
 		LongDouble,
@@ -529,6 +530,7 @@ namespace llvm_abi {
 	static const Type Int128Ty = Type::FixedWidthInteger(DataSize::Bits(128), /*isSigned=*/true);
 	static const Type UInt128Ty = Type::FixedWidthInteger(DataSize::Bits(128), /*isSigned=*/false);
 	
+	static const Type HalfFloatTy = Type::FloatingPoint(HalfFloat);
 	static const Type FloatTy = Type::FloatingPoint(Float);
 	static const Type DoubleTy = Type::FloatingPoint(Double);
 	static const Type LongDoubleTy = Type::FloatingPoint(LongDouble);
