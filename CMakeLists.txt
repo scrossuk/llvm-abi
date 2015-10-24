@@ -125,15 +125,41 @@ add_subdirectory(test)
 
 set(LLVMABI_PUBLIC_HEADERS
 	include/llvm-abi/ABI.hpp
+	include/llvm-abi/ABITypeInfo.hpp
+	include/llvm-abi/ArgInfo.hpp
+	include/llvm-abi/ArgumentIRMapping.hpp
 	include/llvm-abi/Builder.hpp
+	include/llvm-abi/Callee.hpp
+	include/llvm-abi/Caller.hpp
 	include/llvm-abi/CallingConvention.hpp
-	include/llvm-abi/Context.hpp
+	include/llvm-abi/DataSize.hpp
 	include/llvm-abi/FunctionEncoder.hpp
+	include/llvm-abi/FunctionIRMapping.hpp
 	include/llvm-abi/FunctionType.hpp
-	include/llvm-abi/Support.hpp
 	include/llvm-abi/Type.hpp
+	include/llvm-abi/TypeBuilder.hpp
+	include/llvm-abi/TypedValue.hpp
+	include/llvm-abi/TypePromoter.hpp
 )
 
 install(FILES ${LLVMABI_PUBLIC_HEADERS}
 	DESTINATION "include/llvm-abi"
+)
+
+set(LLVMABI_X86_PUBLIC_HEADERS
+	include/llvm-abi/x86/ArgClass.hpp
+	include/llvm-abi/x86/Classification.hpp
+	include/llvm-abi/x86/Classifier.hpp
+	include/llvm-abi/x86/CPUFeatures.hpp
+	include/llvm-abi/x86/CPUKind.hpp
+	include/llvm-abi/x86/Win64ABI.hpp
+	include/llvm-abi/x86/X86_32ABI.hpp
+	include/llvm-abi/x86/X86_32ABITypeInfo.hpp
+	include/llvm-abi/x86/X86_32Classifier.hpp
+	include/llvm-abi/x86/X86_64ABI.hpp
+	include/llvm-abi/x86/X86_64ABITypeInfo.hpp
+)
+
+install(FILES ${LLVMABI_X86_PUBLIC_HEADERS}
+	DESTINATION "include/llvm-abi/x86"
 )
