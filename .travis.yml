@@ -58,8 +58,9 @@ before_script:
   - cd build
 
 script:
-  - cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+  - cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DCMAKE_INSTALL_PREFIX=./artifacts/llvm-abi ..
   - make && ctest --output-on-failure
+  - make install
 
 env:
   # Build with LLVM 3.3.
