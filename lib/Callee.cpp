@@ -667,7 +667,6 @@ namespace llvm_abi {
 				const auto indirectArg = encodedArguments[argIndex];
 				
 				// Value is returned by storing it into the struct-ret pointer argument.
-				assert(indirectArg->getType() == returnValue->getType()->getPointerTo());
 				builder_.getBuilder().CreateStore(returnValue, indirectArg);
 				
 				// (Nothing is returned by-value.)

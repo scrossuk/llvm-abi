@@ -465,8 +465,6 @@ namespace llvm_abi {
 			(void) isVarArgArgument;
 			assert(isVarArgArgument || argumentType == functionType_.argumentTypes()[argumentNumber]);
 			
-			assert(argumentValue->getType() == typeInfo_.getLLVMType(argumentType));
-			
 			if (functionIRMapping_.hasPaddingArg(argumentNumber)) {
 				irCallArgs[functionIRMapping_.paddingArgIndex(argumentNumber)] =
 					llvm::UndefValue::get(typeInfo_.getLLVMType(argInfo.getPaddingType()));
@@ -562,7 +560,6 @@ namespace llvm_abi {
 						                          "coerce.arg.source");
 						builder_.getBuilder().CreateStore(argumentValue, sourcePtr);
 					} else {
-						assert(argumentValue->getType() == typeInfo_.getLLVMType(argumentType)->getPointerTo());
 						sourcePtr = argumentValue;
 					}
 					
@@ -659,7 +656,6 @@ namespace llvm_abi {
 				return loadInst;
 			}
 			case ArgInfo::Ignore: {
-				assert(encodedReturnValue->getType()->isVoidTy());
 				return encodedReturnValue;
 			}
 			case ArgInfo::ExtendInteger:
