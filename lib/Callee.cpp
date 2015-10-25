@@ -30,6 +30,16 @@ namespace llvm_abi {
 		return allocaInst;
 	}
 	
+	static
+	llvm::StoreInst* createStore(llvm::IRBuilder<>& builder,
+	                             llvm::Value* const value,
+	                             llvm::Value* const ptr) {
+		assert(ptr->getType()->isPointerTy());
+		const auto castPtr = builder.CreatePointerCast(ptr,
+		                                               value->getType()->getPointerTo());
+		return builder.CreateStore(value, castPtr);
+	}
+	
 	/// EnterStructPointerForCoercedAccess - Given a struct pointer that we are
 	/// accessing some number of bytes out of it, try to gep into the struct to get
 	/// at its inner goodness. Dive as deep as possible without entering an element
@@ -233,14 +243,14 @@ namespace llvm_abi {
 			for (unsigned i = 0, e = structType->getNumElements(); i != e; ++i) {
 				const auto elementPtr = builder.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
 				const auto element = builder.getBuilder().CreateExtractValue(source, i);
-				const auto storeInst = builder.getBuilder().CreateStore(element,
+				const auto storeInst = createStore(builder.getBuilder(), element,
 				                                                        elementPtr);
 				if (lowAlignment) {
 					storeInst->setAlignment(1);
 				}
 			}
 		} else {
-			const auto storeInst = builder.getBuilder().CreateStore(source,
+			const auto storeInst = createStore(builder.getBuilder(), source,
 			                                                        destPtr);
 			if (lowAlignment) {
 				storeInst->setAlignment(1);
@@ -260,7 +270,7 @@ namespace llvm_abi {
 	                               const Type sourceType,
 	                               Type destType) {
 		if (typeInfo.getLLVMType(sourceType) == typeInfo.getLLVMType(destType)) {
-			builder.getBuilder().CreateStore(source, destPtr);
+			createStore(builder.getBuilder(), source, destPtr);
 			return;
 		}
 		
@@ -285,7 +295,7 @@ namespace llvm_abi {
 			                                                    source,
 			                                                    sourceType,
 			                                                    destType);
-			builder.getBuilder().CreateStore(coercedSource, destPtr);
+			createStore(builder.getBuilder(), coercedSource, destPtr);
 			return;
 		}
 		
@@ -316,7 +326,7 @@ namespace llvm_abi {
 			                                         builder,
 			                                         sourceType,
 			                                         "coerce.mem.store");
-			builder.getBuilder().CreateStore(source, tempAlloca);
+			createStore(builder.getBuilder(), source, tempAlloca);
 			const auto i8PtrType = builder.getBuilder().getInt8PtrTy();
 			const auto casted = builder.getBuilder().CreateBitCast(tempAlloca, i8PtrType);
 			const auto destCasted = builder.getBuilder().CreateBitCast(destPtr, i8PtrType);
@@ -396,7 +406,7 @@ namespace llvm_abi {
 			llvm_unreachable("TODO");
 		} else {
 			const auto value = *iterator++;
-			const auto storeInst = builder.getBuilder().CreateStore(value, alloca);
+			const auto storeInst = createStore(builder.getBuilder(), value, alloca);
 			storeInst->setAlignment(typeInfo.getTypeRequiredAlign(type).asBytes());
 		}
 	}
@@ -567,7 +577,7 @@ namespace llvm_abi {
 								const auto argValue = encodedArguments[firstIRArg + i];
 								argValue->setName("coerce" + llvm::Twine(i));
 								const auto elementPtr = builder_.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
-								builder_.getBuilder().CreateStore(argValue, elementPtr);
+								createStore(builder_.getBuilder(), argValue, elementPtr);
 							}
 						} else {
 							const auto tempAlloca = createTempAlloca(typeInfo_,
@@ -580,7 +590,7 @@ namespace llvm_abi {
 								const auto argValue = encodedArguments[firstIRArg + i];
 								argValue->setName("coerce" + llvm::Twine(i));
 								const auto elementPtr = builder_.getBuilder().CreateConstGEP2_32(tempAlloca, 0, i);
-								builder_.getBuilder().CreateStore(argValue, elementPtr);
+								createStore(builder_.getBuilder(), argValue, elementPtr);
 							}
 							
 							builder_.getBuilder().CreateMemCpy(destPtr,
@@ -667,7 +677,7 @@ namespace llvm_abi {
 				const auto indirectArg = encodedArguments[argIndex];
 				
 				// Value is returned by storing it into the struct-ret pointer argument.
-				builder_.getBuilder().CreateStore(returnValue, indirectArg);
+				createStore(builder_.getBuilder(), returnValue, indirectArg);
 				
 				// (Nothing is returned by-value.)
 				return llvm::UndefValue::get(typeInfo_.getLLVMType(VoidTy));
@@ -691,7 +701,7 @@ namespace llvm_abi {
 					                                       builder_,
 					                                       returnType,
 					                                       "coerce");
-					const auto storeInst = builder_.getBuilder().CreateStore(returnValue, sourcePtr);
+					const auto storeInst = createStore(builder_.getBuilder(), returnValue, sourcePtr);
 					storeInst->setAlignment(typeInfo_.getTypeRequiredAlign(returnType).asBytes());
 					
 					auto sourceType = returnType;

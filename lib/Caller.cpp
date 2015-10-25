@@ -30,6 +30,16 @@ namespace llvm_abi {
 		return allocaInst;
 	}
 	
+	static
+	llvm::StoreInst* createStore(llvm::IRBuilder<>& builder,
+	                             llvm::Value* const value,
+	                             llvm::Value* const ptr) {
+		assert(ptr->getType()->isPointerTy());
+		const auto castPtr = builder.CreatePointerCast(ptr,
+		                                               value->getType()->getPointerTo());
+		return builder.CreateStore(value, castPtr);
+	}
+	
 	Caller::Caller(const ABITypeInfo& typeInfo,
 	               const FunctionType& functionType,
 	               const FunctionIRMapping& functionIRMapping,
@@ -242,15 +252,16 @@ namespace llvm_abi {
 			for (unsigned i = 0, e = structType->getNumElements(); i != e; ++i) {
 				const auto elementPtr = builder.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
 				const auto element = builder.getBuilder().CreateExtractValue(source, i);
-				const auto storeInst = builder.getBuilder().CreateStore(element,
-				                                                        elementPtr);
+				const auto storeInst = createStore(builder.getBuilder(),
+				                                   element,
+				                                   elementPtr);
 				if (lowAlignment) {
 					storeInst->setAlignment(1);
 				}
 			}
 		} else {
-			const auto storeInst = builder.getBuilder().CreateStore(source,
-			                                                        destPtr);
+			const auto storeInst = createStore(builder.getBuilder(),
+			                                   source, destPtr);
 			if (lowAlignment) {
 				storeInst->setAlignment(1);
 			}
@@ -269,7 +280,7 @@ namespace llvm_abi {
 	                               const Type sourceType,
 	                               Type destType) {
 		if (typeInfo.getLLVMType(sourceType) == typeInfo.getLLVMType(destType)) {
-			builder.getBuilder().CreateStore(source, destPtr);
+			createStore(builder.getBuilder(), source, destPtr);
 			return;
 		}
 		
@@ -294,7 +305,7 @@ namespace llvm_abi {
 			                                                    source,
 			                                                    sourceType,
 			                                                    destType);
-			builder.getBuilder().CreateStore(coercedSource, destPtr);
+			createStore(builder.getBuilder(), coercedSource, destPtr);
 			return;
 		}
 		
@@ -325,7 +336,7 @@ namespace llvm_abi {
 			                                         builder,
 			                                         sourceType,
 			                                         "coerce.mem.store");
-			builder.getBuilder().CreateStore(source, tempAlloca);
+			createStore(builder.getBuilder(), source, tempAlloca);
 			const auto i8PtrType = builder.getBuilder().getInt8PtrTy();
 			const auto casted = builder.getBuilder().CreateBitCast(tempAlloca, i8PtrType);
 			const auto destCasted = builder.getBuilder().CreateBitCast(destPtr, i8PtrType);
@@ -447,7 +458,7 @@ namespace llvm_abi {
 				assert(argMemory != nullptr);
 				llvm::Value* const address =
 					builder_.getBuilder().CreateStructGEP(argMemory, returnArgInfo.getInAllocaFieldIndex());
-				builder_.getBuilder().CreateStore(structRetPtr, address);
+				createStore(builder_.getBuilder(), structRetPtr, address);
 			}
 		}
 		
@@ -500,7 +511,9 @@ namespace llvm_abi {
 						}
 						irCallArgs[firstIRArg] = allocaInst;
 						
-						const auto storeInst = builder_.getBuilder().CreateStore(argumentValue, allocaInst);
+						const auto storeInst = createStore(builder_.getBuilder(),
+						                                   argumentValue,
+						                                   allocaInst);
 						storeInst->setAlignment(allocaInst->getAlignment());
 					} else {
 						// We want to avoid creating an unnecessary temporary+copy here;
@@ -558,7 +571,8 @@ namespace llvm_abi {
 						                          builder_,
 						                          argumentType,
 						                          "coerce.arg.source");
-						builder_.getBuilder().CreateStore(argumentValue, sourcePtr);
+						createStore(builder_.getBuilder(),
+						            argumentValue, sourcePtr);
 					} else {
 						sourcePtr = argumentValue;
 					}
@@ -621,7 +635,8 @@ namespace llvm_abi {
 					                                  argumentType,
 					                                  "expand.source.arg");
 					
- 					const auto storeInst = builder_.getBuilder().CreateStore(argumentValue, alloca);
+					const auto storeInst = createStore(builder_.getBuilder(),
+					                                   argumentValue, alloca);
 					storeInst->setAlignment(typeInfo_.getTypeRequiredAlign(argumentType).asBytes());
 					
 					auto iterator = irCallArgs.begin() + firstIRArg;
