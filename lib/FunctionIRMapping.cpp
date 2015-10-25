@@ -252,7 +252,7 @@ namespace llvm_abi {
 			}
 			
 			case ArgInfo::Ignore:
-				resultType = llvm::Type::getVoidTy(context);
+				resultType = typeInfo.getLLVMType(functionType.returnType());
 				break;
 		}
 		
