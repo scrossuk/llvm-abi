@@ -108,6 +108,10 @@ namespace llvm_abi {
 		                                    const FunctionType& functionType,
 		                                    std::function<llvm::Value* (llvm::ArrayRef<llvm::Value*>)> callBuilder,
 		                                    llvm::ArrayRef<TypedValue> rawArguments) const {
+			for (size_t i = 0; i < rawArguments.size(); i++) {
+				assert(i >= functionType.argumentTypes().size() ||
+				       rawArguments[i].type() == functionType.argumentTypes()[i]);
+			}
 			
 			TypePromoter typePromoter(typeInfo());
 			
