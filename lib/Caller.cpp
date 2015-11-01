@@ -45,7 +45,10 @@ namespace llvm_abi {
 		}
 		
 		// GEP into the first element.
-		const auto diveSourcePtr = builder.getBuilder().CreateConstGEP2_32(sourcePtr, 0, 0, "coerce.dive");
+		const auto diveSourcePtr = createConstGEP2_32(builder,
+		                                              typeInfo.getLLVMType(sourceStructType),
+		                                              sourcePtr,
+		                                              0, 0, "coerce.dive");
 		
 		// If the first element is a struct, recurse.
 		if (firstElementType.isStruct()) {
@@ -218,7 +221,8 @@ namespace llvm_abi {
 		// Prefer scalar stores to first-class aggregate stores.
 		if (const auto structType = llvm::dyn_cast<llvm::StructType>(source->getType())) {
 			for (unsigned i = 0, e = structType->getNumElements(); i != e; ++i) {
-				const auto elementPtr = builder.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
+				const auto elementPtr = createConstGEP2_32(builder, structType,
+				                                           destPtr, 0, i);
 				const auto element = builder.getBuilder().CreateExtractValue(source, i);
 				const auto storeInst = createStore(builder.getBuilder(),
 				                                   element,
@@ -326,7 +330,10 @@ namespace llvm_abi {
 		
 		if (type.isArray()) {
 			for (size_t i = 0; i < type.arrayElementCount(); i++) {
-				const auto elementAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto elementAddress = createConstGEP2_32(builder,
+				                                               typeInfo.getLLVMType(type),
+				                                               alloca,
+				                                               0, i);
 				const auto elementIRType = typeInfo.getLLVMType(type.arrayElementType());
 				const auto castAddress = builder.getBuilder().CreateBitCast(elementAddress, elementIRType->getPointerTo());
 				expandTypeToArgs(typeInfo, builder, type,
@@ -345,7 +352,10 @@ namespace llvm_abi {
 				}
 				assert(!field.isBitField() &&
  				       "Cannot expand structure with bit-field members.");
-				const auto fieldAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto fieldAddress = createConstGEP2_32(builder,
+				                                             typeInfo.getLLVMType(type),
+				                                             alloca,
+				                                             0, i);
 				expandTypeToArgs(typeInfo, builder,
 				                 field.type(), fieldAddress,
 				                 iterator);
@@ -425,7 +435,8 @@ namespace llvm_abi {
 			} else {
 				assert(argMemory != nullptr);
 				llvm::Value* const address =
-					builder_.getBuilder().CreateStructGEP(argMemory, returnArgInfo.getInAllocaFieldIndex());
+					createStructGEP(builder_, argMemory->getType()->getPointerElementType(),
+					                argMemory, returnArgInfo.getInAllocaFieldIndex());
 				createStore(builder_.getBuilder(), structRetPtr, address);
 			}
 		}
@@ -579,7 +590,10 @@ namespace llvm_abi {
 						assert(numIRArgs == coerceType.structMembers().size());
 						
 						for (size_t i = 0; i < numIRArgs; i++) {
-							const auto elementPtr = builder_.getBuilder().CreateConstGEP2_32(sourcePtr, 0, i);
+							const auto elementPtr = createConstGEP2_32(builder_,
+							                                           typeInfo_.getLLVMType(coerceType),
+							                                           sourcePtr,
+							                                           0, i);
 							const auto loadInst = builder_.getBuilder().CreateLoad(elementPtr);
 							// We don't know what we're loading from.
 							loadInst->setAlignment(1);

@@ -35,7 +35,9 @@ namespace llvm_abi {
 		}
 		
 		// GEP into the first element.
-		const auto diveSourcePtr = builder.getBuilder().CreateConstGEP2_32(sourcePtr, 0, 0, "coerce.dive");
+		const auto diveSourcePtr = createConstGEP2_32(builder, typeInfo.getLLVMType(sourceStructType),
+		                                              sourcePtr,
+		                                              0, 0, "coerce.dive");
 		
 		// If the first element is a struct, recurse.
 		if (firstElementType.isStruct()) {
@@ -208,7 +210,8 @@ namespace llvm_abi {
 		// Prefer scalar stores to first-class aggregate stores.
 		if (const auto structType = llvm::dyn_cast<llvm::StructType>(source->getType())) {
 			for (unsigned i = 0, e = structType->getNumElements(); i != e; ++i) {
-				const auto elementPtr = builder.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
+				const auto elementPtr = createConstGEP2_32(builder, structType,
+				                                           destPtr, 0, i);
 				const auto element = builder.getBuilder().CreateExtractValue(source, i);
 				const auto storeInst = createStore(builder.getBuilder(), element,
 				                                                        elementPtr);
@@ -315,7 +318,8 @@ namespace llvm_abi {
 		
 		if (type.isArray()) {
 			for (size_t i = 0; i < type.arrayElementCount(); i++) {
-				const auto elementAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto elementAddress = createConstGEP2_32(builder, typeInfo.getLLVMType(type),
+				                                               alloca, 0, i);
 				const auto elementIRType = typeInfo.getLLVMType(type.arrayElementType());
 				const auto castAddress = builder.getBuilder().CreateBitCast(elementAddress, elementIRType->getPointerTo());
 				expandTypeFromArgs(typeInfo, builder, type,
@@ -334,7 +338,8 @@ namespace llvm_abi {
 				}
 				assert(!field.isBitField() &&
  				       "Cannot expand structure with bit-field members.");
-				const auto fieldAddress = builder.getBuilder().CreateConstGEP2_32(alloca, 0, i);
+				const auto fieldAddress = createConstGEP2_32(builder, typeInfo.getLLVMType(type),
+				                                             alloca, 0, i);
 				expandTypeFromArgs(typeInfo, builder,
 				                   field.type(), fieldAddress,
 				                   iterator);
@@ -417,9 +422,11 @@ namespace llvm_abi {
 			switch (argInfo.getKind()) {
 				case ArgInfo::InAlloca: {
 					assert(numIRArgs == 0);
-					const auto value = builder_.getBuilder().CreateStructGEP(argStruct,
-					                                                         argInfo.getInAllocaFieldIndex(),
-					                                                         "inalloca.arg");
+					const auto value = createStructGEP(builder_,
+					                                   argStruct->getType()->getPointerElementType(),
+					                                   argStruct,
+					                                   argInfo.getInAllocaFieldIndex(),
+					                                   "inalloca.arg");
 					arguments.push_back(value);
 					break;
 				}
@@ -543,7 +550,10 @@ namespace llvm_abi {
 							for (size_t i = 0; i < coerceType.structMembers().size(); i++) {
 								const auto argValue = encodedArguments[firstIRArg + i];
 								argValue->setName("coerce" + llvm::Twine(i));
-								const auto elementPtr = builder_.getBuilder().CreateConstGEP2_32(destPtr, 0, i);
+								const auto elementPtr = createConstGEP2_32(builder_,
+								                                           typeInfo_.getLLVMType(coerceType),
+								                                           destPtr,
+								                                           0, i);
 								createStore(builder_.getBuilder(), argValue, elementPtr);
 							}
 						} else {
@@ -556,7 +566,10 @@ namespace llvm_abi {
 							for (size_t i = 0; i < coerceType.structMembers().size(); i++) {
 								const auto argValue = encodedArguments[firstIRArg + i];
 								argValue->setName("coerce" + llvm::Twine(i));
-								const auto elementPtr = builder_.getBuilder().CreateConstGEP2_32(tempAlloca, 0, i);
+								const auto elementPtr = createConstGEP2_32(builder_,
+								                                           typeInfo_.getLLVMType(coerceType),
+								                                           tempAlloca,
+								                                           0, i);
 								createStore(builder_.getBuilder(), argValue, elementPtr);
 							}
 							
@@ -631,8 +644,10 @@ namespace llvm_abi {
 				// Sometimes we need to return the sret value in a register, though.
 				if (returnArgInfo.getInAllocaSRet()) {
 					const auto argStruct = encodedArguments.back();
-					const auto structRet = builder_.getBuilder().CreateStructGEP(argStruct,
-					                                                             returnArgInfo.getInAllocaFieldIndex());
+					const auto structRet = createStructGEP(builder_,
+					                                       argStruct->getType()->getPointerElementType(),
+					                                       argStruct,
+					                                       returnArgInfo.getInAllocaFieldIndex());
 					return builder_.getBuilder().CreateLoad(structRet, "sret");
 				} else {
 					return llvm::UndefValue::get(typeInfo_.getLLVMType(VoidTy));
