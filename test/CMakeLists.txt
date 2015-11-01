@@ -19,6 +19,7 @@ target_link_libraries(ParseTest
 
 # Search for Clang so we can compare against its output.
 set(CLANG_BINARY_SEARCH_NAMES
+	clang-3.7
 	clang-3.6
 	clang-3.5
 	clang-3.4
