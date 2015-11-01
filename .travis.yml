@@ -29,13 +29,11 @@ before_install:
   - sudo add-apt-repository --yes ppa:h-rayflood/llvm
 
 install:
-  - sudo apt-get update
-
   # Install package dependencies.
   # (Re-run this command a few times to handle handle random failures.)
   -
     for i in {1..5}; do
-      if sudo apt-get install -y $LLVM_PACKAGE "clang-$CLANG_VERSION" libconfig++8-dev; then
+      if sudo apt-get update && sudo apt-get install -y $LLVM_PACKAGE "clang-$CLANG_VERSION" libconfig++8-dev; then
         break;
       fi;
       sleep 1;
