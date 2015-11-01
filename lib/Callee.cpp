@@ -1,44 +1,11 @@
-
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/Builder.hpp>
 #include <llvm-abi/Callee.hpp>
 #include <llvm-abi/FunctionIRMapping.hpp>
 #include <llvm-abi/FunctionType.hpp>
+#include <llvm-abi/LLVMUtils.hpp>
 
 namespace llvm_abi {
-	
-	static
-	llvm::AllocaInst* createTempAlloca(const ABITypeInfo& typeInfo,
-	                                   Builder& builder,
-	                                   const Type type,
-	                                   const llvm::Twine& name = "") {
-		const auto allocaInst = builder.getEntryBuilder().CreateAlloca(typeInfo.getLLVMType(type));
-		allocaInst->setName(name);
-		return allocaInst;
-	}
-	
-	static
-	llvm::AllocaInst* createMemTemp(const ABITypeInfo& typeInfo,
-	                                Builder& builder,
-	                                const Type type,
-	                                const llvm::Twine& name = "") {
-		const auto allocaInst = createTempAlloca(typeInfo,
-		                                         builder,
-		                                         type,
-		                                         name);
-		allocaInst->setAlignment(typeInfo.getTypeRequiredAlign(type).asBytes());
-		return allocaInst;
-	}
-	
-	static
-	llvm::StoreInst* createStore(llvm::IRBuilder<>& builder,
-	                             llvm::Value* const value,
-	                             llvm::Value* const ptr) {
-		assert(ptr->getType()->isPointerTy());
-		const auto castPtr = builder.CreatePointerCast(ptr,
-		                                               value->getType()->getPointerTo());
-		return builder.CreateStore(value, castPtr);
-	}
 	
 	/// EnterStructPointerForCoercedAccess - Given a struct pointer that we are
 	/// accessing some number of bytes out of it, try to gep into the struct to get

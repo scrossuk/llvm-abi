@@ -3,6 +3,7 @@ add_library(llvm-abi
 	Callee.cpp
 	Caller.cpp
 	FunctionIRMapping.cpp
+	LLVMUtils.cpp
 	Type.cpp
 	TypeBuilder.cpp
 	TypePromoter.cpp
