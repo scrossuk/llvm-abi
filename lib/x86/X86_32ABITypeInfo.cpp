@@ -303,7 +303,7 @@ namespace llvm_abi {
 							maxSizeLLVMType = getLLVMType(member);
 						}
 					}
-					return maxSizeLLVMType;
+					return llvm::StructType::get(maxSizeLLVMType, nullptr);
 				}
 				case ArrayType: {
 					return llvm::ArrayType::get(getLLVMType(type.arrayElementType()),
