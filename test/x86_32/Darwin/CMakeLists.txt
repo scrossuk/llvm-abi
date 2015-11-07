@@ -1,4 +1,5 @@
 
+add_x86_32_call_test(DarwinReturnStructFloatUnionEmpty)
 add_x86_32_call_test(DarwinReturnStructVector1Double)
 add_x86_32_call_test(DarwinReturnStructVector1LongLong)
 add_x86_32_call_test(DarwinReturnStructVector2Double)
