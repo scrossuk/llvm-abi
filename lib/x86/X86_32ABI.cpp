@@ -180,7 +180,7 @@ namespace llvm_abi {
 			        functionType,
 			        functionIRMapping_,
 			        builder),
-			encodedArguments_(pArguments),
+			encodedArguments_(pArguments.begin(), pArguments.end()),
 			arguments_(callee_.decodeArguments(pArguments)) { }
 			
 			llvm::ArrayRef<llvm::Value*> arguments() const {
@@ -206,7 +206,7 @@ namespace llvm_abi {
 			Builder& builder_;
 			FunctionIRMapping functionIRMapping_;
 			Callee callee_;
-			llvm::ArrayRef<llvm::Value*> encodedArguments_;
+			llvm::SmallVector<llvm::Value*, 8> encodedArguments_;
 			llvm::SmallVector<llvm::Value*, 8> arguments_;
 			
 		};
