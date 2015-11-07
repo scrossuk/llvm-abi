@@ -406,8 +406,8 @@ namespace llvm_abi {
 				// Constant arrays of zero length always count as empty.
 				if (allowArrays) {
 					while (fieldType.isArray()) {
-						if (fieldType.arrayElementCount() != 1) {
-							break;
+						if (fieldType.arrayElementCount() == 0) {
+							return true;
 						}
 						fieldType = fieldType.arrayElementType();
 					}
