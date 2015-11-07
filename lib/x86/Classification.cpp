@@ -110,7 +110,7 @@ namespace llvm_abi {
 				case UnionType: {
 					for (const auto& member: type.unionMembers()) {
 						classifyType(typeInfo,
-						             member,
+						             member.type(),
 						             offset,
 						             isNamedArg);
 					}

@@ -68,7 +68,7 @@ namespace llvm_abi {
 	
 	// Forward declaration.
 	class ABITypeInfo;
-	class StructMember;
+	class RecordMember;
 	class TypeBuilder;
 	
 	/**
@@ -112,7 +112,7 @@ namespace llvm_abi {
 			/**
 			 * \brief Struct Type
 			 */
-			static Type Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<StructMember> members);
+			static Type Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members);
 			
 			/**
 			 * \brief Auto-aligned Struct Type
@@ -172,11 +172,11 @@ namespace llvm_abi {
 			
 			bool isStruct() const;
 			
-			llvm::ArrayRef<StructMember> structMembers() const;
+			llvm::ArrayRef<RecordMember> structMembers() const;
 			
 			bool isUnion() const;
 			
-			llvm::ArrayRef<Type> unionMembers() const;
+			llvm::ArrayRef<RecordMember> unionMembers() const;
 			
 			bool hasFlexibleArrayMember() const;
 			
@@ -210,6 +210,17 @@ namespace llvm_abi {
 			 * \return Whether type is 'aggregate'.
 			 */
 			bool isAggregateType() const;
+			
+			/**
+			 * \brief Query whether type is a record type.
+			 * 
+			 * Record types are structs or unions.
+			 * 
+			 * \return Whether type is a record type.
+			 */
+			bool isRecordType() const;
+			
+			llvm::ArrayRef<RecordMember> recordMembers() const;
 			
 			/**
 			 * \brief Query whether type is a promotable integer.
@@ -323,17 +334,17 @@ namespace llvm_abi {
 	};
 	
 	/**
-	 * \brief ABI Struct Member
+	 * \brief ABI Record Member
 	 */
-	class StructMember {
+	class RecordMember {
 		public:
-			static StructMember AutoOffset(const Type type) {
-				return StructMember(type, DataSize::Bytes(0));
+			static RecordMember AutoOffset(const Type type) {
+				return RecordMember(type, DataSize::Bytes(0));
 			}
 			
-			static StructMember ForceOffset(const Type type,
+			static RecordMember ForceOffset(const Type type,
 			                                const DataSize offset) {
-				return StructMember(type, offset);
+				return RecordMember(type, offset);
 			}
 			
 			Type type() const {
@@ -360,7 +371,7 @@ namespace llvm_abi {
 				return isBitField() && !isNamed();
 			}
 			
-			StructMember asNamedBitField(const DataSize width) const {
+			RecordMember asNamedBitField(const DataSize width) const {
 				assert(!isBitField() && !isNamed());
 				auto copy = *this;
 				copy.isBitField_ = true;
@@ -369,7 +380,7 @@ namespace llvm_abi {
 				return copy;
 			}
 			
-			StructMember asUnnamedBitField(const DataSize width) const {
+			RecordMember asUnnamedBitField(const DataSize width) const {
 				assert(!isBitField() && !isNamed());
 				auto copy = *this;
 				copy.isBitField_ = true;
@@ -402,14 +413,14 @@ namespace llvm_abi {
 					}
 				}
 				
-				if (!fieldType.isStruct()) {
+				if (!fieldType.isRecordType()) {
 					return false;
 				}
 				
 				return fieldType.isEmptyRecord(allowArrays);
 			}
 			
-			bool operator==(const StructMember& other) const {
+			bool operator==(const RecordMember& other) const {
 				return type() == other.type() &&
 				       offset() == other.offset() &&
 				       isBitField() == other.isBitField() &&
@@ -417,7 +428,7 @@ namespace llvm_abi {
 				       isNamed() == other.isNamed();
 			}
 			
-			bool operator<(const StructMember& other) const {
+			bool operator<(const RecordMember& other) const {
 				if (type() != other.type()) {
 					return type() < other.type();
 				}
@@ -442,7 +453,7 @@ namespace llvm_abi {
 			}
 			
 		private:
-			StructMember(const Type pType,
+			RecordMember(const Type pType,
 			             const DataSize pOffset)
 			: type_(pType), offset_(pOffset),
 			isBitField_(false),
@@ -459,12 +470,8 @@ namespace llvm_abi {
 	
 	struct Type::TypeData {
 		struct {
-			llvm::SmallVector<StructMember, 8> members;
-		} structType;
-		
-		struct {
-			llvm::SmallVector<Type, 8> members;
-		} unionType;
+			llvm::SmallVector<RecordMember, 8> members;
+		} recordType;
 		
 		struct ArrayTypeData {
 			size_t elementCount;
@@ -483,12 +490,8 @@ namespace llvm_abi {
 		} vectorType;
 		
 		bool operator<(const TypeData& other) const {
-			if (structType.members != other.structType.members) {
-				return structType.members < other.structType.members;
-			}
-			
-			if (unionType.members != other.unionType.members) {
-				return unionType.members < other.unionType.members;
+			if (recordType.members != other.recordType.members) {
+				return recordType.members < other.recordType.members;
 			}
 			
 			if (arrayType.elementCount != other.arrayType.elementCount) {

@@ -79,7 +79,8 @@ namespace llvm_abi {
 		 * \param structMembers The member types of the struct.
 		 * \return The offsets of each member of the struct.
 		 */
-		virtual llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const = 0;
+		virtual llvm::SmallVector<DataSize, 8>
+		calculateStructOffsets(llvm::ArrayRef<RecordMember> structMembers) const = 0;
 		
 		/**
 		 * \brief Queries whether vector type is legal for target.

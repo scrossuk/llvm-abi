@@ -368,16 +368,16 @@ namespace llvm_abi {
 			
 			for (const auto field: type.unionMembers()) {
 				// Skip zero length bitfields.
-// 				if (field.isBitField() &&
-// 				    field.bitFieldWidth().asBits() == 0) {
-// 					continue;
-// 				}
-// 				assert(!field.isBitField() &&
-// 				       "Cannot expand structure with bit-field members.");
-				const auto fieldSize = typeInfo.getTypeAllocSize(field);
+				if (field.isBitField() &&
+				    field.bitFieldWidth().asBits() == 0) {
+					continue;
+				}
+				assert(!field.isBitField() &&
+				       "Cannot expand structure with bit-field members.");
+				const auto fieldSize = typeInfo.getTypeAllocSize(field.type());
 				if (largestSize < fieldSize) {
 					largestSize = fieldSize;
-					largestType = field;
+					largestType = field.type();
 				}
 			}
 			

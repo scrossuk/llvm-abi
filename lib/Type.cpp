@@ -45,9 +45,9 @@ namespace llvm_abi {
 		return type;
 	}
 	
-	Type Type::Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<StructMember> members) {
+	Type Type::Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members) {
 		TypeData typeData;
-		typeData.structType.members = llvm::SmallVector<StructMember, 8>(members.begin(), members.end());
+		typeData.recordType.members = llvm::SmallVector<RecordMember, 8>(members.begin(), members.end());
 		
 		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
 		
@@ -58,9 +58,9 @@ namespace llvm_abi {
 	
 	Type Type::AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
 		TypeData typeData;
-		typeData.structType.members.reserve(memberTypes.size());
+		typeData.recordType.members.reserve(memberTypes.size());
 		for (auto& memberType: memberTypes) {
-			typeData.structType.members.push_back(StructMember::AutoOffset(memberType));
+			typeData.recordType.members.push_back(RecordMember::AutoOffset(memberType));
 		}
 		
 		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
@@ -72,7 +72,10 @@ namespace llvm_abi {
 	
 	Type Type::Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
 		TypeData typeData;
-		typeData.unionType.members = llvm::SmallVector<Type, 8>(memberTypes.begin(), memberTypes.end());
+		typeData.recordType.members.reserve(memberTypes.size());
+		for (auto& memberType: memberTypes) {
+			typeData.recordType.members.push_back(RecordMember::AutoOffset(memberType));
+		}
 		
 		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
 		
@@ -252,18 +255,18 @@ namespace llvm_abi {
 		return kind() == StructType;
 	}
 	
-	llvm::ArrayRef<StructMember> Type::structMembers() const {
+	llvm::ArrayRef<RecordMember> Type::structMembers() const {
 		assert(isStruct());
-		return subKind_.uniquedPointer->structType.members;
+		return subKind_.uniquedPointer->recordType.members;
 	}
 	
 	bool Type::isUnion() const {
 		return kind() == UnionType;
 	}
 	
-	llvm::ArrayRef<Type> Type::unionMembers() const {
+	llvm::ArrayRef<RecordMember> Type::unionMembers() const {
 		assert(isUnion());
-		return subKind_.uniquedPointer->unionType.members;
+		return subKind_.uniquedPointer->recordType.members;
 	}
 	
 	bool Type::isArray() const {
@@ -305,7 +308,7 @@ namespace llvm_abi {
 			       lastMember.arrayElementCount() == 0;
 		} else if (isUnion()) {
 			for (const auto& member: unionMembers()) {
-				if (member.hasFlexibleArrayMember()) {
+				if (member.type().hasFlexibleArrayMember()) {
 					return true;
 				}
 			}
@@ -328,6 +331,16 @@ namespace llvm_abi {
 		       isUnion();
 	}
 	
+	bool Type::isRecordType() const {
+		return isStruct() ||
+		       isUnion();
+	}
+	
+	llvm::ArrayRef<RecordMember> Type::recordMembers() const {
+		assert(isRecordType());
+		return isStruct() ? structMembers() : unionMembers();
+	}
+	
 	bool Type::isPromotableIntegerType() const {
 		return *this == BoolTy ||
 		       *this == CharTy ||
@@ -338,7 +351,7 @@ namespace llvm_abi {
 	}
 	
 	Type Type::getStructSingleElement(const ABITypeInfo& typeInfo) const {
-		if (!isStruct()) {
+		if (!isRecordType()) {
 			return VoidTy;
 		}
 		
@@ -349,7 +362,7 @@ namespace llvm_abi {
 		Type foundType = VoidTy;
 		
 		// Check for single element.
-		for (const auto& field: structMembers()) {
+		for (const auto& field: recordMembers()) {
 			// Ignore empty fields.
 			const bool allowArrays = true;
 			if (field.isEmptyField(allowArrays)) {
@@ -372,7 +385,7 @@ namespace llvm_abi {
 				fieldType = fieldType.arrayElementType();
 			}
 			
-			if (!fieldType.isAggregateType()) {
+			if (!fieldType.isRecordType()) {
 				foundType = fieldType;
 			} else {
 				foundType = fieldType.getStructSingleElement(typeInfo);
@@ -393,7 +406,7 @@ namespace llvm_abi {
 	}
 	
 	bool Type::isEmptyRecord(const bool allowArrays) const {
-		if (!isStruct()) {
+		if (!isRecordType()) {
 			return false;
 		}
 		
@@ -401,7 +414,7 @@ namespace llvm_abi {
 			return false;
 		}
 		
-		for (const auto& field: structMembers()) {
+		for (const auto& field: recordMembers()) {
 			if (!field.isEmptyField(allowArrays)) {
 				return false;
 			}
@@ -492,15 +505,14 @@ namespace llvm_abi {
 				return false;
 			}
 			members *= arrayElementCount();
-		} else if (isStruct() || isUnion()) {
+		} else if (isRecordType()) {
 			if (hasFlexibleArrayMember()) {
 				return false;
 			}
 			
 			members = 0;
 			
-			// FIXME: should also iterate through union members.
-			for (const auto& field: structMembers()) {
+			for (const auto& field: recordMembers()) {
 				auto fieldType = field.type();
 				// Ignore (non-zero arrays of) empty records.
 				while (fieldType.isArray()) {
@@ -806,7 +818,7 @@ namespace llvm_abi {
 					if (i > 0) {
 						s += ", ";
 					}
-					s += members[i].toString();
+					s += members[i].type().toString();
 				}
 				return s + ")";
 			}

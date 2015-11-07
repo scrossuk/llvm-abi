@@ -139,8 +139,8 @@ namespace llvm_abi {
 			}
 			case UnionType: {
 				std::vector<std::string> unionMemberTypes;
-				for (const auto& memberType: type.unionMembers()) {
-					unionMemberTypes.push_back(emitType(memberType));
+				for (const auto& member: type.unionMembers()) {
+					unionMemberTypes.push_back(emitType(member.type()));
 				}
 				
 				sourceCodeStream_ << "typedef union { ";

@@ -93,7 +93,7 @@ namespace llvm_abi {
 			}
 			
 			// Otherwise, it must be a record type.
-			if (!type.isStruct()) {
+			if (!type.isRecordType()) {
 				return false;
 			}
 			
@@ -101,7 +101,7 @@ namespace llvm_abi {
 			
 			// Structure types are passed in register if all fields would be
 			// passed in a register.
-			for (const auto& member: type.structMembers()) {
+			for (const auto& member: type.recordMembers()) {
 				// Empty fields are ignored.
 				if (member.isEmptyField(/*allowArrays=*/true)) {
 					continue;

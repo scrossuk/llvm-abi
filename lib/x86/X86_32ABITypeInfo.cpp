@@ -116,7 +116,7 @@ namespace llvm_abi {
 					auto size = DataSize::Bytes(0);
 					
 					for (const auto& member: type.unionMembers()) {
-						const auto memberSize = getTypeAllocSize(member);
+						const auto memberSize = getTypeAllocSize(member.type());
 						size = std::max<DataSize>(size, memberSize);
 					}
 					
@@ -240,7 +240,7 @@ namespace llvm_abi {
 				case UnionType: {
 					auto mostStrictAlign = DataSize::Bytes(1);
 					for (const auto& member: type.unionMembers()) {
-						const auto align = getTypeRequiredAlign(member);
+						const auto align = getTypeRequiredAlign(member.type());
 						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
 					}
 					
@@ -302,10 +302,10 @@ namespace llvm_abi {
 					auto maxSize = DataSize::Bytes(0);
 					llvm::Type* maxSizeLLVMType = llvm::Type::getInt8Ty(llvmContext_);
 					for (const auto& member: type.unionMembers()) {
-						const auto size = getTypeAllocSize(member);
+						const auto size = getTypeAllocSize(member.type());
 						if (size > maxSize) {
 							maxSize = size;
-							maxSizeLLVMType = getLLVMType(member);
+							maxSizeLLVMType = getLLVMType(member.type());
 						}
 					}
 					return llvm::StructType::get(maxSizeLLVMType, nullptr);
@@ -323,7 +323,7 @@ namespace llvm_abi {
 		}
 		
 		llvm::SmallVector<DataSize, 8>
-		X86_32ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const {
+		X86_32ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<RecordMember> structMembers) const {
 			llvm::SmallVector<DataSize, 8> offsets;
 			offsets.reserve(structMembers.size());
 			
