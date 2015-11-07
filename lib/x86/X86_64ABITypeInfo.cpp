@@ -134,13 +134,13 @@ namespace llvm_abi {
 		DataSize X86_64ABITypeInfo::getTypeAllocSize(const Type type) const {
 			if (type.isFixedWidthInteger()) {
 				return type.integerWidth().roundUpToPowerOf2Bytes();
-			} else {
-				return getTypeRawSize(type);
 			}
+			
+			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeStoreSize(const Type type) const {
-			return getTypeAllocSize(type);
+			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeRequiredAlign(const Type type) const {
