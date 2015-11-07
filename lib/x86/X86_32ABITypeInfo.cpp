@@ -300,13 +300,16 @@ namespace llvm_abi {
 				}
 				case UnionType: {
 					auto maxSize = DataSize::Bytes(0);
-					llvm::Type* maxSizeLLVMType = llvm::Type::getInt8Ty(llvmContext_);
+					llvm::Type* maxSizeLLVMType = nullptr;
 					for (const auto& member: type.unionMembers()) {
 						const auto size = getTypeAllocSize(member.type());
 						if (size > maxSize) {
 							maxSize = size;
 							maxSizeLLVMType = getLLVMType(member.type());
 						}
+					}
+					if (maxSizeLLVMType == nullptr) {
+						return llvm::StructType::get(llvmContext_);
 					}
 					return llvm::StructType::get(maxSizeLLVMType, nullptr);
 				}
