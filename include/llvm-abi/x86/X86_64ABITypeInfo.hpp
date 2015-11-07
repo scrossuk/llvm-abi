@@ -7,6 +7,7 @@
 #include <llvm/IR/Value.h>
 
 #include <llvm-abi/ABITypeInfo.hpp>
+#include <llvm-abi/DefaultABITypeInfo.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -16,7 +17,8 @@ namespace llvm_abi {
 		
 		class CPUFeatures;
 		
-		class X86_64ABITypeInfo: public ABITypeInfo {
+		class X86_64ABITypeInfo: public ABITypeInfo,
+		                         public DefaultABITypeInfoDelegate {
 		public:
 			X86_64ABITypeInfo(llvm::LLVMContext& llvmContext,
 			                  const CPUFeatures& cpuFeatures);
@@ -53,11 +55,28 @@ namespace llvm_abi {
 				return false;
 			}
 			
+			DataSize getPointerSize() const;
+			DataSize getPointerAlign() const;
+			
+			DataSize getIntSize(IntegerKind kind) const;
+			DataSize getIntAlign(IntegerKind kind) const;
+			
+			DataSize getFloatSize(FloatingPointKind kind) const;
+			DataSize getFloatAlign(FloatingPointKind kind) const;
+			
+			DataSize getComplexSize(FloatingPointKind kind) const;
+			DataSize getComplexAlign(FloatingPointKind kind) const;
+			
+			DataSize getArrayAlign(Type type) const;
+			DataSize getVectorAlign(Type type) const;
+			
+			llvm::Type* getLongDoubleIRType() const;
+			
 		private:
 			llvm::LLVMContext& llvmContext_;
 			const CPUFeatures& cpuFeatures_;
 			TypeBuilder typeBuilder_;
-			
+			DefaultABITypeInfo defaultABITypeInfo_;
 		};
 		
 	}

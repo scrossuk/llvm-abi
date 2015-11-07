@@ -4,6 +4,7 @@
 
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/DataSize.hpp>
+#include <llvm-abi/DefaultABITypeInfo.hpp>
 #include <llvm-abi/Type.hpp>
 
 #include <llvm-abi/x86/X86_32ABITypeInfo.hpp>
@@ -13,339 +14,42 @@ namespace llvm_abi {
 	namespace x86 {
 		
 		X86_32ABITypeInfo::X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
-		: llvmContext_(llvmContext) { }
+		: llvmContext_(llvmContext),
+		defaultABITypeInfo_(llvmContext, /*typeInfo=*/*this,
+		                    /*delegate=*/*this)
+		{ }
 		
 		const TypeBuilder& X86_32ABITypeInfo::typeBuilder() const {
 			return typeBuilder_;
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeRawSize(const Type type) const {
-			switch (type.kind()) {
-				case VoidType:
-					return DataSize::Bytes(0);
-				case PointerType:
-					return DataSize::Bytes(4);
-				case UnspecifiedWidthIntegerType: {
-					switch (type.integerKind()) {
-						case Bool:
-							return DataSize::Bytes(1);
-						case Char:
-						case SChar:
-						case UChar:
-							return DataSize::Bytes(1);
-						case Short:
-						case UShort:
-							return DataSize::Bytes(2);
-						case Int:
-						case UInt:
-							return DataSize::Bytes(4);
-						case Long:
-						case ULong:
-							return DataSize::Bytes(4);
-						case LongLong:
-						case ULongLong:
-							return DataSize::Bytes(8);
-						case SizeT:
-						case SSizeT:
-							return DataSize::Bytes(4);
-						case IntPtrT:
-						case UIntPtrT:
-						case PtrDiffT:
-							return DataSize::Bytes(4);
-					}
-					llvm_unreachable("Unknown Integer type kind.");
-				}
-				case FixedWidthIntegerType: {
-					return type.integerWidth();
-				}
-				case FloatingPointType: {
-					switch (type.floatingPointKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(4);
-						case Double:
-							return DataSize::Bytes(8);
-						case LongDouble:
-							// NB: Apparently on Android this is the same as 'double'.
-							return DataSize::Bytes(12);
-						case Float128:
-							return DataSize::Bytes(16);
-					}
-					llvm_unreachable("Unknown Float type kind.");
-				}
-				case ComplexType: {
-					switch (type.complexKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(8);
-						case Double:
-							return DataSize::Bytes(16);
-						case LongDouble:
-							// NB: Apparently on Android this is the same as 'double'.
-							return DataSize::Bytes(24);
-						case Float128:
-							return DataSize::Bytes(32);
-					}
-					llvm_unreachable("Unknown Complex type kind.");
-				}
-				case StructType: {
-					if (type.structMembers().empty()) {
-						return DataSize::Bytes(0);
-					}
-					
-					auto size = DataSize::Bytes(0);
-					
-					for (const auto& member: type.structMembers()) {
-						if (member.offset() < size) {
-							// Add necessary padding before this member.
-							size = size.roundUpToAlign(getTypeRequiredAlign(member.type()));
-						} else {
-							size = member.offset();
-						}
-						
-						// Add the member's size.
-						size += getTypeAllocSize(member.type());
-					}
-					
-					// Add any final padding.
-					return size.roundUpToAlign(getTypeRequiredAlign(type));
-				}
-				case UnionType: {
-					auto size = DataSize::Bytes(0);
-					
-					for (const auto& member: type.unionMembers()) {
-						const auto memberSize = getTypeAllocSize(member.type());
-						size = std::max<DataSize>(size, memberSize);
-					}
-					
-					// Add any final padding.
-					return size.roundUpToAlign(getTypeRequiredAlign(type));
-				}
-				case ArrayType:
-					// TODO: this is probably wrong...
-					return getTypeRawSize(type.arrayElementType()) * type.arrayElementCount();
-				case VectorType:
-					// TODO: this is probably wrong...
-					return getTypeRawSize(type.vectorElementType()) * type.vectorElementCount();
-			}
-			llvm_unreachable("Unknown type kind.");
+			return defaultABITypeInfo_.getDefaultTypeRawSize(type);
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeAllocSize(const Type type) const {
-			if (type.isFixedWidthInteger()) {
-				return type.integerWidth().roundUpToPowerOf2Bytes();
-			}
-			
-			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
+			return defaultABITypeInfo_.getDefaultTypeAllocSize(type);
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeStoreSize(const Type type) const {
-			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
-		}
-		
-		DataSize getVectorMinAlign(const DataSize size) {
-			if (size.asBytes() >= 32) {
-				return DataSize::Bytes(32);
-			} else if (size.asBytes() >= 16) {
-				return DataSize::Bytes(16);
-			} else if (size.asBytes() >= 8) {
-				return DataSize::Bytes(8);
-			} else if (size.asBytes() >= 4) {
-				return DataSize::Bytes(4);
-			} else {
-				return DataSize::Bytes(1);
-			}
+			return defaultABITypeInfo_.getDefaultTypeStoreSize(type);
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeRequiredAlign(const Type type) const {
-			switch (type.kind()) {
-				case VoidType:
-					return DataSize::Bytes(0);
-				case PointerType:
-					return DataSize::Bytes(4);
-				case UnspecifiedWidthIntegerType: {
-					switch (type.integerKind()) {
-						case Bool:
-							return DataSize::Bytes(1);
-						case Char:
-						case SChar:
-						case UChar:
-							return DataSize::Bytes(1);
-						case Short:
-						case UShort:
-							return DataSize::Bytes(2);
-						case Int:
-						case UInt:
-							return DataSize::Bytes(4);
-						case Long:
-						case ULong:
-							return DataSize::Bytes(4);
-						case LongLong:
-						case ULongLong:
-							return DataSize::Bytes(4);
-						case SizeT:
-						case SSizeT:
-							return DataSize::Bytes(4);
-						case IntPtrT:
-						case UIntPtrT:
-						case PtrDiffT:
-							return DataSize::Bytes(4);
-					}
-					llvm_unreachable("Unknown Integer type kind.");
-				}
-				case FixedWidthIntegerType: {
-					return type.integerWidth().roundUpToPowerOf2Bytes();
-				}
-				case FloatingPointType: {
-					switch (type.floatingPointKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(4);
-						case Double:
-							return DataSize::Bytes(4);
-						case LongDouble:
-							return DataSize::Bytes(4);
-						case Float128:
-							return DataSize::Bytes(16);
-					}
-					llvm_unreachable("Unknown Float type kind.");
-				}
-				case ComplexType: {
-					switch (type.complexKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(4);
-						case Double:
-							return DataSize::Bytes(4);
-						case LongDouble:
-							return DataSize::Bytes(4);
-						case Float128:
-							return DataSize::Bytes(16);
-					}
-					llvm_unreachable("Unknown Complex type kind.");
-				}
-				case StructType: {
-					auto mostStrictAlign = DataSize::Bytes(1);
-					for (const auto& member: type.structMembers()) {
-						const auto align = getTypeRequiredAlign(member.type());
-						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
-					}
-					
-					return mostStrictAlign;
-				}
-				case UnionType: {
-					auto mostStrictAlign = DataSize::Bytes(1);
-					for (const auto& member: type.unionMembers()) {
-						const auto align = getTypeRequiredAlign(member.type());
-						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
-					}
-					
-					return mostStrictAlign;
-				}
-				case ArrayType: {
-					return getTypeRequiredAlign(type.arrayElementType());
-				}
-				case VectorType: {
-					const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
-					const auto minAlign = getVectorMinAlign(getTypeAllocSize(type));
-					return std::max<DataSize>(elementAlign, minAlign);
-				}
-			}
-			llvm_unreachable("Unknown type kind.");
+			return defaultABITypeInfo_.getDefaultTypeRequiredAlign(type);
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypePreferredAlign(const Type type) const {
-			// TODO!
-			return getTypeRequiredAlign(type);
+			return defaultABITypeInfo_.getDefaultTypePreferredAlign(type);
 		}
 		
 		llvm::Type* X86_32ABITypeInfo::getLLVMType(const Type type) const {
-			switch (type.kind()) {
-				case VoidType:
-					return llvm::Type::getVoidTy(llvmContext_);
-				case PointerType:
-					return llvm::Type::getInt8PtrTy(llvmContext_);
-				case UnspecifiedWidthIntegerType:
-				case FixedWidthIntegerType: {
-					return llvm::IntegerType::get(llvmContext_, getTypeRawSize(type).asBits());
-				}
-				case FloatingPointType: {
-					switch (type.floatingPointKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return llvm::Type::getFloatTy(llvmContext_);
-						case Double:
-							return llvm::Type::getDoubleTy(llvmContext_);
-						case LongDouble:
-							return llvm::Type::getX86_FP80Ty(llvmContext_);
-						case Float128:
-							return llvm::Type::getFP128Ty(llvmContext_);
-					}
-					llvm_unreachable("Unknown Float type kind.");
-				}
-				case ComplexType: {
-					llvm_unreachable("TODO");
-				}
-				case StructType: {
-					llvm::SmallVector<llvm::Type*, 8> members;
-					for (const auto& structMember: type.structMembers()) {
-						members.push_back(getLLVMType(structMember.type()));
-					}
-					return llvm::StructType::get(llvmContext_, members);
-				}
-				case UnionType: {
-					auto maxSize = DataSize::Bytes(0);
-					llvm::Type* maxSizeLLVMType = nullptr;
-					for (const auto& member: type.unionMembers()) {
-						const auto size = getTypeAllocSize(member.type());
-						if (size > maxSize) {
-							maxSize = size;
-							maxSizeLLVMType = getLLVMType(member.type());
-						}
-					}
-					if (maxSizeLLVMType == nullptr) {
-						return llvm::StructType::get(llvmContext_);
-					}
-					return llvm::StructType::get(maxSizeLLVMType, nullptr);
-				}
-				case ArrayType: {
-					return llvm::ArrayType::get(getLLVMType(type.arrayElementType()),
-					                            type.arrayElementCount());
-				}
-				case VectorType: {
-					return llvm::VectorType::get(getLLVMType(type.vectorElementType()),
-					                             type.vectorElementCount());
-				}
-			}
-			llvm_unreachable("Unknown type kind.");
+			return defaultABITypeInfo_.getDefaultLLVMType(type);
 		}
 		
 		llvm::SmallVector<DataSize, 8>
 		X86_32ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<RecordMember> structMembers) const {
-			llvm::SmallVector<DataSize, 8> offsets;
-			offsets.reserve(structMembers.size());
-			
-			auto offset = DataSize::Bytes(0);
-			for (const auto& member: structMembers) {
-				if (member.offset() < offset) {
-					// Add necessary padding before this member.
-					offset = offset.roundUpToAlign(getTypeRequiredAlign(member.type()));
-				} else {
-					offset = member.offset();
-				}
-				
-				offsets.push_back(offset);
-				
-				// Add the member's size.
-				offset += getTypeAllocSize(member.type());
-			}
-			
-			return offsets;
+			return defaultABITypeInfo_.calculateDefaultStructOffsets(structMembers);
 		}
 		
 		bool X86_32ABITypeInfo::isLegalVectorType(const Type /*type*/) const {
@@ -392,6 +96,170 @@ namespace llvm_abi {
 		                                                          const uint64_t members) const {
 			// FIXME: Assumes vectorcall is in use.
 			return isX86VectorCallAggregateSmallEnough(members);
+		}
+		
+		DataSize X86_32ABITypeInfo::getPointerSize() const {
+			return DataSize::Bytes(4);
+		}
+		
+		DataSize X86_32ABITypeInfo::getPointerAlign() const {
+			return DataSize::Bytes(4);
+		}
+		
+		DataSize X86_32ABITypeInfo::getIntSize(const IntegerKind kind) const {
+			switch (kind) {
+				case Bool:
+					return DataSize::Bytes(1);
+				case Char:
+				case SChar:
+				case UChar:
+					return DataSize::Bytes(1);
+				case Short:
+				case UShort:
+					return DataSize::Bytes(2);
+				case Int:
+				case UInt:
+					return DataSize::Bytes(4);
+				case Long:
+				case ULong:
+					return DataSize::Bytes(4);
+				case LongLong:
+				case ULongLong:
+					return DataSize::Bytes(8);
+				case SizeT:
+				case SSizeT:
+					return DataSize::Bytes(4);
+				case IntPtrT:
+				case UIntPtrT:
+				case PtrDiffT:
+					return DataSize::Bytes(4);
+			}
+			llvm_unreachable("Unknown Integer type kind.");
+		}
+		
+		DataSize X86_32ABITypeInfo::getIntAlign(const IntegerKind kind) const {
+			switch (kind) {
+				case Bool:
+					return DataSize::Bytes(1);
+				case Char:
+				case SChar:
+				case UChar:
+					return DataSize::Bytes(1);
+				case Short:
+				case UShort:
+					return DataSize::Bytes(2);
+				case Int:
+				case UInt:
+					return DataSize::Bytes(4);
+				case Long:
+				case ULong:
+					return DataSize::Bytes(4);
+				case LongLong:
+				case ULongLong:
+					return DataSize::Bytes(4);
+				case SizeT:
+				case SSizeT:
+					return DataSize::Bytes(4);
+				case IntPtrT:
+				case UIntPtrT:
+				case PtrDiffT:
+					return DataSize::Bytes(4);
+			}
+			llvm_unreachable("Unknown Integer type kind.");
+		}
+		
+		DataSize X86_32ABITypeInfo::getFloatSize(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(4);
+				case Double:
+					return DataSize::Bytes(8);
+				case LongDouble:
+					// NB: Apparently on Android this is the same as 'double'.
+					return DataSize::Bytes(12);
+				case Float128:
+					return DataSize::Bytes(16);
+			}
+			llvm_unreachable("Unknown Float type kind.");
+		}
+		
+		DataSize X86_32ABITypeInfo::getFloatAlign(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(4);
+				case Double:
+					return DataSize::Bytes(4);
+				case LongDouble:
+					return DataSize::Bytes(4);
+				case Float128:
+					return DataSize::Bytes(16);
+			}
+			llvm_unreachable("Unknown Float type kind.");
+		}
+		
+		DataSize X86_32ABITypeInfo::getComplexSize(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(8);
+				case Double:
+					return DataSize::Bytes(16);
+				case LongDouble:
+					// NB: Apparently on Android this is the same as 'double'.
+					return DataSize::Bytes(24);
+				case Float128:
+					return DataSize::Bytes(32);
+			}
+			llvm_unreachable("Unknown Complex type kind.");
+		}
+		
+		DataSize X86_32ABITypeInfo::getComplexAlign(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(4);
+				case Double:
+					return DataSize::Bytes(4);
+				case LongDouble:
+					return DataSize::Bytes(4);
+				case Float128:
+					return DataSize::Bytes(16);
+			}
+			llvm_unreachable("Unknown Complex type kind.");
+		}
+		
+		static DataSize getVectorMinAlign(const DataSize size) {
+			if (size.asBytes() >= 32) {
+				return DataSize::Bytes(32);
+			} else if (size.asBytes() >= 16) {
+				return DataSize::Bytes(16);
+			} else if (size.asBytes() >= 8) {
+				return DataSize::Bytes(8);
+			} else if (size.asBytes() >= 4) {
+				return DataSize::Bytes(4);
+			} else {
+				return DataSize::Bytes(1);
+			}
+		}
+		
+		DataSize X86_32ABITypeInfo::getArrayAlign(const Type type) const {
+			return getTypeRequiredAlign(type.arrayElementType());
+		}
+		
+		DataSize X86_32ABITypeInfo::getVectorAlign(const Type type) const {
+			const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
+			const auto minAlign = getVectorMinAlign(getTypeAllocSize(type));
+			return std::max<DataSize>(elementAlign, minAlign);
+		}
+		
+		llvm::Type* X86_32ABITypeInfo::getLongDoubleIRType() const {
+			return llvm::Type::getX86_FP80Ty(llvmContext_);
 		}
 		
 	}

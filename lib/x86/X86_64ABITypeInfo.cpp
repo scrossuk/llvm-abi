@@ -5,6 +5,7 @@
 
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/DataSize.hpp>
+#include <llvm-abi/DefaultABITypeInfo.hpp>
 #include <llvm-abi/Type.hpp>
 #include <llvm-abi/TypeBuilder.hpp>
 
@@ -18,266 +19,42 @@ namespace llvm_abi {
 		X86_64ABITypeInfo::X86_64ABITypeInfo(llvm::LLVMContext& llvmContext,
 		                                     const CPUFeatures& cpuFeatures)
 		: llvmContext_(llvmContext),
-		cpuFeatures_(cpuFeatures) { }
+		cpuFeatures_(cpuFeatures),
+		defaultABITypeInfo_(llvmContext, /*typeInfo=*/*this,
+		                    /*delegate=*/*this)
+		{ }
 		
 		const TypeBuilder& X86_64ABITypeInfo::typeBuilder() const {
 			return typeBuilder_;
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeRawSize(const Type type) const {
-			switch (type.kind()) {
-				case VoidType:
-					return DataSize::Bytes(0);
-				case PointerType:
-					return DataSize::Bytes(8);
-				case UnspecifiedWidthIntegerType:
-					switch (type.integerKind()) {
-						case Bool:
-						case Char:
-						case UChar:
-						case SChar:
-							return DataSize::Bytes(1);
-						case Short:
-						case UShort:
-							return DataSize::Bytes(2);
-						case Int:
-						case UInt:
-							return DataSize::Bytes(4);
-						case Long:
-						case ULong:
-						case SizeT:
-						case SSizeT:
-						case PtrDiffT:
-						case IntPtrT:
-						case UIntPtrT:
-						case LongLong:
-						case ULongLong:
-							return DataSize::Bytes(8);
-					}
-					llvm_unreachable("Unknown integer type.");
-				case FixedWidthIntegerType:
-					return type.integerWidth();
-				case FloatingPointType:
-					switch (type.floatingPointKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(4);
-						case Double:
-							return DataSize::Bytes(8);
-						case LongDouble:
-							return DataSize::Bytes(16);
-						case Float128:
-							return DataSize::Bytes(16);
-					}
-					llvm_unreachable("Unknown floating point type.");
-				case ComplexType:
-					switch (type.complexKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return DataSize::Bytes(8);
-							
-						case Double:
-							return DataSize::Bytes(16);
-							
-						case LongDouble:
-							return DataSize::Bytes(32);
-							
-						case Float128:
-							return DataSize::Bytes(32);
-					}
-					llvm_unreachable("Unknown complex type.");
-				case StructType: {
-					if (type.structMembers().empty()) {
-						return DataSize::Bytes(0);
-					}
-					
-					auto size = DataSize::Bytes(0);
-					
-					for (const auto& member: type.structMembers()) {
-						if (member.offset() < size) {
-							// Add necessary padding before this member.
-							size = size.roundUpToAlign(getTypeRequiredAlign(member.type()));
-						} else {
-							size = member.offset();
-						}
-						
-						// Add the member's size.
-						size += getTypeAllocSize(member.type());
-					}
-					
-					// Add any final padding.
-					return size.roundUpToAlign(getTypeRequiredAlign(type));
-				}
-				case UnionType: {
-					auto size = DataSize::Bytes(0);
-					
-					for (const auto& member: type.unionMembers()) {
-						const auto memberSize = getTypeAllocSize(member.type());
-						size = std::max<DataSize>(size, memberSize);
-					}
-					
-					// Add any final padding.
-					return size.roundUpToAlign(getTypeRequiredAlign(type));
-				}
-				case ArrayType:
-					// TODO: this is probably wrong...
-					return getTypeRawSize(type.arrayElementType()) * type.arrayElementCount();
-				case VectorType:
-					// TODO: this is probably wrong...
-					return getTypeRawSize(type.vectorElementType()) * type.vectorElementCount();
-			}
-			llvm_unreachable("Unknown ABI type.");
+			return defaultABITypeInfo_.getDefaultTypeRawSize(type);
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeAllocSize(const Type type) const {
-			if (type.isFixedWidthInteger()) {
-				return type.integerWidth().roundUpToPowerOf2Bytes();
-			}
-			
-			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
+			return defaultABITypeInfo_.getDefaultTypeAllocSize(type);
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeStoreSize(const Type type) const {
-			return getTypeRawSize(type).roundUpToAlign(DataSize::Bytes(1));
+			return defaultABITypeInfo_.getDefaultTypeStoreSize(type);
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypeRequiredAlign(const Type type) const {
-			switch (type.kind()) {
-				case StructType: {
-					auto mostStrictAlign = DataSize::Bytes(1);
-					for (const auto& member: type.structMembers()) {
-						const auto align = getTypeRequiredAlign(member.type());
-						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
-					}
-					
-					return mostStrictAlign;
-				}
-				case UnionType: {
-					auto mostStrictAlign = DataSize::Bytes(1);
-					for (const auto& member: type.unionMembers()) {
-						const auto align = getTypeRequiredAlign(member.type());
-						mostStrictAlign = std::max<DataSize>(mostStrictAlign, align);
-					}
-					
-					return mostStrictAlign;
-				}
-				case ArrayType: {
-					const auto elementAlign = getTypeRequiredAlign(type.arrayElementType());
-					
-					// AMD64-ABI 3.1.2p3: An array uses the
-					// same alignment as its elements, except
-					// that a local or global array variable
-					// of length at least 16 bytes or a C99
-					// variable-length array variable always
-					// has alignment of at least 16 bytes.
-					const auto minAlign = getTypeAllocSize(type).asBytes() >= 16 ? DataSize::Bytes(16) : DataSize::Bytes(1);
-					return std::max<DataSize>(elementAlign, minAlign);
-				}
-				case VectorType: {
-					const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
-					const auto minAlign =
-						getTypeAllocSize(type).asBytes() >= 32 ?
-							DataSize::Bytes(32) :
-							getTypeAllocSize(type).asBytes() >= 16 ?
-								DataSize::Bytes(16) :
-								DataSize::Bytes(1);
-					return std::max<DataSize>(elementAlign, minAlign);
-				}
-				default:
-					return getTypeAllocSize(type);
-			}
+			return defaultABITypeInfo_.getDefaultTypeRequiredAlign(type);
 		}
 		
 		DataSize X86_64ABITypeInfo::getTypePreferredAlign(const Type type) const {
-			return getTypeRequiredAlign(type);
+			return defaultABITypeInfo_.getDefaultTypePreferredAlign(type);
 		}
 		
 		llvm::Type* X86_64ABITypeInfo::getLLVMType(const Type type) const  {
-			switch (type.kind()) {
-				case VoidType:
-					return llvm::Type::getVoidTy(llvmContext_);
-				case PointerType:
-					return llvm::Type::getInt8PtrTy(llvmContext_);
-				case UnspecifiedWidthIntegerType:
-				case FixedWidthIntegerType: {
-					return llvm::IntegerType::get(llvmContext_, getTypeRawSize(type).asBits());
-				}
-				case FloatingPointType: {
-					switch (type.floatingPointKind()) {
-						case HalfFloat:
-							llvm_unreachable("TODO");
-						case Float:
-							return llvm::Type::getFloatTy(llvmContext_);
-						case Double:
-							return llvm::Type::getDoubleTy(llvmContext_);
-						case LongDouble:
-							return llvm::Type::getX86_FP80Ty(llvmContext_);
-						case Float128:
-							return llvm::Type::getFP128Ty(llvmContext_);
-					}
-					llvm_unreachable("Unknown Float type kind.");
-				}
-				case ComplexType: {
-					llvm_unreachable("TODO");
-				}
-				case StructType: {
-					llvm::SmallVector<llvm::Type*, 8> members;
-					for (const auto& structMember: type.structMembers()) {
-						members.push_back(getLLVMType(structMember.type()));
-					}
-					return llvm::StructType::get(llvmContext_, members);
-				}
-				case UnionType: {
-					auto maxSize = DataSize::Bytes(0);
-					llvm::Type* maxSizeLLVMType = nullptr;
-					for (const auto& member: type.unionMembers()) {
-						const auto size = getTypeAllocSize(member.type());
-						if (size > maxSize) {
-							maxSize = size;
-							maxSizeLLVMType = getLLVMType(member.type());
-						}
-					}
-					if (maxSizeLLVMType == nullptr) {
-						return llvm::StructType::get(llvmContext_);
-					}
-					return llvm::StructType::get(maxSizeLLVMType, nullptr);
-				}
-				case ArrayType: {
-					return llvm::ArrayType::get(getLLVMType(type.arrayElementType()),
-					                            type.arrayElementCount());
-				}
-				case VectorType: {
-					return llvm::VectorType::get(getLLVMType(type.vectorElementType()),
-					                            type.vectorElementCount());
-				}
-			}
-			
-			llvm_unreachable("Unknown type for creating IR type.");
+			return defaultABITypeInfo_.getDefaultLLVMType(type);
 		}
 		
 		llvm::SmallVector<DataSize, 8>
 		X86_64ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<RecordMember> structMembers) const {
-			llvm::SmallVector<DataSize, 8> offsets;
-			offsets.reserve(structMembers.size());
-			
-			auto offset = DataSize::Bytes(0);
-			for (const auto& member: structMembers) {
-				if (member.offset() < offset) {
-					// Add necessary padding before this member.
-					offset = offset.roundUpToAlign(getTypeRequiredAlign(member.type()));
-				} else {
-					offset = member.offset();
-				}
-				
-				offsets.push_back(offset);
-				
-				// Add the member's size.
-				offset += getTypeAllocSize(member.type());
-			}
-			
-			return offsets;
+			return defaultABITypeInfo_.calculateDefaultStructOffsets(structMembers);
 		}
 		
 		bool X86_64ABITypeInfo::isLegalVectorType(const Type type) const {
@@ -293,6 +70,166 @@ namespace llvm_abi {
 		
 		bool X86_64ABITypeInfo::isCharSigned() const {
 			return true;
+		}
+		
+		DataSize X86_64ABITypeInfo::getPointerSize() const {
+			return DataSize::Bytes(8);
+		}
+		
+		DataSize X86_64ABITypeInfo::getPointerAlign() const {
+			return DataSize::Bytes(8);
+		}
+		
+		DataSize X86_64ABITypeInfo::getIntSize(const IntegerKind kind) const {
+			switch (kind) {
+				case Bool:
+				case Char:
+				case UChar:
+				case SChar:
+					return DataSize::Bytes(1);
+				case Short:
+				case UShort:
+					return DataSize::Bytes(2);
+				case Int:
+				case UInt:
+					return DataSize::Bytes(4);
+				case Long:
+				case ULong:
+				case SizeT:
+				case SSizeT:
+				case PtrDiffT:
+				case IntPtrT:
+				case UIntPtrT:
+				case LongLong:
+				case ULongLong:
+					return DataSize::Bytes(8);
+			}
+			llvm_unreachable("Unknown Integer type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getIntAlign(const IntegerKind kind) const {
+			switch (kind) {
+				case Bool:
+				case Char:
+				case UChar:
+				case SChar:
+					return DataSize::Bytes(1);
+				case Short:
+				case UShort:
+					return DataSize::Bytes(2);
+				case Int:
+				case UInt:
+					return DataSize::Bytes(4);
+				case Long:
+				case ULong:
+				case SizeT:
+				case SSizeT:
+				case PtrDiffT:
+				case IntPtrT:
+				case UIntPtrT:
+				case LongLong:
+				case ULongLong:
+					return DataSize::Bytes(8);
+			}
+			llvm_unreachable("Unknown Integer type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getFloatSize(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(4);
+				case Double:
+					return DataSize::Bytes(8);
+				case LongDouble:
+					return DataSize::Bytes(16);
+				case Float128:
+					return DataSize::Bytes(16);
+			}
+			llvm_unreachable("Unknown Float type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getFloatAlign(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(4);
+				case Double:
+					return DataSize::Bytes(8);
+				case LongDouble:
+					return DataSize::Bytes(16);
+				case Float128:
+					return DataSize::Bytes(16);
+			}
+			llvm_unreachable("Unknown Float type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getComplexSize(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(8);
+					
+				case Double:
+					return DataSize::Bytes(16);
+					
+				case LongDouble:
+					return DataSize::Bytes(32);
+					
+				case Float128:
+					return DataSize::Bytes(32);
+			}
+			llvm_unreachable("Unknown Complex type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getComplexAlign(const FloatingPointKind kind) const {
+			switch (kind) {
+				case HalfFloat:
+					llvm_unreachable("TODO");
+				case Float:
+					return DataSize::Bytes(8);
+					
+				case Double:
+					return DataSize::Bytes(16);
+					
+				case LongDouble:
+					return DataSize::Bytes(32);
+					
+				case Float128:
+					return DataSize::Bytes(32);
+			}
+			llvm_unreachable("Unknown Complex type kind.");
+		}
+		
+		DataSize X86_64ABITypeInfo::getArrayAlign(const Type type) const {
+			const auto elementAlign = getTypeRequiredAlign(type.arrayElementType());
+			
+			// AMD64-ABI 3.1.2p3: An array uses the
+			// same alignment as its elements, except
+			// that a local or global array variable
+			// of length at least 16 bytes or a C99
+			// variable-length array variable always
+			// has alignment of at least 16 bytes.
+			const auto minAlign = getTypeAllocSize(type).asBytes() >= 16 ? DataSize::Bytes(16) : DataSize::Bytes(1);
+			return std::max<DataSize>(elementAlign, minAlign);
+		}
+		
+		DataSize X86_64ABITypeInfo::getVectorAlign(const Type type) const {
+			const auto elementAlign = getTypeRequiredAlign(type.vectorElementType());
+			const auto minAlign =
+				getTypeAllocSize(type).asBytes() >= 32 ?
+					DataSize::Bytes(32) :
+					getTypeAllocSize(type).asBytes() >= 16 ?
+						DataSize::Bytes(16) :
+						DataSize::Bytes(1);
+			return std::max<DataSize>(elementAlign, minAlign);
+		}
+		
+		llvm::Type* X86_64ABITypeInfo::getLongDoubleIRType() const {
+			return llvm::Type::getX86_FP80Ty(llvmContext_);
 		}
 		
 	}

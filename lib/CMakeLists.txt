@@ -2,6 +2,7 @@ add_library(llvm-abi
 	ABI.cpp
 	Callee.cpp
 	Caller.cpp
+	DefaultABITypeInfo.cpp
 	FunctionIRMapping.cpp
 	LLVMUtils.cpp
 	Type.cpp
