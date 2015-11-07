@@ -30,7 +30,8 @@ namespace llvm_abi {
 			
 			llvm::Type* getLLVMType(Type type) const;
 			
-			llvm::SmallVector<DataSize, 8> calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
+			llvm::SmallVector<DataSize, 8>
+			calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const;
 			
 			bool isLegalVectorType(Type type) const;
 			

@@ -254,7 +254,8 @@ namespace llvm_abi {
 			llvm_unreachable("Unknown type for creating IR type.");
 		}
 		
-		llvm::SmallVector<DataSize, 8> X86_64ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const {
+		llvm::SmallVector<DataSize, 8>
+		X86_64ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> structMembers) const {
 			llvm::SmallVector<DataSize, 8> offsets;
 			offsets.reserve(structMembers.size());
 			
