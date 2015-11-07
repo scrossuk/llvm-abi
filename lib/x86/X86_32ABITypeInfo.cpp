@@ -12,8 +12,11 @@ namespace llvm_abi {
 	
 	namespace x86 {
 		
+		X86_32ABITypeInfo::X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
+		: llvmContext_(llvmContext) { }
+		
 		const TypeBuilder& X86_32ABITypeInfo::typeBuilder() const {
-			llvm_unreachable("TODO");
+			return typeBuilder_;
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeRawSize(const Type type) const {

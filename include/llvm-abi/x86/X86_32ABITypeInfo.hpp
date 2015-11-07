@@ -6,6 +6,7 @@
 
 #include <llvm-abi/ABITypeInfo.hpp>
 #include <llvm-abi/Type.hpp>
+#include <llvm-abi/TypeBuilder.hpp>
 
 namespace llvm_abi {
 	
@@ -13,8 +14,7 @@ namespace llvm_abi {
 		
 		class X86_32ABITypeInfo: public ABITypeInfo {
 		public:
-			X86_32ABITypeInfo(llvm::LLVMContext& llvmContext)
-			: llvmContext_(llvmContext) { }
+			X86_32ABITypeInfo(llvm::LLVMContext& llvmContext);
 			
 			const TypeBuilder& typeBuilder() const;
 			
@@ -45,6 +45,7 @@ namespace llvm_abi {
 			
 		private:
 			llvm::LLVMContext& llvmContext_;
+			TypeBuilder typeBuilder_;
 			
 		};
 		
