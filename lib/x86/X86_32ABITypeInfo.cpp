@@ -56,7 +56,7 @@ namespace llvm_abi {
 					llvm_unreachable("Unknown Integer type kind.");
 				}
 				case FixedWidthIntegerType: {
-					return type.integerWidth().roundUpToPowerOf2Bytes();
+					return type.integerWidth();
 				}
 				case FloatingPointType: {
 					switch (type.floatingPointKind()) {
@@ -134,12 +134,14 @@ namespace llvm_abi {
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeAllocSize(const Type type) const {
-			// TODO!
-			return getTypeRawSize(type);
+			if (type.isFixedWidthInteger()) {
+				return type.integerWidth().roundUpToPowerOf2Bytes();
+			} else {
+				return getTypeRawSize(type);
+			}
 		}
 		
 		DataSize X86_32ABITypeInfo::getTypeStoreSize(const Type type) const {
-			// TODO!
 			return getTypeAllocSize(type);
 		}
 		
