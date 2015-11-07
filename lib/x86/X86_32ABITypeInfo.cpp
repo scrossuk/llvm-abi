@@ -323,7 +323,25 @@ namespace llvm_abi {
 		}
 		
 		llvm::SmallVector<DataSize, 8> X86_32ABITypeInfo::calculateStructOffsets(llvm::ArrayRef<StructMember> /*structMembers*/) const {
-			llvm_unreachable("TODO");
+			llvm::SmallVector<DataSize, 8> offsets;
+			offsets.reserve(structMembers.size());
+			
+			auto offset = DataSize::Bytes(0);
+			for (const auto& member: structMembers) {
+				if (member.offset() < offset) {
+					// Add necessary padding before this member.
+					offset = offset.roundUpToAlign(getTypeRequiredAlign(member.type()));
+				} else {
+					offset = member.offset();
+				}
+				
+				offsets.push_back(offset);
+				
+				// Add the member's size.
+				offset += getTypeAllocSize(member.type());
+			}
+			
+			return offsets;
 		}
 		
 		bool X86_32ABITypeInfo::isLegalVectorType(const Type /*type*/) const {
