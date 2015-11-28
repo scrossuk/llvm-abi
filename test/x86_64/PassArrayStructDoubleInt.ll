@@ -4,8 +4,8 @@
 declare void @callee(double, i32)
 
 define void @caller(double %coerce0, i32 %coerce1) {
-  %coerce.arg.source = alloca [1 x { double, i32 }], align 16
-  %coerce.mem = alloca [1 x { double, i32 }], align 16
+  %coerce.arg.source = alloca [1 x { double, i32 }], align 8
+  %coerce.mem = alloca [1 x { double, i32 }], align 8
   %1 = bitcast [1 x { double, i32 }]* %coerce.mem to { double, i32 }*
   %2 = getelementptr { double, i32 }* %1, i32 0, i32 0
   store double %coerce0, double* %2
