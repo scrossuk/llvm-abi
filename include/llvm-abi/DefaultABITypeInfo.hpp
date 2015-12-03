@@ -1,6 +1,9 @@
 #ifndef LLVMABI_DEFAULTABITYPEINFO_HPP
 #define LLVMABI_DEFAULTABITYPEINFO_HPP
 
+#include <map>
+#include <string>
+
 #include <llvm/IR/Type.h>
 
 namespace llvm_abi {
@@ -88,6 +91,16 @@ namespace llvm_abi {
 		DataSize getDefaultTypePreferredAlign(Type type) const;
 		
 		/**
+		 * \brief Get LLVM struct type with name and member types.
+		 * 
+		 * \param name The name of the struct (empty string for for literal struct).
+		 * \param members The struct member types.
+		 * \return The LLVM struct type.
+		 */
+		llvm::StructType* getLLVMStructType(const std::string& name,
+		                                    llvm::ArrayRef<llvm::Type*> members) const;
+		
+		/**
 		 * \brief Get the LLVM type used to represent the ABI type given.
 		 * 
 		 * \param type The ABI type.
@@ -108,6 +121,7 @@ namespace llvm_abi {
 		llvm::LLVMContext& llvmContext_;
 		const ABITypeInfo& typeInfo_;
 		const DefaultABITypeInfoDelegate& delegate_;
+		mutable std::map<std::string, llvm::StructType*> structTypes_;
 		
 	};
 

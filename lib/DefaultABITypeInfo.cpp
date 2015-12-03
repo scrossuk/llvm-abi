@@ -136,6 +136,24 @@ namespace llvm_abi {
 		return typeInfo_.getTypeRequiredAlign(type);
 	}
 	
+	llvm::StructType*
+	DefaultABITypeInfo::getLLVMStructType(const std::string& name,
+	                                      llvm::ArrayRef<llvm::Type*> members) const {
+		if (name.empty()) {
+			return llvm::StructType::get(llvmContext_, members);
+		}
+		
+		const auto iterator = structTypes_.find(name);
+		if (iterator != structTypes_.end()) {
+			return iterator->second;
+		}
+		
+		const auto structType = llvm::StructType::create(llvmContext_, members,
+		                                                 name);
+		structTypes_.insert(std::make_pair(name, structType));
+		return structType;
+	}
+	
 	llvm::Type*
 	DefaultABITypeInfo::getDefaultLLVMType(const Type type) const {
 		switch (type.kind()) {
@@ -171,7 +189,7 @@ namespace llvm_abi {
 				for (const auto& structMember: type.structMembers()) {
 					members.push_back(typeInfo_.getLLVMType(structMember.type()));
 				}
-				return llvm::StructType::get(llvmContext_, members);
+				return getLLVMStructType(type.structName(), members);
 			}
 			case UnionType: {
 				auto maxSize = DataSize::Bytes(0);
@@ -183,10 +201,11 @@ namespace llvm_abi {
 						maxSizeLLVMType = typeInfo_.getLLVMType(member.type());
 					}
 				}
-				if (maxSizeLLVMType == nullptr) {
-					return llvm::StructType::get(llvmContext_);
+				llvm::SmallVector<llvm::Type*, 1> members;
+				if (maxSizeLLVMType != nullptr) {
+					members.push_back(maxSizeLLVMType);
 				}
-				return llvm::StructType::get(maxSizeLLVMType, nullptr);
+				return getLLVMStructType(type.unionName(), members);
 			}
 			case ArrayType: {
 				return llvm::ArrayType::get(typeInfo_.getLLVMType(type.arrayElementType()),
