@@ -60,24 +60,30 @@ namespace llvm_abi {
 		return Float128Ty;
 	}
 	
-	Type TypeBuilder::getStructTy(std::initializer_list<Type> memberTypes) const {
+	Type TypeBuilder::getStructTy(std::initializer_list<Type> memberTypes,
+	                              std::string name) const {
 		return Type::AutoStruct(*this,
 		                        llvm::ArrayRef<Type>(memberTypes.begin(),
-					                     memberTypes.end()));
+					                     memberTypes.end()),
+		                        std::move(name));
 	}
 	
-	Type TypeBuilder::getUnionTy(llvm::ArrayRef<Type> memberTypes) const {
-		return Type::Union(*this, memberTypes);
+	Type TypeBuilder::getUnionTy(llvm::ArrayRef<Type> memberTypes,
+	                             std::string name) const {
+		return Type::Union(*this, memberTypes, std::move(name));
 	}
 	
-	Type TypeBuilder::getUnionTy(std::initializer_list<Type> memberTypes) const {
+	Type TypeBuilder::getUnionTy(std::initializer_list<Type> memberTypes,
+	                             std::string name) const {
 		return Type::Union(*this,
 		                   llvm::ArrayRef<Type>(memberTypes.begin(),
-				                        memberTypes.end()));
+				                        memberTypes.end()),
+		                   std::move(name));
 	}
 	
-	Type TypeBuilder::getStructTy(llvm::ArrayRef<Type> memberTypes) const {
-		return Type::AutoStruct(*this, memberTypes);
+	Type TypeBuilder::getStructTy(llvm::ArrayRef<Type> memberTypes,
+	                              std::string name) const {
+		return Type::AutoStruct(*this, memberTypes, std::move(name));
 	}
 	
 	Type TypeBuilder::getArrayTy(const size_t elementCount,

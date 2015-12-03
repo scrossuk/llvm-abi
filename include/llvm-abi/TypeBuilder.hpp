@@ -37,11 +37,15 @@ namespace llvm_abi {
 			Type getLongDoubleTy() const;
 			Type getFloat128Ty() const;
 			
-			Type getStructTy(std::initializer_list<Type> memberTypes) const;
-			Type getStructTy(llvm::ArrayRef<Type> memberTypes) const;
+			Type getStructTy(std::initializer_list<Type> memberTypes,
+			                 std::string name="") const;
+			Type getStructTy(llvm::ArrayRef<Type> memberTypes,
+			                 std::string name="") const;
 			
-			Type getUnionTy(std::initializer_list<Type> memberTypes) const;
-			Type getUnionTy(llvm::ArrayRef<Type> memberTypes) const;
+			Type getUnionTy(std::initializer_list<Type> memberTypes,
+			                std::string name="") const;
+			Type getUnionTy(llvm::ArrayRef<Type> memberTypes,
+			                std::string name="") const;
 			
 			Type getArrayTy(size_t elementCount, Type elementType) const;
 			
