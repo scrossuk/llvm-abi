@@ -130,11 +130,15 @@ namespace llvm_abi {
 				
 				sourceCodeStream_ << "}";
 				
-				sourceCodeStream_ << " Struct" << structId_ << ";" << std::endl;
-				
 				std::ostringstream stream;
-				stream << "Struct" << structId_;
-				structId_++;
+				if (type.structName().empty()) {
+					stream << "Struct" << structId_;
+					structId_++;
+				} else {
+					stream << type.structName();
+				}
+				
+				sourceCodeStream_ << " " << stream.str() << ";" << std::endl;
 				return stream.str();
 			}
 			case UnionType: {
@@ -153,11 +157,15 @@ namespace llvm_abi {
 				
 				sourceCodeStream_ << "}";
 				
-				sourceCodeStream_ << " Union" << unionId_ << ";" << std::endl;
-				
 				std::ostringstream stream;
-				stream << "Union" << unionId_;
-				unionId_++;
+				if (type.unionName().empty()) {
+					stream << "Union" << unionId_;
+					unionId_++;
+				} else {
+					stream << type.unionName();
+				}
+				
+				sourceCodeStream_ << " " << stream.str() << ";" << std::endl;
 				return stream.str();
 			}
 			case ArrayType: {
