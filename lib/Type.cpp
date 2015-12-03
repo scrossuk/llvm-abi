@@ -45,8 +45,10 @@ namespace llvm_abi {
 		return type;
 	}
 	
-	Type Type::Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members) {
+	Type Type::Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members,
+	                  std::string name) {
 		TypeData typeData;
+		typeData.recordType.name = std::move(name);
 		typeData.recordType.members = llvm::SmallVector<RecordMember, 8>(members.begin(), members.end());
 		
 		const auto typeDataPtr = typeBuilder.getUniquedTypeData(std::move(typeData));
@@ -56,8 +58,10 @@ namespace llvm_abi {
 		return type;
 	}
 	
-	Type Type::AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
+	Type Type::AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes,
+	                      std::string name) {
 		TypeData typeData;
+		typeData.recordType.name = std::move(name);
 		typeData.recordType.members.reserve(memberTypes.size());
 		for (auto& memberType: memberTypes) {
 			typeData.recordType.members.push_back(RecordMember::AutoOffset(memberType));
@@ -70,8 +74,10 @@ namespace llvm_abi {
 		return type;
 	}
 	
-	Type Type::Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes) {
+	Type Type::Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes,
+	                 std::string name) {
 		TypeData typeData;
+		typeData.recordType.name = std::move(name);
 		typeData.recordType.members.reserve(memberTypes.size());
 		for (auto& memberType: memberTypes) {
 			typeData.recordType.members.push_back(RecordMember::AutoOffset(memberType));
@@ -255,6 +261,11 @@ namespace llvm_abi {
 		return kind() == StructType;
 	}
 	
+	const std::string& Type::structName() const {
+		assert(isStruct());
+		return subKind_.uniquedPointer->recordType.name;
+	}
+	
 	llvm::ArrayRef<RecordMember> Type::structMembers() const {
 		assert(isStruct());
 		return subKind_.uniquedPointer->recordType.members;
@@ -262,6 +273,11 @@ namespace llvm_abi {
 	
 	bool Type::isUnion() const {
 		return kind() == UnionType;
+	}
+	
+	const std::string& Type::unionName() const {
+		assert(isUnion());
+		return subKind_.uniquedPointer->recordType.name;
 	}
 	
 	llvm::ArrayRef<RecordMember> Type::unionMembers() const {

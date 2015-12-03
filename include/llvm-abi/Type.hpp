@@ -112,17 +112,20 @@ namespace llvm_abi {
 			/**
 			 * \brief Struct Type
 			 */
-			static Type Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members);
+			static Type Struct(const TypeBuilder& typeBuilder, llvm::ArrayRef<RecordMember> members,
+			                   std::string name="");
 			
 			/**
 			 * \brief Auto-aligned Struct Type
 			 */
-			static Type AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes);
+			static Type AutoStruct(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> memberTypes,
+			                        std::string name="");
 			
 			/**
 			 * \brief Union Type
 			 */
-			static Type Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> members);
+			static Type Union(const TypeBuilder& typeBuilder, llvm::ArrayRef<Type> members,
+			                  std::string name="");
 			
 			/**
 			 * \brief Array Type
@@ -172,9 +175,13 @@ namespace llvm_abi {
 			
 			bool isStruct() const;
 			
+			const std::string& structName() const;
+			
 			llvm::ArrayRef<RecordMember> structMembers() const;
 			
 			bool isUnion() const;
+			
+			const std::string& unionName() const;
 			
 			llvm::ArrayRef<RecordMember> unionMembers() const;
 			
@@ -470,6 +477,7 @@ namespace llvm_abi {
 	
 	struct Type::TypeData {
 		struct {
+			std::string name;
 			llvm::SmallVector<RecordMember, 8> members;
 		} recordType;
 		
@@ -490,6 +498,10 @@ namespace llvm_abi {
 		} vectorType;
 		
 		bool operator<(const TypeData& other) const {
+			if (recordType.name != other.recordType.name) {
+				return recordType.name < other.recordType.name;
+			}
+			
 			if (recordType.members != other.recordType.members) {
 				return recordType.members < other.recordType.members;
 			}
