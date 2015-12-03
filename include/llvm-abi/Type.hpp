@@ -439,6 +439,10 @@ namespace llvm_abi {
 				       isNamed() == other.isNamed();
 			}
 			
+			bool operator!=(const RecordMember& other) const {
+				return !(*this == other);
+			}
+			
 			bool operator<(const RecordMember& other) const {
 				if (type() != other.type()) {
 					return type() < other.type();
