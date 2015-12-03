@@ -545,6 +545,8 @@ public:
 			return parseVectorType();
 		} else if (lexer_.get() == '[') {
 			return parseArrayType();
+		} else if (lexer_.get() == '%') {
+			return TypeInfo::Name(parseVar());
 		} else {
 			return TypeInfo::Name(parseNameString());
 		}
