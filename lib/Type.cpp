@@ -357,6 +357,23 @@ namespace llvm_abi {
 		return isStruct() ? structMembers() : unionMembers();
 	}
 	
+	const std::string& Type::recordName() const {
+		assert(isRecordType());
+		return isStruct() ? structName() : unionName();
+	}
+	
+	bool Type::isEquivalentType(const Type other) const {
+		if (*this == other) {
+			return true;
+		}
+		
+		if (isRecordType() && other.isRecordType() && kind() == other.kind()) {
+			return recordMembers() == other.recordMembers();
+		}
+		
+		return false;
+	}
+	
 	bool Type::isPromotableIntegerType() const {
 		return *this == BoolTy ||
 		       *this == CharTy ||

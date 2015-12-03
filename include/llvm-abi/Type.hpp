@@ -229,6 +229,10 @@ namespace llvm_abi {
 			
 			llvm::ArrayRef<RecordMember> recordMembers() const;
 			
+			const std::string& recordName() const;
+			
+			bool isEquivalentType(Type other) const;
+			
 			/**
 			 * \brief Query whether type is a promotable integer.
 			 * 
