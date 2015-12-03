@@ -24,13 +24,16 @@ namespace llvm_abi {
 			while (true) {
 				const auto next = stream_.peek();
 				if ((next >= 'a' && next <= 'z') ||
+				    (next >= 'A' && next <= 'Z') ||
 				    (next >= '0' && next <= '9')) {
 					text += next;
-					stream_.consume();
+					stream_.consumeOne();
 				} else {
 					break;
 				}
 			}
+			
+			stream_.consumeWhitespace();
 			
 			return text;
 		}
@@ -39,8 +42,10 @@ namespace llvm_abi {
 			const auto text = parseString();
 			assert(!text.empty());
 			
-			if (text == "union") {
-				return parseUnionType();
+			if (text == "struct") {
+				return parseNamedStructType();
+			} else if (text == "union") {
+				return parseNamedUnionType();
 			}
 			
 			if (text == "void") {
@@ -82,27 +87,16 @@ namespace llvm_abi {
 			}
 		}
 		
-		Type parseStructType() {
-			stream_.expect('{');
-			stream_.consume();
-			
-			llvm::SmallVector<Type, 8> types;
-			
-			while (stream_.peek() != '}') {
-				types.push_back(parseType());
-				stream_.expectAny({',', '}'});
-				if (stream_.peek() == ',') {
-					stream_.consume();
-				}
+		Type parseNamedStructType() {
+			std::string name;
+			if (stream_.peek() != '{') {
+				name = parseString();
+				assert(!name.empty());
 			}
-			
-			stream_.expect('}');
-			stream_.consume();
-			
-			return typeBuilder_.getStructTy(types);
+			return parseStructType(std::move(name));
 		}
 		
-		Type parseUnionType() {
+		Type parseStructType(std::string name="") {
 			stream_.expect('{');
 			stream_.consume();
 			
@@ -119,7 +113,36 @@ namespace llvm_abi {
 			stream_.expect('}');
 			stream_.consume();
 			
-			return typeBuilder_.getUnionTy(types);
+			return typeBuilder_.getStructTy(types, std::move(name));
+		}
+		
+		Type parseNamedUnionType() {
+			std::string name;
+			if (stream_.peek() != '{') {
+				name = parseString();
+				assert(!name.empty());
+			}
+			return parseUnionType(std::move(name));
+		}
+		
+		Type parseUnionType(std::string name="") {
+			stream_.expect('{');
+			stream_.consume();
+			
+			llvm::SmallVector<Type, 8> types;
+			
+			while (stream_.peek() != '}') {
+				types.push_back(parseType());
+				stream_.expectAny({',', '}'});
+				if (stream_.peek() == ',') {
+					stream_.consume();
+				}
+			}
+			
+			stream_.expect('}');
+			stream_.consume();
+			
+			return typeBuilder_.getUnionTy(types, std::move(name));
 		}
 		
 		std::string parseIntString() {

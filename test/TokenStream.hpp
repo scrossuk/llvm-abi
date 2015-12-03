@@ -18,6 +18,8 @@ namespace llvm_abi {
 		
 		void consume();
 		
+		void consumeOne();
+		
 		void consumeWhitespace();
 		
 	private:

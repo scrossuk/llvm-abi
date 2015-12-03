@@ -39,6 +39,10 @@ namespace llvm_abi {
 		consumeWhitespace();
 	}
 	
+	void TokenStream::consumeOne() {
+		offset_++;
+	}
+	
 	void TokenStream::consumeWhitespace() {
 		while (true) {
 			if (offset_ >= text_.length()) {
