@@ -610,6 +610,11 @@ namespace llvm_abi {
 				                                        highPartType);
 			}
 			
+			if (resultType.isEquivalentType(type)) {
+				// Preserve named structs/unions if possible.
+				resultType = type;
+			}
+			
 			return ArgInfo::getDirect(resultType);
 		}
 		
