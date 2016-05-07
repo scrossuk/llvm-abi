@@ -593,7 +593,7 @@ public:
 			lexer_.consumeZeroOrMoreSpaces();
 			
 			if (command == "call") {
-				return parseCall("");
+				return parseCall();
 			} else {
 				printf("Command is %s\n", command.c_str());
 				throw std::runtime_error("Unknown command.");
@@ -601,7 +601,7 @@ public:
 		}
 	}
 	
-	std::string parseCall(const std::string& resultName) {
+	std::string parseCall() {
 		auto returnType = parseType();
 		std::vector<TypeInfo> argTypes;
 		bool isVarArg = false;
