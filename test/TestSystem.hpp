@@ -19,8 +19,6 @@
 
 using namespace llvm_abi;
 
-static const char* const X86_64_TRIPLE = "x86_64-none-linux-gnu";
-
 class TestBuilder: public Builder {
 public:
 	TestBuilder(llvm::Function& function)
