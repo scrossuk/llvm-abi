@@ -27,7 +27,7 @@ public:
 	
 	IRBuilder& getEntryBuilder() {
 		if (!function_.getEntryBlock().empty()) {
-			builder_.SetInsertPoint(function_.getEntryBlock().begin());
+			builder_.SetInsertPoint(&(function_.getEntryBlock().front()));
 		}
 		return builder_;
 	}
@@ -101,7 +101,7 @@ public:
 		llvm::SmallVector<llvm::Value*, 8> encodedArgumentValues;
 		for (auto it = callerFunction->arg_begin();
 		     it != callerFunction->arg_end(); ++it) {
-			encodedArgumentValues.push_back(it);
+			encodedArgumentValues.push_back(&*it);
 		}
 		
 		auto functionEncoder = abi_->createFunctionEncoder(builder,
