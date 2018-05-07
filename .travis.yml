@@ -4,6 +4,8 @@
 # http://lint.travis-ci.org/
 
 language: cpp
+dist: trusty
+sudo: required
 
 compiler:
   - gcc
@@ -12,46 +14,25 @@ compiler:
 before_install:
   - sudo apt-get update
 
-  # Ensure add-apt-repository is installed.
-  - sudo apt-get install python-software-properties
-
   # LLVM
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.4 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.5 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.6 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main' >> /etc/apt/sources.list"
-  - sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise main' >> /etc/apt/sources.list"
+  - sudo sh -c "echo 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main' >> /etc/apt/sources.list"
   - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-
-  # g++4.8.1
-  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-
-  - sudo add-apt-repository --yes ppa:h-rayflood/llvm
 
 install:
   # Install package dependencies.
   # (Re-run this command a few times to handle handle random failures.)
   -
     for i in {1..5}; do
-      if sudo apt-get update && sudo apt-get install -y $LLVM_PACKAGE "clang-$CLANG_VERSION" libconfig++8-dev; then
+      if sudo apt-get update && sudo apt-get install -y llvm-$LLVM_VERSION llvm-$LLVM_VERSION-dev clang-$LLVM_VERSION; then
         break;
       fi;
       sleep 1;
     done
 
-  # Install a recent version of g++ to build the compiler (with C++11 support).
-  -
-    if [[ "${CXX}" == "g++" ]]; then
-      sudo apt-get install -y g++-4.8; export CXX="g++-4.8";
-    fi
-
-  # Use a recent version of clang++ to build the compiler (with C++11 support);
   # use the previously installed clang version (since installing one tends to remove another).
   -
     if [[ "${CXX}" == "clang++" ]]; then
-      export CXX="clang++-$CLANG_VERSION";
+      export CXX="clang++-$LLVM_VERSION";
     fi
 
 before_script:
@@ -64,24 +45,6 @@ script:
   - make install
 
 env:
-  # Build with LLVM 3.3.
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.3 llvm-3.3-dev" CLANG_VERSION="3.3"
+  - BUILD_TYPE=Debug LLVM_VERSION="6.0"
+  - BUILD_TYPE=Release LLVM_VERSION="6.0"
 
-  # Build with LLVM 3.4
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.4 llvm-3.4-dev" CLANG_VERSION="3.4"
-
-  # Build with LLVM 3.5
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.5 llvm-3.5-dev" CLANG_VERSION="3.5"
-
-  # Build with LLVM 3.6
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.6 llvm-3.6-dev" CLANG_VERSION="3.6"
-
-  # Build with LLVM 3.7
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.7 llvm-3.7-dev" CLANG_VERSION="3.7"
-
-  # Build with LLVM 3.8
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.8 llvm-3.8-dev" CLANG_VERSION="3.8"
-
-  # Build with LLVM 3.9
-  - BUILD_TYPE=Debug LLVM_PACKAGE="llvm-3.9 llvm-3.9-dev" CLANG_VERSION="3.9"
-  - BUILD_TYPE=Release LLVM_PACKAGE="llvm-3.9 llvm-3.9-dev" CLANG_VERSION="3.9"

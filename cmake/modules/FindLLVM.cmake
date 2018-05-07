@@ -27,6 +27,7 @@
 #  LLVM_NM_EXECUTABLE   - Path of 'llvm-nm' executable.
 #  LLVM_OPT_EXECUTABLE  - Path of 'opt' executable.
 set(llvm_config_names
+	llvm-config-6.0
 	llvm-config
 )
 
