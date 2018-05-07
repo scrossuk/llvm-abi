@@ -336,14 +336,14 @@ namespace llvm_abi {
 		return llvm::FunctionType::get(resultType, argumentTypes, functionType.isVarArg());
 	}
 	
-	llvm::AttributeSet
+	llvm::AttributeList
 	getFunctionAttributes(llvm::LLVMContext& llvmContext,
 	                      const ABITypeInfo& typeInfo,
 	                      const FunctionIRMapping& functionIRMapping,
-	                      const llvm::AttributeSet existingAttributes) {
-		llvm::SmallVector<llvm::AttributeSet, 8> attributes;
-		llvm::AttrBuilder functionAttrs(existingAttributes, llvm::AttributeSet::FunctionIndex);
-		llvm::AttrBuilder returnAttrs(existingAttributes, llvm::AttributeSet::ReturnIndex);
+	                      const llvm::AttributeList existingAttributes) {
+		llvm::SmallVector<llvm::AttributeList, 8> attributes;
+		llvm::AttrBuilder functionAttrs(existingAttributes, llvm::AttributeList::FunctionIndex);
+		llvm::AttrBuilder returnAttrs(existingAttributes, llvm::AttributeList::ReturnIndex);
 		
 		const auto& returnArgInfo = functionIRMapping.returnArgInfo();
 		
@@ -377,7 +377,7 @@ namespace llvm_abi {
 		
 		// Attach return attributes.
 		if (returnAttrs.hasAttributes()) {
-			attributes.push_back(llvm::AttributeSet::get(llvmContext, llvm::AttributeSet::ReturnIndex, returnAttrs));
+			attributes.push_back(llvm::AttributeList::get(llvmContext, llvm::AttributeList::ReturnIndex, returnAttrs));
 		}
 		
 		// Attach attributes to sret.
@@ -388,7 +388,7 @@ namespace llvm_abi {
 			if (returnArgInfo.getInReg()) {
 				structRetAttrs.addAttribute(llvm::Attribute::InReg);
 			}
-			attributes.push_back(llvm::AttributeSet::get(
+			attributes.push_back(llvm::AttributeList::get(
 					llvmContext, functionIRMapping.structRetArgIndex() + 1, structRetAttrs));
 		}
 		
@@ -399,7 +399,7 @@ namespace llvm_abi {
 			// InAlloca support was added in LLVM 3.5.
 			attrs.addAttribute(llvm::Attribute::InAlloca);
 #endif
-			attributes.push_back(llvm::AttributeSet::get(llvmContext, functionIRMapping.inallocaArgIndex() + 1, attrs));
+			attributes.push_back(llvm::AttributeList::get(llvmContext, functionIRMapping.inallocaArgIndex() + 1, attrs));
 		}
 		
 		for (size_t argIndex = 0; argIndex < functionIRMapping.arguments().size(); argIndex++) {
@@ -410,7 +410,7 @@ namespace llvm_abi {
 			// Add attribute for padding argument, if necessary.
 			if (functionIRMapping.hasPaddingArg(argIndex) &&
 			    argInfo.getPaddingInReg()) {
-				attributes.push_back(llvm::AttributeSet::get(
+				attributes.push_back(llvm::AttributeList::get(
 						llvmContext, functionIRMapping.paddingArgIndex(argIndex) + 1,
 						llvm::Attribute::InReg));
 			}
@@ -462,16 +462,16 @@ namespace llvm_abi {
 				unsigned firstIRArg, numIRArgs;
 				std::tie(firstIRArg, numIRArgs) = functionIRMapping.getIRArgRange(argIndex);
 				for (unsigned i = 0; i < numIRArgs; i++) {
-					attributes.push_back(llvm::AttributeSet::get(llvmContext, firstIRArg + i + 1, attrs));
+					attributes.push_back(llvm::AttributeList::get(llvmContext, firstIRArg + i + 1, attrs));
 				}
 			}
 		}
 		
 		if (functionAttrs.hasAttributes()) {
-			attributes.push_back(llvm::AttributeSet::get(llvmContext, llvm::AttributeSet::FunctionIndex, functionAttrs));
+			attributes.push_back(llvm::AttributeList::get(llvmContext, llvm::AttributeList::FunctionIndex, functionAttrs));
 		}
 		
-		return llvm::AttributeSet::get(llvmContext, attributes);
+		return llvm::AttributeList::get(llvmContext, attributes);
 	}
 	
 }

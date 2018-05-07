@@ -172,11 +172,11 @@ namespace llvm_abi {
 	 *                           be removed).
 	 * \return The ABI-encoded LLVM function type.
 	 */
-	llvm::AttributeSet
+	llvm::AttributeList
 	getFunctionAttributes(llvm::LLVMContext& llvmContext,
 	                      const ABITypeInfo& typeInfo,
 	                      const FunctionIRMapping& functionIRMapping,
-	                      const llvm::AttributeSet existingAttributes);
+	                      const llvm::AttributeList existingAttributes);
 	
 }
 

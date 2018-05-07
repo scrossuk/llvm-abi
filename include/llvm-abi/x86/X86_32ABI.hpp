@@ -31,9 +31,9 @@ namespace llvm_abi {
 			
 			llvm::FunctionType* getFunctionType(const FunctionType& functionType) const;
 			
-			llvm::AttributeSet getAttributes(const FunctionType& functionType,
-			                                 llvm::ArrayRef<Type> argumentTypes,
-			                                 llvm::AttributeSet existingAttributes) const;
+			llvm::AttributeList getAttributes(const FunctionType& functionType,
+			                                  llvm::ArrayRef<Type> argumentTypes,
+			                                  llvm::AttributeList existingAttributes) const;
 			
 			llvm::Value* createCall(Builder& builder,
 			                        const FunctionType& functionType,

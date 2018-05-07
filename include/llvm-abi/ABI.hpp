@@ -74,7 +74,7 @@ namespace llvm_abi {
 		/**
 		 * \brief Get function attributes for ABI.
 		 * 
-		 * This creates a set of attributes as needed by the ABI for a
+		 * This creates a list of attributes as needed by the ABI for a
 		 * function of the given type. Existng attributes should be
 		 * passed to this method since some may need to be disabled
 		 * (e.g. 'readnone' disabled when arguments are passed via
@@ -84,9 +84,9 @@ namespace llvm_abi {
 		 * \param existingAttributes The existing function attributes.
 		 * \return The set of attributes for the ABI.
 		 */
-		virtual llvm::AttributeSet getAttributes(const FunctionType& functionType,
-		                                         llvm::ArrayRef<Type> argumentTypes,
-		                                         llvm::AttributeSet existingAttributes = llvm::AttributeSet()) const = 0;
+		virtual llvm::AttributeList getAttributes(const FunctionType& functionType,
+		                                          llvm::ArrayRef<Type> argumentTypes,
+		                                          llvm::AttributeList existingAttributes = llvm::AttributeList()) const = 0;
 		
 		/**
 		 * \brief Create a function call.

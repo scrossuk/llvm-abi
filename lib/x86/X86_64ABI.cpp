@@ -84,9 +84,9 @@ namespace llvm_abi {
 			return getFunctionIRMapping(typeInfo, argInfoArray);
 		}
 		
-		llvm::AttributeSet X86_64ABI::getAttributes(const FunctionType& functionType,
-		                                            llvm::ArrayRef<Type> rawArgumentTypes,
-		                                            const llvm::AttributeSet existingAttributes) const {
+		llvm::AttributeList X86_64ABI::getAttributes(const FunctionType& functionType,
+		                                             llvm::ArrayRef<Type> rawArgumentTypes,
+		                                             const llvm::AttributeList existingAttributes) const {
 			assert(rawArgumentTypes.size() >= functionType.argumentTypes().size());
 			
 			// Promote argument types (e.g. for varargs).

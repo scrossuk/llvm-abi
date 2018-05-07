@@ -36,9 +36,9 @@ namespace llvm_abi {
 			llvm_unreachable("TODO");
 		}
 		
-		llvm::AttributeSet Win64ABI::getAttributes(const FunctionType& /*functionType*/,
-		                                           llvm::ArrayRef<Type> /*argumentTypes*/,
-		                                           const llvm::AttributeSet /*existingAttributes*/) const {
+		llvm::AttributeList Win64ABI::getAttributes(const FunctionType& /*functionType*/,
+		                                            llvm::ArrayRef<Type> /*argumentTypes*/,
+		                                            const llvm::AttributeList /*existingAttributes*/) const {
 			llvm_unreachable("TODO");
 		}
 		
