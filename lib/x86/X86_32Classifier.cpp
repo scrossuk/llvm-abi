@@ -48,7 +48,6 @@ namespace llvm_abi {
 				case llvm::Triple::DragonFly:
 				case llvm::Triple::FreeBSD:
 				case llvm::Triple::OpenBSD:
-				case llvm::Triple::Bitrig:
 				case llvm::Triple::Win32:
 					return true;
 				default:
