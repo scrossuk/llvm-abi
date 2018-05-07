@@ -39,29 +39,16 @@ namespace llvm_abi {
 	                                unsigned idx0, unsigned idx1,
 	                                const llvm::Twine& name) {
 		assert(ptr->getType()->isPointerTy());
-#if LLVMABI_LLVM_VERSION >= 307
 		return builder.getBuilder().CreateConstGEP2_32(type, ptr, idx0,
 		                                               idx1, name);
-#else
-		(void) type;
-		assert(ptr->getType()->getPointerElementType() == type);
-		return builder.getBuilder().CreateConstGEP2_32(ptr, idx0, idx1,
-		                                               name);
-#endif
 	}
 	
 	llvm::Value* createStructGEP(Builder& builder, llvm::Type* type,
 	                             llvm::Value* ptr, unsigned idx,
 	                             const llvm::Twine& name) {
 		assert(ptr->getType()->isPointerTy());
-#if LLVMABI_LLVM_VERSION >= 307
 		return builder.getBuilder().CreateStructGEP(type, ptr, idx,
 		                                            name);
-#else
-		(void) type;
-		assert(ptr->getType()->getPointerElementType() == type);
-		return builder.getBuilder().CreateStructGEP(ptr, idx, name);
-#endif
 	}
 	
 }
