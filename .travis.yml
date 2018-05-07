@@ -21,7 +21,7 @@ before_install:
   - sudo sh -c "echo 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main' >> /etc/apt/sources.list"
   - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
 
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
 
 install:
   # Install package dependencies.
