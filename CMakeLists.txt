@@ -79,7 +79,7 @@ endif(NOT "${LLVM_ROOT_DIR}" STREQUAL "")
 # --- Dependencies
 
 # Find LLVM (for code generation).
-set(LLVM_REQ_COMPONENTS all-targets bitreader bitwriter core irreader jit linker mcjit nativecodegen native ipo option)
+set(LLVM_REQ_COMPONENTS all-targets bitreader bitwriter core irreader linker mcjit nativecodegen native ipo option)
 find_package(LLVM REQUIRED ${LLVM_REQ_COMPONENTS})
 
 # Check LLVM version.
