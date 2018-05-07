@@ -25,4 +25,4 @@ define { i64, i32 } @caller() {
 ; Function Attrs: nounwind
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture, i8* nocapture readonly, i64, i32, i1) #0
 
-attributes #0 = { nounwind }
+attributes #0 = { argmemonly nounwind }

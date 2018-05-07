@@ -21,4 +21,4 @@ define void @caller({ [1 x <4 x float>] }* noalias sret %agg.result, { [1 x <4 x
 ; Function Attrs: nounwind
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #0
 
-attributes #0 = { nounwind }
+attributes #0 = { argmemonly nounwind }
