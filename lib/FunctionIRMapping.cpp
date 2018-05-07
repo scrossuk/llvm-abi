@@ -355,8 +355,8 @@ namespace llvm_abi {
 				} else if (coerceType.hasUnsignedIntegerRepresentation(typeInfo)) {
 					returnAttrs.addAttribute(llvm::Attribute::ZExt);
 				}
-				// FALL THROUGH
 			}
+				// FALL THROUGH
 			case ArgInfo::Direct:
 				if (returnArgInfo.getInReg()) {
 					returnAttrs.addAttribute(llvm::Attribute::InReg);
@@ -420,8 +420,8 @@ namespace llvm_abi {
 					} else if (coerceType.hasUnsignedIntegerRepresentation(typeInfo)) {
 						attrs.addAttribute(llvm::Attribute::ZExt);
 					}
-					// FALL THROUGH
 				}
+					// FALL THROUGH
 				case ArgInfo::Direct:
 					/*if (argIndex == 0 && FI.isChainCall())
 						attrs.addAttribute(llvm::Attribute::Nest);
