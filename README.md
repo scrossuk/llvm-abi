@@ -23,7 +23,7 @@ library has been created to handle this and abstract away the details.
 
 This is currently being developed by [Stephen Cross](http://scross.co.uk) and
 was created due to the need for good ABI support in the
-[Loci](http://loci-lang.org) [compiler](https://github.com/scross99/locic);
+[Loci](http://loci-lang.org) [compiler](https://github.com/scrossuk/locic);
 ultimately the aim is that this library is useful to all LLVM frontends that
 are interested in ABI compliance.
 
