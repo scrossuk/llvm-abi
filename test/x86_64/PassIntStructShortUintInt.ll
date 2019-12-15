@@ -14,12 +14,12 @@ define void @caller(i32, i64 %coerce0, i32 %coerce1) {
   store i32 %coerce1, i32* %3
   %4 = bitcast { i16, i32, i32 }* %coerce.mem to i8*
   %5 = bitcast { i64, i32 }* %coerce to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %4, i8* %5, i64 12, i32 8, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %4, i8* align 8 %5, i64 12, i1 false)
   %6 = load { i16, i32, i32 }* %coerce.mem
   store { i16, i32, i32 } %6, { i16, i32, i32 }* %coerce.arg.source
   %7 = bitcast { i64, i32 }* %coerce.arg.source.coerce to i8*
   %8 = bitcast { i16, i32, i32 }* %coerce.arg.source to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %7, i8* %8, i64 12, i32 0, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %7, i8* align 1 %8, i64 12, i1 false)
   %9 = getelementptr { i64, i32 }* %coerce.arg.source.coerce, i32 0, i32 0
   %10 = load i64* %9, align 1
   %11 = getelementptr { i64, i32 }* %coerce.arg.source.coerce, i32 0, i32 1

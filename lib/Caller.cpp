@@ -202,10 +202,9 @@ namespace llvm_abi {
 			const auto casted = builder.getBuilder().CreateBitCast(tmpAlloca, i8PtrType);
 			const auto sourceCasted = builder.getBuilder().CreateBitCast(sourcePtr, i8PtrType);
 			// FIXME: Use better alignment.
-			builder.getBuilder().CreateMemCpy(casted, sourceCasted,
+			builder.getBuilder().CreateMemCpy(casted, /*dstAlign=*/1, sourceCasted, /*srcAlign=*/1,
 			                                  llvm::ConstantInt::get(typeInfo.getLLVMType(IntPtrTy),
-			                                                         sourceSize.asBytes()),
-			                                  1, false);
+			                                                         sourceSize.asBytes()));
 			return builder.getBuilder().CreateLoad(tmpAlloca);
 		}
 	}
@@ -313,11 +312,10 @@ namespace llvm_abi {
 			const auto casted = builder.getBuilder().CreateBitCast(tempAlloca, i8PtrType);
 			const auto destCasted = builder.getBuilder().CreateBitCast(destPtr, i8PtrType);
 			// FIXME: Use better alignment.
-			builder.getBuilder().CreateMemCpy(destCasted,
-			                                  casted,
+			builder.getBuilder().CreateMemCpy(destCasted, /*dstAlign=*/1,
+			                                  casted, /*srcAlign=*/1,
 			                                  llvm::ConstantInt::get(typeInfo.getLLVMType(IntPtrTy),
-			                                                         destSize.asBytes()),
-			                                  1, false);
+			                                                         destSize.asBytes()));
 		}
 	}
 	
@@ -578,10 +576,9 @@ namespace llvm_abi {
 							                                         builder_,
 							                                         coerceType,
 							                                         sourcePtr->getName() + ".coerce");
-							builder_.getBuilder().CreateMemCpy(tempAlloca,
-							                                   sourcePtr,
-							                                   sourceSize.asBytes(),
-							                                   0);
+							builder_.getBuilder().CreateMemCpy(tempAlloca, /*dstAlign=*/1,
+							                                   sourcePtr, /*srcAlign=*/1,
+							                                   sourceSize.asBytes());
 							sourcePtr = tempAlloca;
 						} else {
 							sourcePtr = builder_.getBuilder().CreateBitCast(sourcePtr, llvm::PointerType::getUnqual(typeInfo_.getLLVMType(coerceType)));

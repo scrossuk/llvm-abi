@@ -12,12 +12,12 @@ define { i64, i32 } @caller() {
   store { i64, i32 } %1, { i64, i32 }* %coerce.mem.store
   %2 = bitcast { i64, i32 }* %coerce.mem.store to i8*
   %3 = bitcast { i32, i32, i32 }* %coerce to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %3, i8* %2, i64 12, i32 1, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %3, i8* align 1 %2, i64 12, i1 false)
   %4 = load { i32, i32, i32 }* %coerce, align 4
   store { i32, i32, i32 } %4, { i32, i32, i32 }* %coerce1, align 4
   %5 = bitcast { i64, i32 }* %coerce.mem.load to i8*
   %6 = bitcast { i32, i32, i32 }* %coerce1 to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %5, i8* %6, i64 12, i32 1, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %5, i8* align 1 %6, i64 12, i1 false)
   %7 = load { i64, i32 }* %coerce.mem.load
   ret { i64, i32 } %7
 }

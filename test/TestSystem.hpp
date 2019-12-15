@@ -82,13 +82,13 @@ public:
 	
 	void doTest(const std::string& testName, const TestFunctionType& testFunctionType) {
 		const auto& calleeFunctionType = testFunctionType.functionType;
-		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(calleeFunctionType)));
+		const auto calleeFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("callee", abi_->getFunctionType(calleeFunctionType)).getCallee());
 		const auto calleeAttributes = abi_->getAttributes(calleeFunctionType,
 		                                                  calleeFunctionType.argumentTypes());
 		calleeFunction->setAttributes(calleeAttributes);
 		
 		const auto callerFunctionType = makeCallerFunctionType(testFunctionType);
-		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(callerFunctionType)));
+		const auto callerFunction = llvm::cast<llvm::Function>(module_.getOrInsertFunction("caller", abi_->getFunctionType(callerFunctionType)).getCallee());
 		const auto callerAttributes = abi_->getAttributes(callerFunctionType,
 		                                                  callerFunctionType.argumentTypes());
 		callerFunction->setAttributes(callerAttributes);

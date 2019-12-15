@@ -191,10 +191,9 @@ namespace llvm_abi {
 			const auto casted = builder.getBuilder().CreateBitCast(tmpAlloca, i8PtrType);
 			const auto sourceCasted = builder.getBuilder().CreateBitCast(sourcePtr, i8PtrType);
 			// FIXME: Use better alignment.
-			builder.getBuilder().CreateMemCpy(casted, sourceCasted,
+			builder.getBuilder().CreateMemCpy(casted, /*dstAlign=*/1, sourceCasted, /*srcAlign=*/1,
 			                                  llvm::ConstantInt::get(typeInfo.getLLVMType(IntPtrTy),
-			                                                         sourceSize.asBytes()),
-			                                  1, false);
+			                                                         sourceSize.asBytes()));
 			return builder.getBuilder().CreateLoad(tmpAlloca);
 		}
 	}
@@ -301,11 +300,10 @@ namespace llvm_abi {
 			const auto casted = builder.getBuilder().CreateBitCast(tempAlloca, i8PtrType);
 			const auto destCasted = builder.getBuilder().CreateBitCast(destPtr, i8PtrType);
 			// FIXME: Use better alignment.
-			builder.getBuilder().CreateMemCpy(destCasted,
-			                                  casted,
+			builder.getBuilder().CreateMemCpy(destCasted, /*dstAlign=*/1,
+			                                  casted, /*srcAlign=*/1,
 			                                  llvm::ConstantInt::get(typeInfo.getLLVMType(IntPtrTy),
-			                                                         destSize.asBytes()),
-			                                  1, false);
+			                                                         destSize.asBytes()));
 		}
 	}
 	
@@ -455,11 +453,10 @@ namespace llvm_abi {
 							                                                      i8PtrType);
 							const auto source = builder_.getBuilder().CreateBitCast(value,
 							                                                        i8PtrType);
-							builder_.getBuilder().CreateMemCpy(dest, source,
+							builder_.getBuilder().CreateMemCpy(dest, /*dstAlign=*/argInfo.getIndirectAlign(),
+										           source, /*srcAlign=*/argInfo.getIndirectAlign(),
 							                                   llvm::ConstantInt::get(typeInfo_.getLLVMType(IntPtrTy),
-							                                                          typeSize.asBytes()),
-							                                   argInfo.getIndirectAlign(),
-							                                   false);
+							                                                          typeSize.asBytes()));
 							value = alignedTempAlloca;
 						}
 						
@@ -573,10 +570,9 @@ namespace llvm_abi {
 								createStore(builder_.getBuilder(), argValue, elementPtr);
 							}
 							
-							builder_.getBuilder().CreateMemCpy(destPtr,
-							                                   tempAlloca,
-							                                   destSize.asBytes(),
-							                                   alignmentToUse.asBytes());
+							builder_.getBuilder().CreateMemCpy(destPtr, /*dstAlign=*/alignmentToUse.asBytes(),
+							                                   tempAlloca, /*srcAlign=*/alignmentToUse.asBytes(),
+							                                   destSize.asBytes());
 						}
 					} else {
 						// Simple case, just do a coerced store of the argument into the alloca.
